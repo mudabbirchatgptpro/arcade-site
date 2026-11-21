@@ -33,7 +33,7 @@
   <header>
     <span class="crown">🎮</span>
     <div class="title">Parker's Arcade</div>
-    <div class="sub">Web preview · ISEE practice + game lobby</div>
+    <div class="sub">Play · Learn · Level up</div>
     <div class="live-badge"><span class="pulse"></span>Live progress sync</div>
     <div id="outbox-indicator" class="live-badge" style="display:none;background:rgba(255,170,0,.18);border-color:rgba(255,170,0,.45);" title="Un-synced attempts — will retry automatically">↻ 0 un-synced</div>
     <div class="player-badge" id="player-badge" onclick="switchPlayer()" title="Switch profile">
@@ -72,7 +72,7 @@
   <div id="weak-banner" class="banner needs-work">Loading…</div>
 
   <footer>
-    PARKER'S ARCADE · Web preview · <a href="#" id="footer-switch" style="color:inherit;text-decoration:underline;opacity:0.7;">Switch profile</a>
+    PARKER'S ARCADE<span id="footer-switch-wrap"> · <a href="#" id="footer-switch" style="color:inherit;text-decoration:underline;opacity:0.7;">Switch profile</a></span>
   </footer>
 </div>
 
@@ -162,6 +162,8 @@ document.getElementById('footer-switch').addEventListener('click', function (e) 
 // 2026-11-21: inside the real shell (Parker's kiosk) there is no picker and no Admin
 // option: it is always Parker. The picker stays for the browser preview only.
 if (window.__inShell) {
+  // no profile switching on the kiosk
+  document.addEventListener('DOMContentLoaded', function(){ var w=document.getElementById('footer-switch-wrap'); if (w) w.style.display='none'; });
   _existingPlayer = 'parker';
   try { localStorage.setItem(PLAYER_KEY, 'parker'); } catch (e) {}
 }
@@ -272,7 +274,6 @@ function buildCard(game, stats) {
     '<div class="card-top">'+
       '<span class="card-icon">'+(game.icon||'🎮')+'</span>'+
       ring+
-      '<span class="transient-badge">SANDBOX</span>'+
     '</div>'+
     '<div class="card-body">'+
       '<div class="card-name">'+game.displayName+'</div>'+

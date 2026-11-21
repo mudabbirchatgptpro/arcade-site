@@ -87,6 +87,7 @@ header{text-align:center;margin-bottom:2rem;padding-top:1.5rem}
 .card-transient{border-color:rgba(255,102,204,.3)}
 .card-transient:hover{border-color:#ff66cc}
 .card-transient .play-btn{background:linear-gradient(135deg,var(--transient),var(--transient2))}
+.card-selfhosted .play-btn{background:linear-gradient(135deg,#00ffcc,#0088ff);color:#001a33}
 
 #login-screen{
   position:fixed;inset:0;z-index:1000;
