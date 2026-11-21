@@ -247,6 +247,11 @@
       .concat(Object.keys(R.slow).filter(function (i) { return !R.missed[i]; }).map(function (i) { return R.slow[i].prompt + ' = ' + R.slow[i].answer + ' (slow)'; })).slice(0, 6);
     $('again').innerHTML = again.length ? '<b>Coming back next round:</b><br>' + again.join('<br>') : 'Clean round. Nothing to practise.';
     $('btnAgain').onclick = function () { start(R.m); };
+    try {
+      if (window.arcadeShell && typeof window.arcadeShell.roundSummary === 'function') {
+        window.arcadeShell.roundSummary({ mode: R.m.key, right: R.right, wrong: R.wrong, factsPerMin: fpm, seconds: Math.round(secs), missed: Object.keys(R.missed) });
+      }
+    } catch (e) {}
     var log = lsGet('rounds', []); log.push({ t: Date.now(), mode: R.m.key, right: R.right, wrong: R.wrong, fpm: fpm }); lsSet('rounds', log.slice(-200));
     showScreen('result');
   }
