@@ -82,32 +82,6 @@
       "featured": true
     },
     {
-      "key": "solar-smash",
-      "type": "crazygames",
-      "slug": "solar-smash",
-      "displayName": "Solar Smash",
-      "desc": "Planet-destruction sandbox.",
-      "icon": "🌍",
-      "cls": "card-transient",
-      "fd": "4.7s",
-      "ringColor": "#ff7733",
-      "category": "arcade",
-      "featured": true
-    },
-    {
-      "key": "deez-balls",
-      "type": "crazygames",
-      "slug": "deez-balls",
-      "displayName": "Deez Balls",
-      "desc": "Physics ball game.",
-      "icon": "🎱",
-      "cls": "card-transient",
-      "fd": "3.9s",
-      "ringColor": "#44ddcc",
-      "category": "arcade",
-      "featured": true
-    },
-    {
       "key": "madalin-stunt-cars-2",
       "type": "crazygames",
       "slug": "madalin-stunt-cars-2",
@@ -139,30 +113,6 @@
       "fd": "3.4s",
       "ringColor": "#88aa44",
       "category": "sports"
-    },
-    {
-      "key": "smash-karts",
-      "type": "crazygames",
-      "slug": "smash-karts",
-      "displayName": "Smash Karts",
-      "desc": "Online kart battle.",
-      "icon": "🏎",
-      "fd": "4.0s",
-      "ringColor": "#ff3366",
-      "category": "racing"
-    },
-    {
-      "key": "escape-evil-granny-viz",
-      "type": "crazygames",
-      "slug": "escape-evil-granny-viz",
-      "displayName": "Super Granny",
-      "desc": "Sneak out of Granny's spooky house!",
-      "icon": "👵",
-      "cls": "card-transient",
-      "fd": "4s",
-      "ringColor": "#9b59b6",
-      "category": "adventure",
-      "featured": false
     },
     {
       "key": "stone-grass-mowing-simulator",
@@ -269,39 +219,6 @@
       "featured": false
     },
     {
-      "key": "lucky-brainrot-blocks-online-ehx",
-      "type": "crazygames",
-      "slug": "lucky-brainrot-blocks-online-ehx",
-      "displayName": "Lucky Brainrot Blocks",
-      "desc": "Stack and match lucky brainrot blocks.",
-      "icon": "🧱",
-      "fd": "3.8s",
-      "ringColor": "#ffcc33",
-      "category": "action"
-    },
-    {
-      "key": "catch-brainrots-from-bosses",
-      "type": "crazygames",
-      "slug": "catch-brainrots-from-bosses",
-      "displayName": "Catch Brainrots from Bosses",
-      "desc": "Catch the brainrots the bosses drop.",
-      "icon": "👾",
-      "fd": "4.0s",
-      "ringColor": "#a855f7",
-      "category": "action"
-    },
-    {
-      "key": "throw-a-lucky-block",
-      "type": "crazygames",
-      "slug": "throw-a-lucky-block",
-      "displayName": "Throw a Lucky Block",
-      "desc": "Throw lucky blocks for surprises.",
-      "icon": "🎁",
-      "fd": "3.7s",
-      "ringColor": "#33ddaa",
-      "category": "action"
-    },
-    {
       "key": "hoop-world-3d",
       "type": "crazygames",
       "slug": "hoop-world-3d",
@@ -322,10 +239,215 @@
       "fd": "3.8s",
       "ringColor": "#33cc77",
       "category": "sports"
+    },
+    {
+      "key": "2048",
+      "type": "crazygames",
+      "slug": "2048",
+      "displayName": "2048",
+      "desc": "Slide and merge number tiles.",
+      "icon": "🔢",
+      "cls": "card-transient",
+      "fd": "3.0s",
+      "ringColor": "#ffcc33",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "cut-the-rope",
+      "type": "crazygames",
+      "slug": "cut-the-rope",
+      "displayName": "Cut the Rope",
+      "desc": "Cut ropes to feed Om Nom candy.",
+      "icon": "🍬",
+      "cls": "card-transient",
+      "fd": "3.2s",
+      "ringColor": "#66dd66",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "color-water-sort-3d",
+      "type": "crazygames",
+      "slug": "color-water-sort-3d",
+      "displayName": "Color Water Sort 3D",
+      "desc": "Sort the colors into tubes.",
+      "icon": "🧪",
+      "cls": "card-transient",
+      "fd": "3.4s",
+      "ringColor": "#44bbff",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "jelly-run-2048",
+      "type": "crazygames",
+      "slug": "jelly-run-2048",
+      "displayName": "Jelly Run 2048",
+      "desc": "Guide blocks to their exits.",
+      "icon": "🟩",
+      "cls": "card-transient",
+      "fd": "3.6s",
+      "ringColor": "#aa66ff",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "mahjongg-solitaire",
+      "type": "crazygames",
+      "slug": "mahjongg-solitaire",
+      "displayName": "Mahjongg Solitaire",
+      "desc": "Match the tiles to clear the board.",
+      "icon": "🀄",
+      "cls": "card-transient",
+      "fd": "3.8s",
+      "ringColor": "#ff8844",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "word-search",
+      "type": "crazygames",
+      "slug": "word-search",
+      "displayName": "Word Search",
+      "desc": "Find the hidden words.",
+      "icon": "🔤",
+      "cls": "card-transient",
+      "fd": "4.0s",
+      "ringColor": "#33ccaa",
+      "category": "puzzle",
+      "featured": false
+    },
+    {
+      "key": "tiny-fishing",
+      "type": "crazygames",
+      "slug": "tiny-fishing",
+      "displayName": "Tiny Fishing",
+      "desc": "Cast your line and catch fish.",
+      "icon": "🎣",
+      "cls": "card-transient",
+      "fd": "3.0s",
+      "ringColor": "#3399ff",
+      "category": "casual",
+      "featured": false
+    },
+    {
+      "key": "idle-ants",
+      "type": "crazygames",
+      "slug": "idle-ants",
+      "displayName": "Idle Ants",
+      "desc": "Grow your own ant colony.",
+      "icon": "🐜",
+      "cls": "card-transient",
+      "fd": "3.2s",
+      "ringColor": "#cc8844",
+      "category": "casual",
+      "featured": false
+    },
+    {
+      "key": "farm-merge-valley",
+      "type": "crazygames",
+      "slug": "farm-merge-valley",
+      "displayName": "Farm Merge Valley",
+      "desc": "Merge animals and grow your farm.",
+      "icon": "🌾",
+      "cls": "card-transient",
+      "fd": "3.4s",
+      "ringColor": "#88cc44",
+      "category": "casual",
+      "featured": false
+    },
+    {
+      "key": "draw-climber",
+      "type": "crazygames",
+      "slug": "draw-climber",
+      "displayName": "Draw Climber",
+      "desc": "Draw legs and race to the top.",
+      "icon": "✏️",
+      "cls": "card-transient",
+      "fd": "3.6s",
+      "ringColor": "#ff66aa",
+      "category": "casual",
+      "featured": false
+    },
+    {
+      "key": "drift-boss",
+      "type": "crazygames",
+      "slug": "drift-boss",
+      "displayName": "Drift Boss",
+      "desc": "One-click drifting around corners.",
+      "icon": "🚗",
+      "cls": "card-transient",
+      "fd": "3.8s",
+      "ringColor": "#ff4444",
+      "category": "racing",
+      "featured": false
+    },
+    {
+      "key": "eggy-car",
+      "type": "crazygames",
+      "slug": "eggy-car",
+      "displayName": "Eggy Car",
+      "desc": "Drive without dropping the egg.",
+      "icon": "🥚",
+      "cls": "card-transient",
+      "fd": "4.0s",
+      "ringColor": "#ffdd55",
+      "category": "racing",
+      "featured": false
+    },
+    {
+      "key": "penalty-shooters-2",
+      "type": "crazygames",
+      "slug": "penalty-shooters-2",
+      "displayName": "Penalty Shooters 2",
+      "desc": "Soccer penalty shootouts.",
+      "icon": "⚽",
+      "cls": "card-transient",
+      "fd": "3.0s",
+      "ringColor": "#44cc66",
+      "category": "sports",
+      "featured": false
+    },
+    {
+      "key": "8-ball-billiards-classic",
+      "type": "crazygames",
+      "slug": "8-ball-billiards-classic",
+      "displayName": "8-Ball Billiards",
+      "desc": "Classic pool against the computer.",
+      "icon": "🎱",
+      "cls": "card-transient",
+      "fd": "3.2s",
+      "ringColor": "#2266cc",
+      "category": "sports",
+      "featured": false
+    },
+    {
+      "key": "basketball-stars-2019",
+      "type": "crazygames",
+      "slug": "basketball-stars-2019",
+      "displayName": "Basketball Stars",
+      "desc": "Two-player basketball.",
+      "icon": "🏀",
+      "cls": "card-transient",
+      "fd": "3.4s",
+      "ringColor": "#ff8833",
+      "category": "sports",
+      "featured": false
     }
   ],
-  "breaks": { "defaultIntervalMs": 75000, "minMs": 60000, "idealMs": 68000, "hardMaxMs": 88000 },
-  "questions": { "batchSize": 15, "mix": { "facts": 0.5 } },
+  "breaks": {
+    "defaultIntervalMs": 75000,
+    "minMs": 60000,
+    "idealMs": 68000,
+    "hardMaxMs": 88000
+  },
+  "questions": {
+    "batchSize": 15,
+    "mix": {
+      "facts": 0.5
+    }
+  },
   "adblock": {
     "hosts": [
       "googlesyndication.com",
@@ -359,5 +481,5 @@
     "heartbeatMs": 30000,
     "manifestMs": 60000
   },
-  "version": "2026-11-21.2"
+  "version": "2026-11-21.3"
 }
