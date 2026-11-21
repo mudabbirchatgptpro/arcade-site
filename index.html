@@ -163,7 +163,7 @@ document.getElementById('footer-switch').addEventListener('click', function (e) 
 // option: it is always Parker. The picker stays for the browser preview only.
 if (window.__inShell) {
   // no profile switching on the kiosk
-  document.addEventListener('DOMContentLoaded', function(){ var w=document.getElementById('footer-switch-wrap'); if (w) w.style.display='none'; });
+  document.addEventListener('DOMContentLoaded', function(){ var w=document.getElementById('footer-switch-wrap'); if (w) w.style.display='none'; var b=document.getElementById('player-badge'); if (b) { b.onclick=null; b.removeAttribute('onclick'); b.title=''; b.style.cursor='default'; b.innerHTML=b.innerHTML.replace('✎',''); } });
   _existingPlayer = 'parker';
   try { localStorage.setItem(PLAYER_KEY, 'parker'); } catch (e) {}
 }
