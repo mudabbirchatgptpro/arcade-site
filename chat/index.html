@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Talk to Mr. Mudabbir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="collapsed">
+  <!-- Collapsed: floating badge -->
+  <button id="badge" type="button" aria-label="Open chat with Mr. Mudabbir">
+    <span class="badge-emoji">💬</span>
+    <span class="badge-label">Talk to Mr.&nbsp;Mudabbir</span>
+    <span id="unread" class="unread" hidden>0</span>
+  </button>
+
+  <!-- Expanded: chat panel -->
+  <section id="panel" aria-hidden="true">
+    <header class="panel-head">
+      <span class="head-emoji">🧑‍🏫</span>
+      <span class="head-title">Mr. Mudabbir</span>
+      <button id="collapse" type="button" aria-label="Close chat">✕</button>
+    </header>
+    <div id="messages" class="messages">
+      <div class="hint">Say hi to Mr. Mudabbir! 👋</div>
+    </div>
+    <form id="composer" class="composer">
+      <input id="input" type="text" autocomplete="off" placeholder="Type a message…" maxlength="2000" />
+      <button id="send" type="submit" aria-label="Send">➤</button>
+    </form>
+  </section>
+
+  <script src="chat.js"></script>
+</body>
+</html>

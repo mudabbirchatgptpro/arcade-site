@@ -1,0 +1,165 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body,html{
+  width:100%;height:100%;overflow:hidden;
+  font-family:'Nunito',sans-serif;color:#fff;
+  background:linear-gradient(160deg,rgba(0,26,10,.97) 0%,rgba(10,64,32,.97) 30%,rgba(26,128,64,.97) 60%,rgba(0,40,24,.97) 100%);
+  backdrop-filter:blur(8px);
+}
+
+#overlay-root{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;
+  transition:opacity .6s ease;
+}
+#overlay-root.fading{opacity:0;pointer-events:none}
+
+#exit-btn{
+  position:absolute;top:1rem;left:1rem;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .15s;
+}
+#exit-btn:hover{background:rgba(255,255,255,.18);transform:scale(1.08)}
+
+.status-row{
+  display:flex;align-items:center;gap:.6rem;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:30px;padding:.5rem 1.2rem;font-size:.85rem;font-weight:700;
+  color:rgba(255,255,255,.75);margin-bottom:1.2rem;
+}
+.status-pulse{
+  width:10px;height:10px;border-radius:50%;background:#ffaa44;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+.status-pulse.ready{background:#44ff88}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.5}}
+#status-elapsed{color:rgba(255,255,255,.4);margin-left:.4rem;font-variant-numeric:tabular-nums}
+
+.ready-banner{
+  background:rgba(40,220,80,.12);border:1.5px solid rgba(40,220,80,.4);
+  color:#88ffaa;padding:.7rem 1.4rem;border-radius:14px;
+  font-weight:700;margin-bottom:1.2rem;text-align:center;
+  animation:slidein .4s ease;
+}
+.ready-banner strong{color:#44ff88}
+@keyframes slidein{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.manual-banner{
+  background:rgba(255,170,60,.12);border:1.5px solid rgba(255,170,60,.4);
+  color:#ffcc88;padding:.7rem 1.4rem;border-radius:14px;
+  font-weight:600;margin-bottom:1.2rem;text-align:center;
+  animation:slidein .4s ease;
+}
+#manual-go{
+  margin-left:.8rem;padding:.4rem 1rem;
+  font-family:'Fredoka One',sans-serif;border:none;border-radius:20px;
+  background:linear-gradient(135deg,#ff66cc,#aa44ff);color:#fff;
+  cursor:pointer;font-size:.85rem;
+}
+
+.hidden{display:none !important}
+
+.question-card{
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.18);
+  border-radius:24px;padding:2rem 2.4rem;
+  max-width:640px;width:100%;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+
+.question-loading{
+  text-align:center;color:rgba(255,255,255,.5);font-size:1rem;padding:2rem;
+}
+
+.topic-tag{
+  display:inline-block;
+  background:rgba(255,102,204,.18);border:1px solid rgba(255,102,204,.4);
+  color:#ffaadd;font-size:.7rem;font-weight:800;letter-spacing:.1em;
+  padding:.2rem .7rem;border-radius:8px;margin-bottom:1rem;
+  text-transform:uppercase;
+}
+.stem{
+  font-size:1.25rem;line-height:1.55;margin-bottom:1.5rem;font-weight:600;
+}
+.diagram{
+  display:block;
+  max-width:100%;
+  max-height:280px;
+  margin:0 auto 1.5rem;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+  padding:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.choices{display:flex;flex-direction:column;gap:.6rem}
+.choice-btn{
+  text-align:left;padding:.85rem 1.2rem;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:14px;color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:.8rem;
+}
+.choice-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4)}
+.choice-letter{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,.12);font-weight:800;font-size:.85rem;
+  flex-shrink:0;
+}
+.choice-btn.correct{
+  background:rgba(40,220,80,.18);border-color:rgba(40,220,80,.6);color:#88ffaa;
+}
+.choice-btn.correct .choice-letter{background:rgba(40,220,80,.4);color:#fff}
+.choice-btn.wrong{
+  background:rgba(255,80,80,.15);border-color:rgba(255,80,80,.5);color:#ffaaaa;
+}
+.choice-btn.wrong .choice-letter{background:rgba(255,80,80,.4);color:#fff}
+.choice-btn:disabled{cursor:not-allowed}
+/* 2026-05-09 v2: text stays full-strength so Parker can READ during
+ * the 15s lock — the whole point. Only the click-affordance dims:
+ * border + letter chip get faded, hover is killed. */
+.choice-btn.locked{
+  background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);
+  color:#fff;opacity:1;
+}
+.choice-btn.locked .choice-letter{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);
+}
+.choice-btn.locked:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+
+/* 2026-05-09: 15-second read-time lock. Forces Parker to read the
+ * question before tapping. Disappears when timer expires + buttons
+ * unlock. */
+.readlock{
+  display:flex;align-items:center;gap:.5rem;
+  margin:.4rem 0 .8rem;padding:.55rem .9rem;
+  background:rgba(255,200,80,.10);border:1px solid rgba(255,200,80,.28);
+  border-radius:12px;font-size:.92rem;font-weight:600;color:#ffd97a;
+  animation:slidein .25s ease;
+}
+.readlock-icon{font-size:1.1rem}
+.readlock-text{flex:1}
+.readlock-secs{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:2.4em;padding:.2rem .55rem;border-radius:999px;
+  background:rgba(255,200,80,.18);color:#fff;font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+
+.feedback{
+  margin-top:1.2rem;padding:.8rem 1rem;border-radius:12px;font-size:.9rem;font-weight:600;
+  animation:slidein .3s ease;
+}
+.feedback.correct{background:rgba(40,220,80,.12);color:#88ffaa;border:1px solid rgba(40,220,80,.3)}
+.feedback.wrong{background:rgba(255,80,80,.12);color:#ffaaaa;border:1px solid rgba(255,80,80,.3)}
+
+.footer-row{
+  display:flex;gap:.8rem;margin-top:1.4rem;
+}
+.streak-pill{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:.3rem .9rem;font-size:.75rem;font-weight:700;
+  color:rgba(255,255,255,.6);
+}

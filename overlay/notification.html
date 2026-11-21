@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Heads-up</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    -webkit-app-region: no-drag;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  /* The toast itself. Pointer-events: none on the wrapper so clicks pass
+     through to the game beneath this BrowserView. */
+  body {
+    pointer-events: none;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  .toast {
+    background: rgba(20, 20, 30, 0.78);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.1px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 320ms ease-out, transform 320ms ease-out;
+    max-width: 100%;
+    text-align: center;
+    /* Even if the toast itself catches a hover, no clicks: */
+    pointer-events: none;
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .toast.fading {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+</style>
+</head>
+<body>
+  <div id="toast" class="toast">⏸ Heads up</div>
+  <script src="notification.js"></script>
+</body>
+</html>

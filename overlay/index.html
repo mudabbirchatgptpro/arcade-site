@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setting up…</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="overlay-root">
+  <button id="exit-btn" title="Back to arcade (Esc Esc)">←</button>
+
+  <div class="status-row">
+    <span id="status-pulse" class="status-pulse"></span>
+    <span id="status-text">Setting up your game…</span>
+    <span id="status-elapsed">0s</span>
+  </div>
+
+  <div id="ready-banner" class="ready-banner hidden">
+    🎮 <strong>Game ready!</strong> Answer this correctly and you're in.
+  </div>
+
+  <div id="manual-banner" class="manual-banner hidden">
+    Hmm, taking longer than expected.
+    <button id="manual-go">I'm ready to play →</button>
+  </div>
+
+  <div id="question-card" class="question-card">
+    <div id="question-loading" class="question-loading">Loading questions…</div>
+    <div id="question-content" class="hidden">
+      <div class="topic-tag" id="q-topic"></div>
+      <div class="stem" id="q-stem"></div>
+      <img id="q-diagram" class="diagram hidden" alt="">
+      <div id="q-readlock" class="readlock hidden">
+        <span class="readlock-icon">📖</span>
+        <span class="readlock-text dots-cycle">Read carefully</span>
+      </div>
+      <div class="choices" id="q-choices"></div>
+      <div id="q-feedback" class="feedback hidden"></div>
+    </div>
+  </div>
+
+  <div class="footer-row">
+    <span id="streak-pill" class="streak-pill">📚 Sandbox</span>
+    <span id="answered-pill" class="streak-pill">0 answered</span>
+  </div>
+</div>
+
+<script src="/env.js"></script>
+<script src="/event-types.js"></script>
+<script>window.__EVENT_SOURCE = 'arcade-hub-overlay';</script>
+<script src="/event-logger.js"></script>
+<script src="/progress-client.js"></script>
+<script src="overlay.js"></script>
+<script>
+  // Fire one event per overlay mount so Mudaber can count question-shown events
+  // even before the question itself renders (catches mount errors).
+  if (window.arcadeLog && window.ARCADE_EVENT_TYPES) {
+    var qs = new URLSearchParams(location.search);
+    window.arcadeLog.event(window.ARCADE_EVENT_TYPES.OVERLAY_LOAD, {
+      mode: qs.get('mode'),
+      is_break: qs.get('break') === '1',
+    }, {
+      game_key: qs.get('game'),
+      device_local_key: qs.get('player'),
+    });
+  }
+</script>
+</body>
+</html>

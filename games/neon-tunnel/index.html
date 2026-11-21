@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Neon Tunnel</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #05030f; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #fff; }
+  #c { display: block; width: 100%; height: 100%; }
+  .hud {
+    position: fixed; top: 14px; left: 14px;
+    background: rgba(0, 0, 0, 0.5); padding: 6px 14px;
+    border-radius: 999px; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: #ff6ec7; border: 1px solid rgba(255, 110, 199, 0.4);
+  }
+  .controls {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.5); padding: 6px 14px;
+    border-radius: 999px; font-size: 12px; color: rgba(255,255,255,0.75);
+  }
+  .gameover {
+    position: fixed; inset: 0; display: none; flex-direction: column;
+    align-items: center; justify-content: center; background: rgba(5, 3, 15, 0.85);
+    z-index: 10;
+  }
+  .gameover h1 { font-size: 38px; margin: 0 0 8px; color: #ff6ec7; letter-spacing: -0.02em; }
+  .gameover p { color: rgba(255,255,255,0.7); margin: 0 0 18px; }
+  .gameover button {
+    background: #ff6ec7; color: #05030f; font-weight: 800; font-size: 15px;
+    padding: 12px 28px; border: 0; border-radius: 10px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">SCORE: <span id="score">0</span></div>
+<div class="controls">← / → arrows · A / D · or steer with mouse</div>
+
+<div id="gameover" class="gameover">
+  <h1>Crashed!</h1>
+  <p>Score: <span id="finalscore">0</span></p>
+  <button onclick="restart()">Race again</button>
+</div>
+
+<script src="three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var canvas = document.getElementById('c');
+  var scoreEl = document.getElementById('score');
+  var finalScoreEl = document.getElementById('finalscore');
+  var gameoverEl = document.getElementById('gameover');
+
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x05030f, 30, 240);
+
+  var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 400);
+
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Tunnel: a series of glowing rings receding into the distance.
+  var ringCount = 60;
+  var ringSpacing = 14;
+  var rings = [];
+  var ringGeo = new THREE.TorusGeometry(11, 0.18, 8, 36);
+  for (var i = 0; i < ringCount; i++) {
+    var hue = (i / ringCount) * 0.6 + 0.65; // pink → blue cycle
+    var mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(hue % 1, 0.95, 0.6) });
+    var ring = new THREE.Mesh(ringGeo, mat);
+    ring.position.z = -i * ringSpacing;
+    rings.push(ring);
+    scene.add(ring);
+  }
+
+  // Obstacles — neon cubes that spawn in tunnel and rush at camera.
+  var obstacleGeo = new THREE.BoxGeometry(2.4, 2.4, 2.4);
+  var obstacleMatA = new THREE.MeshBasicMaterial({ color: 0xff3680 });
+  var obstacleMatB = new THREE.MeshBasicMaterial({ color: 0x39e2ff });
+  var obstacles = [];
+  function spawnObstacle(zStart) {
+    var angle = Math.random() * Math.PI * 2;
+    var radius = 6 + Math.random() * 3;
+    var ob = new THREE.Mesh(obstacleGeo, Math.random() < 0.5 ? obstacleMatA : obstacleMatB);
+    ob.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, zStart);
+    ob.rotation.x = Math.random() * Math.PI;
+    ob.rotation.y = Math.random() * Math.PI;
+    scene.add(ob);
+    obstacles.push(ob);
+  }
+  for (var k = 0; k < 8; k++) spawnObstacle(-(60 + k * 35));
+
+  // Player — a small glowing pyramid following the player's input.
+  var playerGeo = new THREE.ConeGeometry(0.7, 1.4, 4);
+  playerGeo.rotateX(Math.PI);
+  var playerMat = new THREE.MeshBasicMaterial({ color: 0xfffbb3 });
+  var player = new THREE.Mesh(playerGeo, playerMat);
+  scene.add(player);
+
+  // Player position — angle around tunnel center + radius.
+  var playerAngle = -Math.PI / 2;
+  var playerRadius = 5.2;
+  var playerTargetAngle = playerAngle;
+
+  // Input
+  var keysL = false, keysR = false;
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysL = true;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysR = true;
+  });
+  window.addEventListener('keyup', function (e) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysL = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysR = false;
+  });
+  window.addEventListener('mousemove', function (e) {
+    var nx = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+    playerTargetAngle = nx * Math.PI - Math.PI / 2;
+  });
+
+  // Game state
+  var alive = true;
+  var score = 0;
+  var speed = 0.55;
+  var tStart = performance.now();
+
+  function restart() {
+    obstacles.forEach(function (ob) { scene.remove(ob); });
+    obstacles.length = 0;
+    for (var k = 0; k < 8; k++) spawnObstacle(-(60 + k * 35));
+    score = 0;
+    speed = 0.55;
+    alive = true;
+    gameoverEl.style.display = 'none';
+    tStart = performance.now();
+  }
+  window.restart = restart;
+
+  function gameOver() {
+    alive = false;
+    finalScoreEl.textContent = score;
+    gameoverEl.style.display = 'flex';
+  }
+
+  function tick() {
+    requestAnimationFrame(tick);
+    if (alive) {
+      // Speed ramps gently with time
+      speed = 0.55 + Math.min(1.4, (performance.now() - tStart) / 30000);
+      score += Math.floor(speed * 1.5);
+      scoreEl.textContent = score;
+
+      // Smooth player input
+      if (keysL) playerTargetAngle -= 0.05;
+      if (keysR) playerTargetAngle += 0.05;
+      playerAngle += (playerTargetAngle - playerAngle) * 0.18;
+      var px = Math.cos(playerAngle) * playerRadius;
+      var py = Math.sin(playerAngle) * playerRadius;
+      player.position.set(px, py, -3);
+      player.rotation.z = -playerAngle - Math.PI / 2;
+
+      // Move rings forward; recycle when they pass the camera
+      rings.forEach(function (r) {
+        r.position.z += speed;
+        r.rotation.z += 0.005;
+        if (r.position.z > 4) r.position.z -= ringCount * ringSpacing;
+      });
+
+      // Move obstacles + collision check
+      for (var i = obstacles.length - 1; i >= 0; i--) {
+        var ob = obstacles[i];
+        ob.position.z += speed;
+        ob.rotation.x += 0.04;
+        ob.rotation.y += 0.05;
+        if (ob.position.z > 8) {
+          // Recycle
+          var angle = Math.random() * Math.PI * 2;
+          var radius = 5 + Math.random() * 3.5;
+          ob.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, -300 + Math.random() * 30);
+          (Math.random() < 0.5 ? obstacleMatA : obstacleMatB);
+          ob.material = Math.random() < 0.5 ? obstacleMatA : obstacleMatB;
+        }
+        // Collision: when obstacle is near camera, check distance to player
+        if (ob.position.z > -6 && ob.position.z < 0) {
+          var dx = ob.position.x - player.position.x;
+          var dy = ob.position.y - player.position.y;
+          if (dx * dx + dy * dy < 5) gameOver();
+        }
+      }
+    }
+
+    renderer.render(scene, camera);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>

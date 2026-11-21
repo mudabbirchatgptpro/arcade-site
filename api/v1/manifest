@@ -1,0 +1,353 @@
+{
+  "schema": 1,
+  "urls": {
+    "hub": "https://arcade.qurios.io",
+    "backend": "https://api.qurios.io"
+  },
+  "ui": {
+    "hub": "/",
+    "overlay": "/overlay/index.html",
+    "backButton": "/back-button.html",
+    "chat": "/chat/index.html",
+    "splash": "/splash/index.html"
+  },
+  "games": [
+    {
+      "key": "airport-security",
+      "type": "crazygames",
+      "slug": "airport-security",
+      "displayName": "Airport Security",
+      "desc": "Scan travelers and catch the contraband.",
+      "icon": "🛂",
+      "cls": "card-transient",
+      "fd": "3.5s",
+      "ringColor": "#4499ff",
+      "category": "arcade",
+      "featured": true
+    },
+    {
+      "key": "moto-x3m",
+      "type": "crazygames",
+      "slug": "moto-x3m",
+      "displayName": "Moto X3M",
+      "desc": "Stunt motorcycle obstacle course.",
+      "icon": "🏍️",
+      "cls": "card-transient",
+      "fd": "3.2s",
+      "ringColor": "#ff66cc",
+      "category": "racing",
+      "featured": true
+    },
+    {
+      "key": "mx-offroad-master",
+      "type": "crazygames",
+      "slug": "mx-offroad-master",
+      "displayName": "MX Offroad Master",
+      "desc": "Motocross racing across rough terrain.",
+      "icon": "🏁",
+      "cls": "card-transient",
+      "fd": "4.5s",
+      "ringColor": "#88cc44",
+      "category": "racing",
+      "featured": true
+    },
+    {
+      "key": "table-tennis-world-tour",
+      "type": "crazygames",
+      "slug": "table-tennis-world-tour",
+      "displayName": "Table Tennis World Tour",
+      "desc": "Ping-pong tournament play.",
+      "icon": "🏓",
+      "cls": "card-transient",
+      "fd": "3.7s",
+      "ringColor": "#ff5566",
+      "category": "sports",
+      "featured": true
+    },
+    {
+      "key": "solar-smash",
+      "type": "crazygames",
+      "slug": "solar-smash",
+      "displayName": "Solar Smash",
+      "desc": "Planet-destruction sandbox.",
+      "icon": "🌍",
+      "cls": "card-transient",
+      "fd": "4.7s",
+      "ringColor": "#ff7733",
+      "category": "arcade",
+      "featured": true
+    },
+    {
+      "key": "deez-balls",
+      "type": "crazygames",
+      "slug": "deez-balls",
+      "displayName": "Deez Balls",
+      "desc": "Physics ball game.",
+      "icon": "🎱",
+      "cls": "card-transient",
+      "fd": "3.9s",
+      "ringColor": "#44ddcc",
+      "category": "arcade",
+      "featured": true
+    },
+    {
+      "key": "madalin-stunt-cars-2",
+      "type": "crazygames",
+      "slug": "madalin-stunt-cars-2",
+      "displayName": "Madalin Stunt Cars 2",
+      "desc": "Stunt cars in open arenas.",
+      "icon": "🏁",
+      "fd": "4.3s",
+      "ringColor": "#3399ff",
+      "category": "racing"
+    },
+    {
+      "key": "polytrack",
+      "type": "crazygames",
+      "slug": "polytrack",
+      "displayName": "PolyTrack",
+      "desc": "Low-poly racing tracks.",
+      "icon": "🏎",
+      "fd": "3.7s",
+      "ringColor": "#cc44ff",
+      "category": "racing"
+    },
+    {
+      "key": "archery-world-tour",
+      "type": "crazygames",
+      "slug": "archery-world-tour",
+      "displayName": "Archery World Tour",
+      "desc": "Hit targets across countries.",
+      "icon": "🏹",
+      "fd": "3.4s",
+      "ringColor": "#88aa44",
+      "category": "sports"
+    },
+    {
+      "key": "smash-karts",
+      "type": "crazygames",
+      "slug": "smash-karts",
+      "displayName": "Smash Karts",
+      "desc": "Online kart battle.",
+      "icon": "🏎",
+      "fd": "4.0s",
+      "ringColor": "#ff3366",
+      "category": "racing"
+    },
+    {
+      "key": "escape-evil-granny-viz",
+      "type": "crazygames",
+      "slug": "escape-evil-granny-viz",
+      "displayName": "Super Granny",
+      "desc": "Sneak out of Granny's spooky house!",
+      "icon": "👵",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#9b59b6",
+      "category": "adventure",
+      "featured": false
+    },
+    {
+      "key": "stone-grass-mowing-simulator",
+      "type": "crazygames",
+      "slug": "stone-grass-mowing-simulator",
+      "displayName": "Stone Grass: Mowing",
+      "desc": "Relaxing lawn-mowing simulator.",
+      "icon": "🚜",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#2ecc71",
+      "category": "simulation",
+      "featured": false
+    },
+    {
+      "key": "lost-adventure",
+      "type": "crazygames",
+      "slug": "lost-adventure",
+      "displayName": "Lost Adventure",
+      "desc": "Explore, craft, and survive.",
+      "icon": "🗺️",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#e67e22",
+      "category": "adventure",
+      "featured": false
+    },
+    {
+      "key": "cat-life-simulator",
+      "type": "crazygames",
+      "slug": "cat-life-simulator",
+      "displayName": "Cat Life Simulator",
+      "desc": "Live the nine lives of a cat.",
+      "icon": "🐱",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#f39c12",
+      "category": "simulation",
+      "featured": false
+    },
+    {
+      "key": "age-evolution-run-fqg",
+      "type": "crazygames",
+      "slug": "age-evolution-run-fqg",
+      "displayName": "Age Evolution Run",
+      "desc": "Endless runner through the ages of evolution.",
+      "icon": "🧬",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#16a085",
+      "category": "action",
+      "featured": false
+    },
+    {
+      "key": "hammer-master-craft-destroy",
+      "type": "crazygames",
+      "slug": "hammer-master-craft-destroy",
+      "displayName": "Hammer Master: Craft & Destroy",
+      "desc": "Forge hammers and smash everything in your path.",
+      "icon": "🔨",
+      "cls": "card-transient",
+      "fd": "3.5s",
+      "ringColor": "#e67e22",
+      "category": "arcade",
+      "featured": false
+    },
+    {
+      "key": "traffic-cop-3d",
+      "type": "crazygames",
+      "slug": "traffic-cop-3d",
+      "displayName": "Traffic Cop 3D",
+      "desc": "Direct the traffic and keep the city moving without a crash.",
+      "icon": "🚦",
+      "cls": "card-transient",
+      "fd": "3.5s",
+      "ringColor": "#3498db",
+      "category": "arcade",
+      "featured": false
+    },
+    {
+      "key": "pottery-master",
+      "type": "crazygames",
+      "slug": "pottery-master",
+      "displayName": "Pottery Master",
+      "desc": "Shape and paint relaxing clay pottery.",
+      "icon": "🏺",
+      "cls": "card-transient",
+      "fd": "4s",
+      "ringColor": "#e67e22",
+      "category": "simulation",
+      "featured": false
+    },
+    {
+      "key": "teeth-runner",
+      "type": "crazygames",
+      "slug": "teeth-runner",
+      "displayName": "Teeth Runner",
+      "desc": "Run, collect teeth, and dodge obstacles.",
+      "icon": "🦷",
+      "cls": "card-transient",
+      "fd": "3.5s",
+      "ringColor": "#9b59b6",
+      "category": "action",
+      "featured": false
+    },
+    {
+      "key": "lucky-brainrot-blocks-online-ehx",
+      "type": "crazygames",
+      "slug": "lucky-brainrot-blocks-online-ehx",
+      "displayName": "Lucky Brainrot Blocks",
+      "desc": "Stack and match lucky brainrot blocks.",
+      "icon": "🧱",
+      "fd": "3.8s",
+      "ringColor": "#ffcc33",
+      "category": "action"
+    },
+    {
+      "key": "catch-brainrots-from-bosses",
+      "type": "crazygames",
+      "slug": "catch-brainrots-from-bosses",
+      "displayName": "Catch Brainrots from Bosses",
+      "desc": "Catch the brainrots the bosses drop.",
+      "icon": "👾",
+      "fd": "4.0s",
+      "ringColor": "#a855f7",
+      "category": "action"
+    },
+    {
+      "key": "throw-a-lucky-block",
+      "type": "crazygames",
+      "slug": "throw-a-lucky-block",
+      "displayName": "Throw a Lucky Block",
+      "desc": "Throw lucky blocks for surprises.",
+      "icon": "🎁",
+      "fd": "3.7s",
+      "ringColor": "#33ddaa",
+      "category": "action"
+    },
+    {
+      "key": "hoop-world-3d",
+      "type": "crazygames",
+      "slug": "hoop-world-3d",
+      "displayName": "Hoop World 3D",
+      "desc": "Sink shots and rack up buckets in 3D.",
+      "icon": "🏀",
+      "fd": "3.6s",
+      "ringColor": "#ff8833",
+      "category": "sports"
+    },
+    {
+      "key": "unmatched-ego---soccer-action",
+      "type": "crazygames",
+      "slug": "unmatched-ego---soccer-action",
+      "displayName": "Unmatched Ego: Soccer",
+      "desc": "Fast-paced soccer showdowns.",
+      "icon": "⚽",
+      "fd": "3.8s",
+      "ringColor": "#33cc77",
+      "category": "sports"
+    }
+  ],
+  "breaks": {
+    "defaultIntervalMs": 120000,
+    "minMs": 30000,
+    "idealMs": 40000,
+    "hardMaxMs": 60000
+  },
+  "questions": {
+    "batchSize": 15
+  },
+  "adblock": {
+    "hosts": [
+      "googlesyndication.com",
+      "doubleclick.net",
+      "googletagmanager.com",
+      "googletagservices.com",
+      "googleadservices.com",
+      "adservice.google.com",
+      "adnxs.com",
+      "pubmatic.com",
+      "rubiconproject.com",
+      "criteo.com",
+      "the-ozone-project.com",
+      "bounceexchange.com",
+      "indexww.com",
+      "crazygames.com/ads/",
+      "crazygames.com/api/v1/ads"
+    ],
+    "hideRevive": true
+  },
+  "features": {
+    "hoot": true,
+    "chat": true,
+    "tts": true,
+    "stt": true,
+    "vision": true,
+    "kiosk": true
+  },
+  "polling": {
+    "commandsMs": 10000,
+    "heartbeatMs": 30000,
+    "manifestMs": 60000
+  },
+  "version": "2026-11-21.1"
+}
