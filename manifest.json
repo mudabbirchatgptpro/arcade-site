@@ -13,6 +13,23 @@
   },
   "games": [
     {
+      "key": "fact-sprint",
+      "type": "selfhosted",
+      "indexPath": "/games/fact-sprint/index.html",
+      "displayName": "Fact Sprint",
+      "desc": "60-second times-table and division sprint. Beat your best.",
+      "icon": "⚡",
+      "cls": "card-selfhosted",
+      "fd": "1.5s",
+      "ringColor": "#44ffcc",
+      "category": "puzzle",
+      "featured": true,
+      "scripts": {
+        "pause": "window.__factSprintPause && window.__factSprintPause()",
+        "resume": "window.__factSprintResume && window.__factSprintResume()"
+      }
+    },
+    {
       "key": "airport-security",
       "type": "crazygames",
       "slug": "airport-security",
@@ -307,15 +324,8 @@
       "category": "sports"
     }
   ],
-  "breaks": {
-    "defaultIntervalMs": 120000,
-    "minMs": 30000,
-    "idealMs": 40000,
-    "hardMaxMs": 60000
-  },
-  "questions": {
-    "batchSize": 15
-  },
+  "breaks": { "defaultIntervalMs": 75000, "minMs": 60000, "idealMs": 68000, "hardMaxMs": 88000 },
+  "questions": { "batchSize": 15, "mix": { "facts": 0.5 } },
   "adblock": {
     "hosts": [
       "googlesyndication.com",
@@ -349,5 +359,5 @@
     "heartbeatMs": 30000,
     "manifestMs": 60000
   },
-  "version": "2026-11-21.1"
+  "version": "2026-11-21.2"
 }

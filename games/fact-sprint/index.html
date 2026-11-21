@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Fact Sprint</title>
+<style>
+  :root { --pink:#ff66cc; --gold:#ffcc44; --mint:#44ffcc; --violet:#aa44ff; --ok:#44ff99; --bad:#ff5566; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    background:linear-gradient(160deg,#001a0a 0%,#0a4020 30%,#1a8040 60%,#002818 100%);
+    font-family:Nunito, ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color:#fff; overflow:hidden; user-select:none; -webkit-user-select:none;
+  }
+  .wrap { height:100%; max-width:560px; margin:0 auto; padding:14px 14px 10px; display:flex; flex-direction:column; align-items:center; }
+  .title {
+    font-family:"Fredoka One", ui-rounded, system-ui, sans-serif; font-weight:800;
+    font-size:clamp(2rem,7vw,3rem); line-height:1.1; text-align:center;
+    background:linear-gradient(90deg,#ff66cc,#ffcc44,#44ffcc,#aa44ff,#ff66cc); background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; animation:shimmer 4s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
+  .sub { font-size:.8rem; font-weight:700; color:rgba(255,255,255,.55); letter-spacing:.12em; text-transform:uppercase; text-align:center; margin:2px 0 12px; }
+  .screen { display:none; width:100%; flex:1; min-height:0; flex-direction:column; align-items:center; }
+  .screen.on { display:flex; }
+  .panel { width:100%; background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.14); border-radius:20px; padding:14px; }
+  .modes { display:flex; flex-direction:column; gap:10px; width:100%; margin-top:6px; }
+  .btn {
+    font:inherit; font-weight:800; font-size:1.15rem; color:#fff; cursor:pointer; border:2px solid rgba(255,255,255,.18);
+    border-radius:16px; padding:14px 16px; background:rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), border-color .15s;
+  }
+  .btn:hover { transform:translateY(-3px) scale(1.02); border-color:var(--gold); }
+  .btn small { font-size:.8rem; font-weight:700; color:rgba(255,255,255,.6); }
+  .btn.go { background:linear-gradient(90deg,var(--pink),var(--violet)); border-color:transparent; justify-content:center; }
+  .focus { text-align:center; font-weight:700; color:rgba(255,255,255,.85); font-size:.95rem; }
+  .hud { display:flex; width:100%; justify-content:space-between; font-weight:800; font-size:1rem; margin-bottom:8px; }
+  .hud span b { color:var(--gold); font-size:1.2rem; }
+  .bar { width:100%; height:12px; border-radius:8px; background:rgba(255,255,255,.12); overflow:hidden; margin-bottom:10px; }
+  .bar > i { display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--mint),var(--gold),var(--pink)); transform-origin:left; }
+  .prompt { font-family:"Fredoka One", ui-rounded, system-ui, sans-serif; font-weight:800; font-size:clamp(2.6rem,12vw,4.2rem); text-align:center; margin:6px 0 2px; min-height:1.2em; letter-spacing:.02em; }
+  .ans { font-weight:800; font-size:clamp(2rem,9vw,3rem); text-align:center; min-height:1.3em; min-width:5ch; border-bottom:4px solid rgba(255,255,255,.3); margin-bottom:6px; color:var(--gold); }
+  .ans.ok { color:var(--ok); border-color:var(--ok); } .ans.bad { color:var(--bad); border-color:var(--bad); }
+  .fb { min-height:1.5em; font-weight:800; font-size:1.05rem; color:var(--bad); text-align:center; margin-bottom:6px; }
+  .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; max-width:380px; margin-top:auto; }
+  .pad button, #text { font:inherit; font-weight:800; font-size:1.7rem; color:#fff; cursor:pointer; padding:12px 0; border-radius:16px; background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.16); }
+  .pad button:active { background:rgba(255,204,68,.35); transform:scale(.96); }
+  .pad .enter { background:linear-gradient(90deg,var(--pink),var(--violet)); border-color:transparent; }
+  #text { display:none; width:100%; max-width:380px; margin-top:auto; font-size:1.4rem; padding:12px; text-align:center; user-select:text; -webkit-user-select:text; }
+  .big { font-family:"Fredoka One", ui-rounded, system-ui, sans-serif; font-weight:800; font-size:clamp(3rem,16vw,5rem); color:var(--gold); text-align:center; line-height:1; }
+  .lbl { text-align:center; font-weight:700; color:rgba(255,255,255,.65); font-size:.85rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+  .stats { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:10px 0; }
+  .pill { background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.12); border-radius:30px; padding:.4rem 1rem; font-weight:700; color:rgba(255,255,255,.7); }
+  .pill b { color:#fff; font-size:1.05rem; }
+  .newbest { text-align:center; color:var(--mint); font-weight:800; font-size:1.2rem; min-height:1.5em; }
+  .again { width:100%; text-align:left; font-size:.95rem; color:rgba(255,255,255,.8); line-height:1.6; }
+  .row { display:flex; gap:10px; width:100%; margin-top:12px; }
+  .row .btn { flex:1; justify-content:center; }
+  .paused { position:fixed; inset:0; background:rgba(0,26,10,.88); display:none; align-items:center; justify-content:center; font-weight:800; font-size:1.6rem; z-index:5; }
+  .paused.on { display:flex; }
+  .warn { font-size:.75rem; color:rgba(255,255,255,.4); margin-top:6px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">Fact Sprint</div>
+  <div class="sub" id="sub">Beat your best</div>
+
+  <section class="screen on" id="menu">
+    <div class="panel"><div class="focus" id="focus"></div></div>
+    <div class="modes" id="modes"></div>
+    <div class="warn" id="warn"></div>
+  </section>
+
+  <section class="screen" id="play">
+    <div class="hud"><span>Score <b id="score">0</b></span><span id="mlabel"></span><span><b id="left">60</b>s</span></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="prompt" id="prompt"></div>
+    <div class="ans" id="ans"></div>
+    <div class="fb" id="fb"></div>
+    <div class="pad" id="pad"></div>
+    <input id="text" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the answer, press Enter" />
+  </section>
+
+  <section class="screen" id="result">
+    <div class="panel" style="margin-top:6px">
+      <div class="lbl">Facts per minute</div>
+      <div class="big" id="fpm">0</div>
+      <div class="newbest" id="newbest"></div>
+      <div class="stats"><span class="pill">Right <b id="rRight">0</b></span><span class="pill">Missed <b id="rWrong">0</b></span><span class="pill">Best <b id="rBest">0</b></span></div>
+      <div class="again" id="again"></div>
+    </div>
+    <div class="row"><button class="btn go" id="btnAgain">Go again</button><button class="btn" id="btnMenu">Menu</button></div>
+  </section>
+</div>
+<div class="paused" id="paused">Paused</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var LS = 'factSprint.';
+  function lsGet(k, d) { try { var v = localStorage.getItem(LS + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---- drill set: games/fact-sprint/drills.json (override with ?drills=other.json). Last good copy is cached for offline.
+  var FALLBACK = { focus: '', roundSeconds: 60, slowMs: 3000, operations: ['mul', 'div'], tables: [8, 9, 10, 11, 12], multipliers: { from: 1, to: 12 }, items: [] };
+  var D = FALLBACK, usedFallback = false;
+  function loadDrills() {
+    var file = new URLSearchParams(location.search).get('drills') || 'drills.json';
+    return fetch(file, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { lsSet('drills', j); return j; })
+      .catch(function () { var c = lsGet('drills', null); usedFallback = !c; return c || FALLBACK; });
+  }
+
+  var MODES = [];
+  function buildModes() {
+    MODES = [];
+    var ops = D.operations || [], t = D.tables || [], m = D.multipliers || { from: 1, to: 12 };
+    var mul = [], div = [];
+    t.forEach(function (a) { for (var b = m.from; b <= m.to; b++) {
+      var p = a * b;
+      mul.push({ id: 'fact-m-' + a + 'x' + b, prompt: a + ' × ' + b, answer: String(p) });
+      div.push({ id: 'fact-d-' + p + '-' + a, prompt: p + ' ÷ ' + a, answer: String(b) });
+    } });
+    var tl = t.length ? 'tables ' + t.join(', ') : '';
+    if (ops.indexOf('mul') >= 0 && mul.length) MODES.push({ key: 'mul', label: '× Multiply', items: mul, note: tl });
+    if (ops.indexOf('div') >= 0 && div.length) MODES.push({ key: 'div', label: '÷ Divide', items: div, note: tl });
+    if (MODES.length === 2) MODES.push({ key: 'mixed', label: '× ÷ Mixed', items: mul.concat(div), note: tl });
+    var custom = (D.items || []).filter(function (x) { return x && x.prompt != null && x.answer != null; })
+      .map(function (x, i) { return { id: 'item-' + (x.id || i), prompt: String(x.prompt), answer: String(x.answer) }; });
+    if (custom.length) MODES.push({ key: 'custom', label: D.itemsLabel || 'Custom', items: custom, note: custom.length + ' items' });
+  }
+
+  // ---- adaptive stats per item: need goes up on a miss or a slow answer, halves on a quick right answer
+  var stats = lsGet('stats', {});
+  function need(id) { return (stats[id] && stats[id].need) || 0; }
+  function bump(id, correct, ms) {
+    var s = stats[id] = stats[id] || { need: 0, seen: 0, miss: 0 };
+    s.seen++;
+    if (!correct) { s.miss++; s.need = Math.min(9, s.need + 3); }
+    else if (ms > (D.slowMs || 3000)) s.need = Math.min(9, s.need + 1.5);
+    else { s.need = s.need * 0.5; if (s.need < 0.2) s.need = 0; }
+    lsSet('stats', stats);
+  }
+
+  // ---- round state
+  var R = null, raf = 0;
+  var best = lsGet('best', {});
+  function now() { return performance.now(); }
+  function bestKey(m) { return m.key; }
+
+  function showScreen(id) { ['menu', 'play', 'result'].forEach(function (s) { $(s).classList.toggle('on', s === id); }); }
+
+  function renderMenu() {
+    $('focus').textContent = D.focus || 'Pick a round';
+    $('warn').textContent = usedFallback ? 'Using built-in drills (drills.json not reachable).' : '';
+    var box = $('modes'); box.innerHTML = '';
+    if (!MODES.length) { box.textContent = 'No drills configured.'; return; }
+    MODES.forEach(function (m) {
+      var b = document.createElement('button'); b.className = 'btn'; b.setAttribute('data-mode', m.key);
+      var bs = best[bestKey(m)];
+      b.innerHTML = '<span>' + m.label + '<br><small>' + (m.note || '') + '</small></span><small>' + (bs ? 'Best ' + bs + '/min' : 'No score yet') + '</small>';
+      b.onclick = function () { start(m); };
+      box.appendChild(b);
+    });
+    showScreen('menu');
+  }
+
+  function isNumeric(m) { return m.items.every(function (x) { return /^-?\d+$/.test(x.answer); }); }
+
+  function start(m) {
+    var secs = D.roundSeconds || 60;
+    R = { m: m, numeric: isNumeric(m), total: secs * 1000, used: 0, last: now(), paused: false, right: 0, wrong: 0,
+      q: null, qStart: 0, qCount: 0, retry: [], typed: '', lock: false, missed: {}, slow: {}, prevId: null, over: false };
+    $('score').textContent = '0'; $('mlabel').textContent = m.label; $('fb').textContent = '';
+    $('pad').style.display = R.numeric ? 'grid' : 'none'; $('text').style.display = R.numeric ? 'none' : 'block';
+    showScreen('play'); nextQ(); tick();
+    if (!R.numeric) $('text').focus();
+  }
+
+  function pick() {
+    var items = R.m.items, i;
+    for (i = 0; i < R.retry.length; i++) if (R.retry[i].due <= R.qCount && R.retry[i].item.id !== R.prevId) { return R.retry.splice(i, 1)[0].item; }
+    var tot = 0, w = items.map(function (x) { var v = (x.id === R.prevId ? 0 : 1 + need(x.id)); tot += v; return v; });
+    var r = Math.random() * tot;
+    for (i = 0; i < items.length; i++) { r -= w[i]; if (r <= 0 && w[i] > 0) return items[i]; }
+    return items[0];
+  }
+
+  function nextQ() {
+    R.q = pick(); R.prevId = R.q.id; R.typed = ''; R.lock = false; R.qStart = now(); R.qPaused = 0;
+    $('prompt').textContent = R.q.prompt + ' ='; setAns('', '');
+    $('text').value = '';
+  }
+  function setAns(t, cls) { var a = $('ans'); a.textContent = t; a.className = 'ans ' + cls; }
+
+  function submit() {
+    if (!R || R.over || R.paused || R.lock) return;
+    var given = R.numeric ? R.typed : $('text').value;
+    if (!given.trim()) return;
+    var q = R.q, ms = Math.max(0, now() - R.qStart - (R.qPaused || 0));
+    var ok = given.trim().toLowerCase() === q.answer.trim().toLowerCase();
+    bump(q.id, ok, ms); record(q, ok, ms, given);
+    R.qCount++;
+    if (ok) {
+      R.right++; $('score').textContent = R.right; setAns(given, 'ok'); $('fb').textContent = '';
+      if (ms > (D.slowMs || 3000)) { R.slow[q.id] = q; R.retry.push({ item: q, due: R.qCount + 5 }); }
+      R.lock = true; setTimeout(function () { if (R && !R.over) nextQ(); }, 120);
+    } else {
+      R.wrong++; R.missed[q.id] = q; setAns(given, 'bad'); $('fb').textContent = q.prompt + ' = ' + q.answer;
+      R.retry.push({ item: q, due: R.qCount + 2 + Math.floor(Math.random() * 3) });
+      R.lock = true; setTimeout(function () { if (R && !R.over) { $('fb').textContent = ''; nextQ(); } }, 900);
+    }
+  }
+
+  function press(k) {
+    if (!R || R.over || R.paused || R.lock || !R.numeric) return;
+    if (k === 'back') R.typed = R.typed.slice(0, -1);
+    else if (k === 'enter') return submit();
+    else if (R.typed.length < 6) R.typed += k;
+    setAns(R.typed, '');
+    if (k !== 'back' && R.typed.length === R.q.answer.length) submit();   // auto-submit at the answer's length: no Enter needed
+  }
+
+  function tick() {
+    if (!R || R.over) return;
+    var t = now();
+    if (!R.paused) R.used += t - R.last;
+    R.last = t;
+    var left = Math.max(0, R.total - R.used);
+    $('left').textContent = Math.ceil(left / 1000);
+    $('bar').style.transform = 'scaleX(' + (left / R.total) + ')';
+    if (left <= 0) return finish();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function finish() {
+    R.over = true; cancelAnimationFrame(raf);
+    var secs = R.total / 1000, fpm = Math.round(R.right * 60 / secs);
+    var k = bestKey(R.m), prev = best[k] || 0, isBest = fpm > prev && R.right > 0;
+    if (isBest) { best[k] = fpm; lsSet('best', best); }
+    $('fpm').textContent = fpm; $('rRight').textContent = R.right; $('rWrong').textContent = R.wrong; $('rBest').textContent = best[k] || 0;
+    $('newbest').textContent = isBest ? (prev ? 'New best! (was ' + prev + ')' : 'First score on the board') : (prev ? 'Best is ' + prev + '. Beat it!' : '');
+    var again = Object.keys(R.missed).map(function (i) { return R.missed[i].prompt + ' = ' + R.missed[i].answer + ' (missed)'; })
+      .concat(Object.keys(R.slow).filter(function (i) { return !R.missed[i]; }).map(function (i) { return R.slow[i].prompt + ' = ' + R.slow[i].answer + ' (slow)'; })).slice(0, 6);
+    $('again').innerHTML = again.length ? '<b>Coming back next round:</b><br>' + again.join('<br>') : 'Clean round. Nothing to practise.';
+    $('btnAgain').onclick = function () { start(R.m); };
+    var log = lsGet('rounds', []); log.push({ t: Date.now(), mode: R.m.key, right: R.right, wrong: R.wrong, fpm: fpm }); lsSet('rounds', log.slice(-200));
+    showScreen('result');
+  }
+
+  // ---- record each attempt: the shell's bridge when this page has it (window.arcadeShell), always a local log.
+  function uuid() { return 'fs-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
+  function record(q, ok, ms, given) {
+    var a = { t: Date.now(), id: q.id, ok: ok, ms: Math.round(ms), given: given };
+    var log = lsGet('attempts', []); log.push(a); lsSet('attempts', log.slice(-500));
+    try {
+      if (window.arcadeShell && typeof window.arcadeShell.recordAttempt === 'function') {
+        var key = (localStorage.getItem('isee_player_id') || 'parker');
+        window.arcadeShell.recordAttempt({ deviceLocalKey: key, attemptId: uuid(), overrideId: null, questionId: q.id, correct: ok, gameKey: 'fact-sprint' });
+      }
+    } catch (e) {}
+  }
+
+  // ---- pause (the shell calls these around a question break; also pauses when the page is hidden)
+  function setPaused(p) {
+    if (!R || R.over) { return; }
+    if (p && !R.paused) { R.paused = true; R.pauseAt = now(); $('paused').classList.add('on'); }
+    else if (!p && R.paused) { var d = now() - R.pauseAt; R.qPaused = (R.qPaused || 0) + d; R.paused = false; R.last = now(); $('paused').classList.remove('on'); }
+  }
+  window.__factSprintPause = function () { setPaused(true); };
+  window.__factSprintResume = function () { setPaused(false); };
+  document.addEventListener('visibilitychange', function () { setPaused(document.hidden); });
+
+  // ---- input
+  (function () {
+    var pad = $('pad'), keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'back', '0', 'enter'];
+    keys.forEach(function (k) {
+      var b = document.createElement('button'); b.textContent = k === 'back' ? '⌫' : k === 'enter' ? '↵' : k; b.setAttribute('data-k', k);
+      if (k === 'enter') b.className = 'enter';
+      b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(k); });
+      pad.appendChild(b);
+    });
+  })();
+  document.addEventListener('keydown', function (e) {
+    if (!R || R.over || !$('play').classList.contains('on')) {
+      if (e.key === 'Enter' && $('result').classList.contains('on')) $('btnAgain').click();
+      return;
+    }
+    if (R.numeric) {
+      if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('back'); else if (e.key === 'Enter') press('enter'); else return;
+      e.preventDefault();
+    } else if (e.key === 'Enter') { submit(); }
+  });
+  $('btnMenu').onclick = function () { renderMenu(); };
+
+  loadDrills().then(function (j) { D = j; buildModes(); renderMenu(); window.__factSprint = { drills: D, modes: MODES.map(function (m) { return m.key; }) }; });
+})();
+</script>
+</body>
+</html>
