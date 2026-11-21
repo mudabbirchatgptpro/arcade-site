@@ -80,6 +80,7 @@
 <script src="event-types.js"></script>
 <script>window.__EVENT_SOURCE = 'arcade-hub-lobby';</script>
 <script src="event-logger.js"></script>
+<script>window.__inShell = !!window.arcadeShell; /* preload ran = real Electron shell (Parker's kiosk) */</script>
 <script src="arcade-shell-shim.js"></script>
 <script src="progress-client.js"></script>
 <script>
@@ -158,6 +159,12 @@ document.getElementById('footer-switch').addEventListener('click', function (e) 
   switchPlayer();
 });
 
+// 2026-11-21: inside the real shell (Parker's kiosk) there is no picker and no Admin
+// option: it is always Parker. The picker stays for the browser preview only.
+if (window.__inShell) {
+  _existingPlayer = 'parker';
+  try { localStorage.setItem(PLAYER_KEY, 'parker'); } catch (e) {}
+}
 if (_existingPlayer) {
   // Returning visitor — skip the picker, go straight in.
   choosePlayer(_existingPlayer);
