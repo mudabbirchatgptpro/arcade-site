@@ -474,12 +474,27 @@
     "tts": true,
     "stt": true,
     "vision": true,
-    "kiosk": true
+    "kiosk": true,
+    "companion": {
+      "enabledKeys": [
+        "mac-test"
+      ],
+      "minGapSec": 20,
+      "listenSec": 6,
+      "presenceIdleSec": 90,
+      "sessionGapSec": 1800,
+      "lullSamples": 2,
+      "strategies": [
+        "say",
+        "teach",
+        "praise"
+      ]
+    }
   },
   "polling": {
     "commandsMs": 10000,
     "heartbeatMs": 30000,
     "manifestMs": 60000
   },
-  "version": "2026-11-21.3"
+  "version": "2026-11-21.3-c1"
 }

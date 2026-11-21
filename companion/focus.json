@@ -1,0 +1,104 @@
+{
+ "goal": "get faster at times tables, eights to twelves",
+ "date": "2026-11-21",
+ "strategies": [
+  "say",
+  "teach",
+  "praise"
+ ],
+ "facts": [
+  {
+   "id": "fact-m-8x6",
+   "prompt": "8 times 6",
+   "answer": 48
+  },
+  {
+   "id": "fact-m-8x7",
+   "prompt": "8 times 7",
+   "answer": 56
+  },
+  {
+   "id": "fact-m-9x8",
+   "prompt": "9 times 8",
+   "answer": 72
+  },
+  {
+   "id": "fact-m-12x8",
+   "prompt": "12 times 8",
+   "answer": 96
+  },
+  {
+   "id": "fact-m-9x6",
+   "prompt": "9 times 6",
+   "answer": 54
+  },
+  {
+   "id": "fact-m-9x7",
+   "prompt": "9 times 7",
+   "answer": 63
+  },
+  {
+   "id": "fact-m-9x8",
+   "prompt": "9 times 8",
+   "answer": 72
+  },
+  {
+   "id": "fact-m-12x9",
+   "prompt": "12 times 9",
+   "answer": 108
+  },
+  {
+   "id": "fact-m-12x6",
+   "prompt": "12 times 6",
+   "answer": 72
+  },
+  {
+   "id": "fact-m-12x7",
+   "prompt": "12 times 7",
+   "answer": 84
+  },
+  {
+   "id": "fact-m-12x8",
+   "prompt": "12 times 8",
+   "answer": 96
+  },
+  {
+   "id": "fact-m-12x9",
+   "prompt": "12 times 9",
+   "answer": 108
+  },
+  {
+   "id": "fact-m-11x6",
+   "prompt": "11 times 6",
+   "answer": 66
+  },
+  {
+   "id": "fact-m-11x7",
+   "prompt": "11 times 7",
+   "answer": 77
+  },
+  {
+   "id": "fact-m-11x8",
+   "prompt": "11 times 8",
+   "answer": 88
+  },
+  {
+   "id": "fact-m-11x9",
+   "prompt": "11 times 9",
+   "answer": 99
+  },
+  {
+   "id": "fact-m-12x11",
+   "prompt": "12 times 11",
+   "answer": 132
+  }
+ ],
+ "tricks": {
+  "fact-m-9x6": "For nines: ten times six is sixty, minus six is fifty four.",
+  "fact-m-8x7": "Five, six, seven, eight: 56 equals 7 times 8.",
+  "fact-m-12x8": "Twelve is ten plus two: 80 plus 16 is 96.",
+  "fact-m-9x7": "Ten sevens is 70, take away 7: 63.",
+  "fact-m-9x8": "Ten eights is 80, take away 8: 72.",
+  "fact-m-9x9": "Ten nines is 90, take away 9: 81."
+ }
+}
