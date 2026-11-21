@@ -331,10 +331,11 @@ function updateMastery() {
   // This is also how the overlay loads in mixed mode — same path,
   // hub-only iteration.
   var fetchQuestions;
-  if (mode === 'mixed') {
-    fetchQuestions = fetch('/api/questions/mixed').then(function(r){ return r.json(); }).catch(function(){ return { total: 0 }; });
-  } else if (window.arcadeShell && window.arcadeShell.getQuestions) {
+  // 2026-11-21 cloud: inside the shell, always ask the shell (also starts heartbeat).
+  if (window.arcadeShell && window.arcadeShell.getQuestions) {
     fetchQuestions = window.arcadeShell.getQuestions(mode, deviceLocalKey);
+  } else if (mode === 'mixed') {
+    fetchQuestions = fetch('/questions/bank.json').then(function(r){ return r.json(); }).then(function(b){ var q=(b&&b.questions)||b||[]; return { total: q.length, questions: q }; }).catch(function(){ return { total: 0 }; });
   } else {
     fetchQuestions = Promise.resolve({ total: 0 });
   }

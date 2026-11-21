@@ -101,10 +101,13 @@
     // Hub-only iteration path — adding/changing question logic doesn't
     // require an .app rebuild.
     var p;
-    if (mode === 'mixed') {
-      p = fetch('/api/questions/mixed').then(function (r) { return r.json(); });
-    } else if (window.arcadeOverlay && window.arcadeOverlay.getQuestions) {
+    // 2026-11-21 cloud: inside the shell, ALWAYS ask the shell (it serves the cloud bank
+    // with the manifest's mix and records progress on the api host). The old
+    // /api/questions/mixed route does not exist on the static site.
+    if (window.arcadeOverlay && window.arcadeOverlay.getQuestions) {
       p = window.arcadeOverlay.getQuestions(mode, deviceLocalKey);
+    } else if (mode === 'mixed') {
+      p = fetch('/questions/bank.json').then(function (r) { return r.json(); });
     } else {
       p = Promise.resolve({ questions: [] });
     }
