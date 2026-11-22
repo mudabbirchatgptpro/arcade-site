@@ -13,7 +13,11 @@
 
   var heat = 0, right = 0, t0 = 0, tick = null;
   var cur = null, shownAt = 0, firstKeyAt = null, backspace = false, copyMode = false, busy = false;
-  var tally = { typed: 0, right: 0, fks: [], heatMs: [], beatGhost: 0 };
+  var tally = { typed: 0, right: 0, fks: [], heatMs: [], beatGhost: 0, miss: {}, bestBeatMs: 0 };
+  var H = window.HootLite || null;
+  function hoot(st) { if (H) H.setState(st); }
+  function golds() { return E.FACTS.filter(function (f) { return E.status(f.id) === 'gold'; }).map(function (f) { return f.id; }); }
+  function mostMissed() { var best = null; Object.keys(tally.miss).forEach(function (id) { if (!best || tally.miss[id] > tally.miss[best]) best = id; }); return best; }
   var before = E.counts();
   var R = E.run();
   var ghostMs = R.bestHeatMs && R.bestHeatN === N ? R.bestHeatMs : null;
@@ -53,6 +57,7 @@
     $('hint').className = 'hint';
     $('hint').textContent = 'Type it, then Enter';
     shownAt = performance.now();
+    hoot({ surface: 'heat', item: cur.id });
     $('ans').focus();
   }
 
@@ -84,6 +89,7 @@
       if (right >= N) return setTimeout(endHeat, 200);
       setTimeout(next, 150);
     } else {
+      tally.miss[cur.id] = (tally.miss[cur.id] || 0) + 1;
       $('card').className = 'card wrong';
       $('fact').innerHTML = cur.full.replace('=', '<span class="eq">=</span>');
       $('hint').className = 'hint miss';
@@ -98,7 +104,8 @@
     var ms = performance.now() - t0;
     tally.heatMs.push(ms);
     var beat = ghostMs && ms < ghostMs;
-    if (beat) tally.beatGhost++;
+    var margin = beat ? ghostMs - ms : 0;
+    if (beat) { tally.beatGhost++; tally.bestBeatMs = Math.max(tally.bestBeatMs, margin); }
     var msg = 'Time ' + fmt(ms) + '. ';
     if (!ghostMs) msg += 'That is your first ghost.';
     else if (beat) msg += 'You beat your ghost by ' + fmt(ghostMs - ms) + '!';
@@ -111,6 +118,16 @@
     $('btext').textContent = msg;
     $('nextheat').textContent = 'Start heat ' + (heat + 1);
     show('between');
+    hoot({ surface: 'between', item: null });
+    if (H) {
+      // One line at most: a pattern for a fact missed twice, else a milestone.
+      var twice = Object.keys(tally.miss).filter(function (id) { return tally.miss[id] >= 2; });
+      var said = false;
+      for (var i = 0; i < twice.length && !said; i++) said = H.card(twice[i]);
+      var fresh = H.newGolds(golds());
+      if (!said && beat) said = H.say('Beat your ghost by ' + fmt(margin) + '.', { clip: true, trigger: 'ghost' });
+      if (!said && fresh.length) H.say('New gold: ' + E.byId(fresh[0]).q + '. Fast on three days.', { clip: true, trigger: 'gold' });
+    }
     $('nextheat').focus();
   }
 
@@ -139,6 +156,16 @@
     log('run.done', { first_today: firstToday, typed: tally.typed, right: tally.right, median_fk: Math.round(median(tally.fks)), fluent: after.fluent, gained: after.fluent - before.fluent, beat_ghost: tally.beatGhost });
     $('heatlabel').textContent = '';
     show('receipt');
+    hoot({ surface: 'receipt', item: null });
+    if (H) {
+      // The single best true thing about today, with one clip.
+      var gained = after.fluent - before.fluent, fresh = H.newGolds(golds()), line;
+      if (tally.bestBeatMs) line = 'Beat your ghost by ' + fmt(tally.bestBeatMs) + '.';
+      else if (fresh.length) line = 'New gold today: ' + E.byId(fresh[0]).q + '.';
+      else if (gained > 0) line = '+' + gained + ' fast squares. ' + after.fluent + ' of 120 now.';
+      else line = tally.right + ' right. Median first key ' + (median(tally.fks) / 1000).toFixed(1) + ' s.';
+      H.say(line, { exempt: true, clip: true, trigger: 'receipt' });
+    }
   }
 
   var LOOT = {
@@ -185,6 +212,20 @@
   // First-key time also from the input event (some input methods send no digit keydown).
   $('ans').addEventListener('input', function () { if (firstKeyAt == null && !copyMode && $('ans').value !== '') firstKeyAt = performance.now(); });
   document.addEventListener('mousedown', function (e) { if (!$('heat').classList.contains('hidden') && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') setTimeout(function () { $('ans').focus(); }, 0); });
+  hoot({ surface: 'run-intro', item: null });
+  if (H) {
+    H.mount();
+    H.onHint(function (st) {
+      if (st.surface === 'run-intro') return 'Type, then Enter. No backspace keeps it fast.';
+      if (st.surface === 'between') return ghostMs ? 'Ghost to beat: ' + fmt(ghostMs) + '.' : 'Set a time. That becomes your ghost.';
+      return 'One fact starts any game for the rest of today.';
+    });
+    H.onExplain(function (st) {
+      var m = mostMissed();
+      if (m && st.surface !== 'run-intro') return H.pattern(m);
+      return 'Fast means first key in 3 s, done in 5.';
+    });
+  }
   $('start').addEventListener('click', function () { log('run.start', { n: N, heats: HEATS }); startHeat(); });
   $('nextheat').addEventListener('click', startHeat);
 })();
