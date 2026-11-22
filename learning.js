@@ -11,7 +11,7 @@
   var PACE = 2; // ← the dial (2026-11-22: Mudaber asked for more challenge)
   var BY_PACE = {
     1: { stepUp: 4, minLevel: 0, fluentFirstKeyMs: 3000, fluentTotalMs: 5000, bossShare: 0.25, bossPerStop: 1 },
-    2: { stepUp: 3, minLevel: 1, fluentFirstKeyMs: 2500, fluentTotalMs: 4000, bossShare: 0.45, bossPerStop: 2 },
+    2: { stepUp: 3, minLevel: 1, fluentFirstKeyMs: 2500, fluentTotalMs: 4000, bossShare: 0.45, bossPerStop: 1 },
     3: { stepUp: 2, minLevel: 2, fluentFirstKeyMs: 2000, fluentTotalMs: 3500, bossShare: 0.65, bossPerStop: 2 },
   };
   var cfg = BY_PACE[PACE] || BY_PACE[2];

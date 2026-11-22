@@ -236,7 +236,7 @@
 
   // ── Grammar (advanced). Each item: s = the prompt, a = the answer, l = level 1-3, why = the breakdown. ──
   var G = {
-    sentence: { k: 4, sub: 'Type 1 simple · 2 compound · 3 complex · 4 compound-complex', mode: 'num', items: [
+    sentence: { k: 4, sub: 'Type 1 simple · 2 compound · 3 complex · 4 compound-complex', mode: 'text', items: [
       { s: 'Parker and his cousin built a tower and defended it all night.', a: '1', l: 2, why: 'One subject (Parker and his cousin), one verb set (built and defended). One clause: SIMPLE.' },
       { s: 'After the long, noisy storm, the creepers crept out of the cave.', a: '1', l: 2, why: '"After the long, noisy storm" has no verb: a phrase. One clause: SIMPLE.' },
       { s: 'Running down the hallway, the dog slid into the wall.', a: '1', l: 2, why: '"Running down the hallway" has no subject doing a verb: a phrase. One clause: SIMPLE.' },
@@ -386,7 +386,7 @@
     if (!x || x.v !== 2) x = s[k] = { v: 2, i: 0, run: [], passed: {}, n: 0, right: 0, missAt: 0 };
     // The dial's floor: never below minLevel (raising it moves him up straight away).
     var floor = Math.min(LCFG().minLevel || 0, ((SKILLS[k] && SKILLS[k].levels) || [0]).length - 1);
-    if (x.i < floor) { x.i = floor; x.run = []; }
+    if (x.i < floor && !x.n) { x.i = floor; x.run = []; } // start level only; after misses he may drop below it
     return x;
   }
   function mastered(k) { var x = st(k), L = SKILLS[k].levels || []; return L.length > 0 && L.every(function (_, i) { return x.passed[i] && x.passed[i].mastered; }); }
@@ -480,14 +480,25 @@
 
   function norm(v, mode) {
     v = String(v || '').trim().toLowerCase();
-    if (mode === 'text') return v.replace(/[^a-z]/g, '');
+    if (mode === 'text') return v.replace(/[^a-z0-9]/g, '');
     if (mode === 'rem') { var m = /^(\d[\d,]*)\s*r\s*(\d+)$/.exec(v.replace(/\s+/g, ' ')); return m ? Number(m[1].replace(/,/g, '')) + 'r' + Number(m[2]) : v; }
     v = v.replace(/,/g, '');
     if (!/^-?\d*\.?\d+$/.test(v) && !/^-?\d+\.$/.test(v)) return v;
     var n = v.replace(/^(-?)0+(?=\d)/, '$1'); if (n.indexOf('.') >= 0) n = n.replace(/0+$/, '').replace(/\.$/, ''); if (n[0] === '.') n = '0' + n;
     return n;
   }
-  function check(it, typed) { return norm(typed, it.mode) === norm(it.ans, it.mode); }
+  // Letter/number answers also accept the full word (he typed "passive" for p and was marked wrong).
+  var WORDS_FOR = {
+    voice: { active: 'a', passive: 'p' },
+    verbals: { gerund: 'g', participle: 'p', infinitive: 'i' },
+    fragrun: { correct: 'c', fragment: 'f', runon: 'r', runonsentence: 'r', commasplice: 'r' },
+    sentence: { simple: '1', compound: '2', complex: '3', compoundcomplex: '4' },
+  };
+  function check(it, typed) {
+    var w = WORDS_FOR[it.skill], t = String(typed || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (w && w[t]) return w[t] === String(it.ans).toLowerCase();
+    return norm(typed, it.mode) === norm(it.ans, it.mode);
+  }
 
   function record(it, correct, meta) {
     meta = meta || {};
@@ -517,7 +528,7 @@
           if (!x.passed[x.i]) x.passed[x.i] = { at: now, step: 0, due: now + GAPS[0] * DAY, days: [], mastered: false };
           if (x.i < def.levels.length - 1) x.i++;
           x.run = [];
-        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > (LCFG().minLevel || 0)) { x.i--; x.run = []; }
+        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > 0) { x.i--; x.run = []; }
       }
     }
     if (it.key && it.skill !== 'spell') {

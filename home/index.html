@@ -573,7 +573,7 @@ function loadHub(playerId) {
   H.setState({surface:'home',item:null});
   H.mount();
   if(window.HootVoice){ var tb=document.createElement('button'); tb.id='talkhoot'; tb.style.cssText='position:fixed;right:14px;bottom:88px;z-index:9000;font:900 16px Nunito,sans-serif;padding:10px 16px;border-radius:14px;border:0;background:#a78bfa;color:#0a1030;cursor:pointer;box-shadow:0 8px 24px #0008';
-    document.body.appendChild(tb); HootVoice.mount(tb,function(){return 'SCREEN: Parker is on the arcade Home screen choosing a game. No question is on screen.';});
+    document.body.appendChild(tb); HootVoice.mount(tb,function(){return 'SCREEN: Parker is on the arcade Home screen choosing a game. No question is on screen.';},function(){return 'Hoo! Ask me anything about your maths or grammar.';});
     var st=document.createElement('style'); st.textContent='#talkhoot.live{background:#ff6b6b!important;color:#fff!important}'; document.head.appendChild(st); }
   var golds=E.FACTS.filter(function(f){return E.status(f.id)==='gold';}).map(function(f){return f.id;});
   var fresh=H.newGolds(golds);

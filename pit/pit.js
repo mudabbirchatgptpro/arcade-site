@@ -79,7 +79,7 @@
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
-    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < BOSS_MAX && Math.random() < pSchool)))) {
+    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < BOSS_MAX && Date.now() - stopStart < 60000 && Math.random() < pSchool)))) {
       if (!loadingPractice) schoolCount++;
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;
@@ -190,7 +190,13 @@
     var g = guide && cur.guide && cur.guide[guide.i] ? ' He got it wrong and is now on a guided step: "' + cur.guide[guide.i].p + '".' : '';
     return 'SCREEN: Parker is on ' + on + '.' + g + ' Do not give or confirm the answer.';
   }
-  if (window.HootVoice) window.HootVoice.mount($('talkhoot'), hootScreen);
+  // Hoot opens by explaining the idea on screen (never the answer), so he never has to explain what he is stuck on.
+  function hootOpener() {
+    if (!cur) return 'Hoo! Ask me anything.';
+    if (cur.school && GLOSS[cur.skill]) return GLOSS[cur.skill].replace(/"/g, '');
+    var p = E.pattern && E.pattern(cur.id); return p ? 'Trick: ' + p : 'Hoo! Ask me anything.';
+  }
+  if (window.HootVoice) window.HootVoice.mount($('talkhoot'), hootScreen, hootOpener);
 
   function submitSchool(raw) {
     var t = performance.now(), correct = window.School.check(cur, raw);
