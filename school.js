@@ -148,13 +148,19 @@
   // Built from a real item at his level, so the numbers stay as hard as his level.
   var MICRO = {
     'dec-mul': function (lvl) {
-      var it = GEN['dec-mul'](lvl), m = it.q.split(' × '), pl = (m[0].split('.')[1] || '').length + (m[1].split('.')[1] || '').length;
-      return { q: it.q, sub: 'Just this: how many digits go AFTER the point in the answer?', ans: String(pl), steps: ['Count the digits after the point in both numbers: ' + pl + '.'] };
+      var it = GEN['dec-mul'](Math.max(3, lvl - R(0, 2))), m = it.q.split(' × '), pl = (m[0].split('.')[1] || '').length + (m[1].split('.')[1] || '').length;
+      var a = Number(m[0]), b = Number(m[1]);
+      if (Math.random() < 0.5) return { q: it.q, sub: 'Just this: how many digits go AFTER the point in the answer?', ans: String(pl), steps: ['Count the digits after the point in both numbers: ' + pl + '.'] };
+      var whole = it.ans.split('.')[0].replace(/^0*/, '') || '0';
+      return { q: it.q, sub: 'Just this: what is the WHOLE-number part of the answer (the digits before the point)?', ans: whole, steps: ['Estimate first: about ' + Math.round(a) + ' × ' + (Math.round(b * 10) / 10) + '. The exact answer is ' + it.ans + '.'] };
     },
     'dec-div': function (lvl) {
       var it = GEN['dec-div'](Math.max(4, lvl)), m = it.q.replace(/,/g, '').split(' ÷ '), sh = (m[1].split('.')[1] || '').length;
       if (!sh) { var d = Number(m[1]), D = Number(m[0]); return { q: it.q, sub: 'Just this: about how much is it? Round to the nearest whole number.', ans: String(Math.round(D / d)), steps: ['Divide ignoring the point, then the point goes straight up: about ' + Math.round(D / d) + '.'] }; }
-      return { q: it.q, sub: 'Just this: how many places must BOTH points move right so you divide by a whole number?', ans: String(sh), steps: [m[1] + ' needs ' + sh + ' place' + (sh > 1 ? 's' : '') + ' to become whole, and the other number moves the same.'] };
+      var D2 = Number(m[0]) * Math.pow(10, sh), r = Math.random();
+      if (r < 0.34) return { q: it.q, sub: 'Just this: how many places must BOTH points move right so you divide by a whole number?', ans: String(sh), steps: [m[1] + ' needs ' + sh + ' place' + (sh > 1 ? 's' : '') + ' to become whole, and the other number moves the same.'] };
+      if (r < 0.67) return { q: it.q, sub: 'Just this: after moving both points, what number are you dividing BY?', ans: String(Math.round(Number(m[1]) * Math.pow(10, sh))), steps: [m[1] + ' becomes ' + Math.round(Number(m[1]) * Math.pow(10, sh)) + '.'] };
+      return { q: it.q, sub: 'Just this: after moving both points, what number are you dividing (the one before ÷)?', ans: String(Math.round(D2 * 1000) / 1000), steps: [m[0] + ' becomes ' + (Math.round(D2 * 1000) / 1000) + '.'] };
     },
     'long-div': function (lvl) {
       var it = GEN['long-div'](lvl), m = it.q.replace(/,/g, '').split(' ÷ '), D = String(m[0]), d = Number(m[1]), cur = 0, i = 0;
@@ -491,9 +497,9 @@
       var rv = dueReview(k), review = rv !== null && Math.random() < 0.6;
       var li = review ? rv : Math.min(x.i, def.levels.length - 1), lvl = def.levels[li];
       if (MICRO[k] && !review && (x.scaffold || x.nearMiss)) {
-        it = MICRO[k](lvl); it.mode = 'num'; it.value = 20; it.micro = true; it.guide = []; it.finalPrompt = '';
+        it = MICRO[k](lvl); it.mode = 'num'; it.value = 20; it.micro = true; it.guide = []; it.finalPrompt = ''; it.microPenalty = 10; // a wrong quick answer costs 10 s: guessing loses
         it.id = 'sch-' + k + '-micro-' + Date.now().toString(36); x.nearMiss = null;
-      } else if (GEN[k]) { it = GEN[k](lvl); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
+      } else if (GEN[k]) { var cap = { 'long-div': 4, 'dec-div': 5 }[k] || 6; it = GEN[k](Math.min(lvl, cap)); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
       else {
         var g = G[k], items = g.items.filter(function (y) { return y.l === lvl; });
         if (!items.length) items = g.items;
@@ -509,7 +515,7 @@
     // costs value/(k-1) when wrong, so guessing is worth nothing on average.
     var seenToday = it.key && ((k === 'spell' ? load().words : load().gram)[it.key] || {}).rightDay === today();
     if (it.review || seenToday || (k === 'spell' && (load().words[it.key] || {}).mastered)) it.value = Math.round(it.value / 2);
-    it.penalty = it.k ? Math.round(it.value / (it.k - 1)) : 0;
+    it.penalty = it.k ? Math.round(it.value / (it.k - 1)) : (it.microPenalty || 0);
     load().last = k; save();
     return it;
   }
@@ -536,7 +542,13 @@
     var t = String(typed || '').trim().toLowerCase(), a = String(it.ans || '').toLowerCase();
     if (check(it, typed)) return false;
     if (/^0+([.,]0*)?$/.test(t) && !/^0+$/.test(a)) return true;              // "0", "00", "0.0"
-    if (MATHS[it.skill] && ms < 5000) return true;                              // no real working in under 5 s
+    if (MATHS[it.skill] && !it.micro && ms < 5000) return true;                 // no real working in under 5 s
+    if (MATHS[it.skill] && it.micro && ms < 1500) return true;                  // a micro answered before reading it
+    var dg = function (v) { return String(v).replace(/[^0-9]/g, '').replace(/^0+/, ''); };
+    if (MATHS[it.skill] && !it.micro && dg(a).length >= 2 && dg(t).length * 2 <= dg(a).length) {   // "1" for 23, "5" for 640
+      var tv = Number(t.replace(/,/g, '')), av = Number(a.replace(/,/g, ''));
+      if (!av || Math.abs(tv - av) / Math.abs(av) > 0.5) return true;
+    }
     if (it.mode === 'text' && a.length >= 4 && t.length <= 1) return true;      // one letter for a word
     if (/^(.)\1{2,}$/.test(t) || /^(asdf|qwer|idk|dunno|skip|pass|no|xxx)$/.test(t)) return true; // mash / refusal
     return false;

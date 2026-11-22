@@ -51,10 +51,13 @@ for (const k of ['dec-mul', 'dec-div', 'long-div', 'zeros-div', 'rem-word']) for
   let it; do { it = S.next(); } while (it.skill !== k); n++;
   if (!it.micro) { bad++; console.log('NOT MICRO', k); break; }
   const nums = (it.q + ' ' + it.sub).replace(/,/g, '').match(/\d+(\.\d+)?/g).map(Number);
-  if (k === 'dec-mul') { const [a, b] = it.q.split(' × '); const pl = (a.split('.')[1] || '').length + (b.split('.')[1] || '').length; if (String(pl) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'dec-mul') { const [a, b] = it.q.split(' × '); const pl = (a.split('.')[1] || '').length + (b.split('.')[1] || '').length;
+    const want = /WHOLE-number/.test(it.sub) ? String(Math.floor(Math.round(Number(a) * Number(b) * 1e6) / 1e6)) : String(pl); if (want !== it.ans) { bad++; console.log('MICRO', it.q, it.sub.slice(0, 30), it.ans, want); } }
   if (k === 'long-div') { const m = it.q.match(/How many (\d+)s fit into (\d+)/); const d = +m[1], c = +m[2], a = +it.ans; if (!(a * d <= c && (a + 1) * d > c && c >= d)) { bad++; console.log('MICRO', it.q, it.ans); } }
   if (k === 'zeros-div') { const [A, B] = it.q.replace(/,/g, '').split(' ÷ '); const z = Math.min(A.match(/0*$/)[0].length, B.match(/0*$/)[0].length); if (String(z) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
-  if (k === 'dec-div' && /places/.test(it.sub)) { const d = it.q.split(' ÷ ')[1]; if (String((d.split('.')[1] || '').length) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'dec-div') { const [D, d] = it.q.replace(/,/g, '').split(' ÷ '); const sh = (d.split('.')[1] || '').length;
+    const want = /places/.test(it.sub) ? String(sh) : /dividing BY/.test(it.sub) ? String(Math.round(Number(d) * 10 ** sh)) : /dividing \(/.test(it.sub) ? String(Math.round(Number(D) * 10 ** sh * 1000) / 1000) : String(Math.round(Number(D) / Number(d)));
+    if (want !== it.ans) { bad++; console.log('MICRO', it.q, it.sub.slice(0, 40), it.ans, want); } }
   if (k === 'rem-word') { const m = it.q.match(/(\d+) ÷ (\d+) = (\d+) R (\d+)/); const N = +m[1], d = +m[2], q = +m[3], r = +m[4]; if (q * d + r !== N) { bad++; console.log('MICRO R', it.q); } const want = /buses/.test(it.q) ? q + 1 : /FULL/.test(it.q) ? q : r; if (String(want) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
   x.scaffold = false;
 }

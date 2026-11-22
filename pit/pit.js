@@ -36,7 +36,7 @@
   var FACTS_REQ = 5 + (OWED ? Math.min(8, Math.max(0, 5 - (OWED.right || 0)) + 3) : 0), factsRight = 0, schoolCount = 0, stopStart = Date.now(), fiveAt = null, clockT = null;
   function done() { return E.fuelMs() >= NEED && factsRight >= FACTS_REQ; }
   function markOpen() { try { localStorage.setItem('pa_open_stop', JSON.stringify({ at: Date.now(), right: factsRight, boss: cur && cur.school ? cur.skill : (OWED && OWED.boss) || null })); } catch (e) {} }
-  if (OWED && OWED.boss && window.School) window.School.queue(OWED.boss);
+  if (OWED && OWED.boss && window.School) { window.School.queue(OWED.boss); }
   function clock() {
     if (loadingPractice || leaving) return;
     var secs = Math.floor((Date.now() - stopStart) / 1000);
@@ -57,7 +57,7 @@
     $('tankfill').style.width = Math.min(100, 100 * ms / NEED) + '%';
     $('tankms').textContent = E.fmtFuel(ms);
     $('tankneed').textContent = E.fmtFuel(NEED);
-    $('earn').textContent = earned > 0 ? '+' + Math.round(earned / 1000) + ' s' : earned < 0 ? Math.round(earned / 1000) + ' s' : (loadingPractice ? 'full power' : '');
+    $('earn').textContent = earned > 0 ? '+' + Math.round(earned / 1000) + ' s' : earned < 0 ? Math.round(earned / 1000) + ' s' : (loadingPractice || E.fuelMs() >= NEED ? '⚡ full' : '');
     $('rates').textContent = 'fast ⚡+' + E.FUEL.FAST / 1000 + ' · slow +' + E.FUEL.SLOW / 1000;
   }
 
@@ -73,11 +73,11 @@
   // facts stay the main diet until they are fluent (Gretchen's first priority).
   // Each card is a school item with probability pSchool (rises as facts get fluent); while the game is
   // loading after he is charged, mostly school items: the wait is learning time, and it earns nothing.
-  var schoolFirst = qs.get('school') === '1'; // testing
+  var schoolFirst = qs.get('school') === '1' || !!(OWED && OWED.boss); // testing, or the boss he walked away from
   var LC = window.__LEARN || {};
   var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / Math.max(1, E.counts().total)) : 0;
   var BOSS_MAX = LC.bossPerStop || 1;
-  var JUNK_COST = 20000, junkCount = 0, junkTotal = 0, factMs = 0;
+  var JUNK_COST = 20000, junkCount = 0, junkTotal = 0, factMs = 0, cardIndex = 0, itemJunked = false, nearTried = false, extraFacts = 0;
   // Flow guard: keep him in flow. After 2 long stops in a row (over 90 s), a quit, or 25 min of play in a session,
   // the next 2 stops are facts only (quick wins), then bosses come back.
   var FLOW = null; try { FLOW = JSON.parse(localStorage.getItem('pa_flow') || 'null'); } catch (e) {}
@@ -87,17 +87,20 @@
   if (OWED) FLOW.easy = Math.max(FLOW.easy, 1);                                     // just quit a stop: no boss now
   if (!FLOW.longBreakGiven && nowT - FLOW.start > 25 * 60000) { FLOW.easy = Math.max(FLOW.easy, 2); FLOW.longBreakGiven = true; }
   var flowEasy = FLOW.easy > 0; if (flowEasy) { BOSS_MAX = 0; FLOW.easy--; }
+  // At most one boss in three stops, so a stop is usually 5 quick facts (about 15 s).
+  FLOW.since = (FLOW.since == null ? 2 : FLOW.since); var bossTurn = schoolFirst || FLOW.since >= 2;
   function saveFlow() { try { localStorage.setItem('pa_flow', JSON.stringify(FLOW)); } catch (e) {} }
   saveFlow();
   try { if (isBreak && localStorage.getItem('pa_boss_free') === '1') { localStorage.removeItem('pa_boss_free'); BOSS_MAX = 0; } } catch (e) {} // won the last boss
   var loadingPractice = false;
 
   function next() {
-    guide = null; copyMode = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
+    guide = null; copyMode = false; itemJunked = false; nearTried = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
-    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < BOSS_MAX && Date.now() - stopStart < 60000 && Math.random() < pSchool)))) {
+    cardIndex++;
+    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < BOSS_MAX && bossTurn && cardIndex <= 3 && Math.random() < pSchool)))) {
       if (!loadingPractice) schoolCount++;
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;
@@ -143,7 +146,7 @@
     'rem-word': 'After dividing, decide what the leftover means: does it need one more (round up), get dropped, or IS it the answer?',
   };
   var hootMsgs = [], $hb = $('hootbox'), $hbsay = $('hbsay');
-  function hootReset() { hootMsgs = []; $hb.style.display = 'none'; var sc = cur && cur.school; $('askhoot').style.display = sc ? 'inline-block' : 'none'; $('callhoot').style.display = sc && MIC ? 'inline-block' : 'none'; }
+  function hootReset() { hootMsgs = []; $hb.style.display = 'none'; var sc = cur && cur.school && cur.skill !== 'spell'; $('askhoot').style.display = sc ? 'inline-block' : 'none'; var tb = $('talkhoot'); if (tb && window.HootVoice && window.HootVoice.enabled()) tb.style.display = cur && cur.skill === 'spell' ? 'none' : ''; if (cur && cur.skill === 'spell' && window.HootVoice && window.HootVoice.on()) document.getElementById('talkhoot').click(); $('callhoot').style.display = sc && MIC ? 'inline-block' : 'none'; }
   function hootSpeak(text) {
     if (!ov || !ov.speak) return;
     ov.speak(text).then(function (r) { if (r && r.audio) { try { new Audio('data:audio/mpeg;base64,' + r.audio).play().catch(function () {}); } catch (e) {} } }).catch(function () {});
@@ -231,7 +234,8 @@
     }
     // A throwaway answer ("0", a key-mash, an instant guess): costs power, changes nothing, and he stays on this question.
     if (!correct && !loadingPractice && S.isJunk && S.isJunk(cur, raw, ms)) {
-      junkCount++; junkTotal++;
+      junkCount++; junkTotal++; itemJunked = true;
+      if (junkTotal <= 3) { FACTS_REQ++; clock(); }                   // and one more fact to earn back (power alone never binds)
       S.record(cur, false, { junk: true, typed: raw, totalMs: ms, surface: surface, gameKey: gameKey });
       gauge(E.fuelGive(-JUNK_COST));
       $card.className = 'card wrong'; busy = false; $ans.value = '';
@@ -245,6 +249,22 @@
       $ans.focus(); return;
     }
     junkCount = 0;
+    if (loadingPractice) { // bonus round while loading: practice only, nothing recorded, no penalties
+      busy = false; $ans.value = '';
+      if (correct) { $card.className = 'card right'; setTimeout(next, 300); }
+      else { $card.className = 'card wrong'; $hint.className = 'hint miss'; $hint.innerHTML = 'It is <b>' + esc(cur.ans) + '</b>. Next one!'; busy = true; setTimeout(next, 1400); }
+      return;
+    }
+    // So close (point slip, or within 5%): one more try at full pay before any help.
+    if (!correct && !nearTried && !cur.micro && /^[0-9.,]+$/.test(String(raw).trim())) {
+      var dgt = function (v) { return String(v).replace(/[^0-9]/g, '').replace(/^0+|0+$/g, ''); }, tv = Number(String(raw).replace(/,/g, '')), av = Number(String(cur.ans).replace(/,/g, ''));
+      if ((dgt(raw) && dgt(raw) === dgt(cur.ans)) || (av && Math.abs(tv - av) / Math.abs(av) <= 0.05)) {
+        nearTried = true; busy = false; $ans.value = ''; $card.className = 'card';
+        $hint.className = 'hint'; $hint.innerHTML = '🔥 So close! ' + (dgt(raw) === dgt(cur.ans) ? 'Check where the point goes.' : 'Check your last step.') + ' One more try for full power.';
+        log('learn.near', { item_id: cur.id, skill: cur.skill, typed: raw, answer: cur.ans });
+        $ans.focus(); return;
+      }
+    }
     S.record(cur, correct, { typed: raw, totalMs: ms, surface: surface, gameKey: gameKey });
     if (ov && ov.recordAttempt) {
       ov.recordAttempt({ deviceLocalKey: player, attemptId: uuid(), overrideId: null, questionId: cur.id, correct: correct, gameKey: gameKey }).catch(function () {});
@@ -252,9 +272,17 @@
     typed++;
     if (correct) {
       right++;
-      gauge(E.fuelGive(cur.value * 1000));
-      $card.className = 'card right';
-      if (!loadingPractice) { try { localStorage.setItem('pa_boss_free', '1'); } catch (e) {} } // beat it: next stop has no boss
+      if (itemJunked) { gauge(0); $card.className = 'card right'; }   // after a throwaway, getting it right pays nothing
+      else {
+        gauge(E.fuelGive(cur.value * 1000));
+        $card.className = 'card right';
+        if (!cur.micro) {
+          // A real boss win: this stop needs only 2 facts, the next stop has no boss, and his streak grows.
+          FACTS_REQ = Math.max(2, Math.min(FACTS_REQ, factsRight + 2)); clock();
+          var sk = 0; try { sk = Number(localStorage.getItem('pa_boss_streak') || 0) + 1; localStorage.setItem('pa_boss_streak', String(sk)); localStorage.setItem('pa_boss_free', '1'); } catch (e) {}
+          $hint.className = 'hint'; $hint.innerHTML = '⚔️ Boss beaten! Only ' + FACTS_REQ + ' facts this stop' + (sk >= 2 ? ' · 🔥 Boss streak ' + sk : '');
+        }
+      }
       if (done() && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
       return;
     }
@@ -262,6 +290,7 @@
     var lost = cur.penalty && !loadingPractice ? E.fuelGive(-cur.penalty * 1000) : 0;
     gauge(lost);
     $card.className = 'card wrong';
+    if (!cur.micro) { try { localStorage.setItem('pa_boss_streak', '0'); } catch (e) {} }
     // One step aimed at his mistake (not the whole walkthrough), then he answers again himself.
     // A point slip (right digits, wrong place) gets the decimal-point step; anything else gets the first step.
     var gs = cur.guide || [], pick = 0, digits = function (v) { return String(v).replace(/[^0-9]/g, '').replace(/^0+|0+$/g, ''); };
@@ -304,10 +333,17 @@
     }
     if (guide.phase === 'final') {
       var right = S.check(cur, raw);
+      if (!right && S.isJunk(cur, raw, 99999 /* time is not the test here */) ) {   // a throwaway here never reveals the answer
+        junkTotal++; itemJunked = true; gauge(E.fuelGive(-JUNK_COST)); if (junkTotal <= 3) { FACTS_REQ++; clock(); }
+        S.record(cur, false, { junk: true, typed: raw, totalMs: 0, surface: surface, gameKey: gameKey });
+        guide.i = Math.max(0, guide.total - 1); showGuide();
+        $hint.innerHTML = '<div class="gtitle">🎯 That is a guess. Work this step:</div>' + $hint.innerHTML; return;
+      }
       log('learn.guide', { item_id: cur.id, skill: cur.skill, steps: guide.total, steps_right: guide.stepsRight, final_correct: right, typed: raw });
       if (right) {
         guide = null; $card.className = 'card right';
-        $hint.className = 'hint'; $hint.innerHTML = '<div class="gtitle">✅ You worked it out. Respawned.</div>';
+        var half = itemJunked ? 0 : Math.round((cur.value || 0) / 2) * 1000; if (half) gauge(E.fuelGive(half));
+        $hint.className = 'hint'; $hint.innerHTML = '<div class="gtitle">✅ You worked it out.' + (half ? ' +' + half / 1000 + ' s' : '') + '</div>';
         busy = true; setTimeout(next, 900); return;
       }
       // Still stuck: now show the whole solution, and he types the answer (spelling: twice).
@@ -377,6 +413,7 @@
     finishedFacts = true;
     clearInterval(clockT);
     try { localStorage.removeItem('pa_open_stop'); } catch (e) {}
+    FLOW.since = schoolCount > 0 ? 0 : (FLOW.since || 0) + 1;
     var dur = Date.now() - stopStart; FLOW.long = dur > 90000 ? FLOW.long + 1 : 0; if (FLOW.long >= 2) { FLOW.easy = 2; FLOW.long = 0; } FLOW.last = Date.now(); saveFlow();
     log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, flow_easy: flowEasy, fact_ms: Math.round(factMs), junk: junkTotal, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
     if (isBreak) return leave('break');
@@ -444,6 +481,7 @@
   log('pit.load', { surface: surface, fuel_ms: startFuel, focus: (window.__FOCUS || {}).version || null, pace: (window.__LEARN || {}).pace || null });
   gauge(0);
   $label.textContent = isBreak ? '⚡ Recharge!' : '⚡ Power up to play';
+  if (startFuel < 0) { extraFacts = Math.min(3, Math.ceil(-startFuel / 15000)); FACTS_REQ += extraFacts; } // played past empty: pay it back in facts
   if (OWED) { $label.textContent = (isBreak ? '⚡ Recharge!' : '⚡ Power up to play') + ' · unfinished stop: ' + FACTS_REQ + ' facts'; log('pit.owed', { facts: FACTS_REQ, boss: OWED.boss || null }); }
   clock(); clockT = setInterval(clock, 1000);
   next();
