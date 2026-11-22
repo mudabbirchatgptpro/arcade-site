@@ -17,7 +17,6 @@
     return mem;
   }
   function save() { try { root.localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
-  function sk(k) { var s = load().skills; return s[k] || (s[k] = { lvl: 4, streak: 0, n: 0, right: 0, missAt: 0 }); }
   var R = function (a, b) { return a + Math.floor(Math.random() * (b - a + 1)); };
   var pickOf = function (a) { return a[Math.floor(Math.random() * a.length)]; };
   var fmtInt = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); };
@@ -171,101 +170,205 @@
     ['il+', 'legal', 'illegal', 'il- before l: two l.'],
   ];
 
-  // ── Sentence structure ──
-  // t: 1 simple, 2 compound, 3 complex, 4 compound-complex. why = the breakdown.
-  var SENT = [
-    { s: 'Parker and his cousin built a tower and defended it all night.', t: 1, why: 'One subject (Parker and his cousin), one verb set (built and defended). One clause: SIMPLE.' },
-    { s: 'After the long, noisy storm, the creepers crept out of the cave.', t: 1, why: '"After the long, noisy storm" has no verb: it is a phrase. One clause: SIMPLE.' },
-    { s: 'Running down the hallway, the dog slid into the wall.', t: 1, why: '"Running down the hallway" has no subject doing a verb: a phrase. One clause: SIMPLE.' },
-    { s: 'During the game, neither the coach nor the players noticed the rain.', t: 1, why: 'Two people in one subject, one verb (noticed). One clause: SIMPLE.' },
-    { s: 'The boy with the red backpack won the spelling bee.', t: 1, why: '"with the red backpack" is a phrase. One clause: SIMPLE.' },
-    { s: 'Rolf jumped onto the counter and knocked over a glass of milk.', t: 1, why: 'One subject (Rolf) with two verbs, no second subject. SIMPLE.' },
-    { s: 'The zombies attacked at midnight, but the villagers were ready.', t: 2, why: 'Two full sentences (zombies attacked / villagers were ready) joined by ", but". COMPOUND.' },
-    { s: 'Parker finished his math, so he earned extra game time.', t: 2, why: 'Two full sentences joined by ", so". COMPOUND.' },
-    { s: 'The test was hard; however, everyone passed.', t: 2, why: 'Two full sentences joined by a semicolon. COMPOUND.' },
-    { s: 'You can build the bridge, or you can swim across the river.', t: 2, why: 'Two full sentences joined by ", or". COMPOUND.' },
-    { s: 'Mia likes soccer; her brother prefers chess.', t: 2, why: 'Two full sentences joined by a semicolon. COMPOUND.' },
-    { s: 'Because the server crashed, nobody could log in.', t: 3, why: '"Because the server crashed" cannot stand alone (dependent). One main clause + one dependent: COMPLEX.' },
-    { s: 'The player who found the diamond shared it with the team.', t: 3, why: '"who found the diamond" is a dependent clause inside the main one. COMPLEX.' },
-    { s: 'When the bell rings, put your pencils down.', t: 3, why: '"When the bell rings" is dependent; "(you) put your pencils down" is the main clause. COMPLEX.' },
-    { s: 'We stayed inside until the storm passed.', t: 3, why: '"until the storm passed" is dependent. COMPLEX.' },
-    { s: 'The book that Parker borrowed is overdue.', t: 3, why: '"that Parker borrowed" is a dependent clause. COMPLEX.' },
-    { s: 'Although he was tired, Parker finished the last level.', t: 3, why: '"Although he was tired" is dependent. COMPLEX.' },
-    { s: 'When the creeper exploded, the wall fell, and the sheep ran away.', t: 4, why: 'Two main clauses (the wall fell / the sheep ran away) + one dependent (When the creeper exploded). COMPOUND-COMPLEX.' },
-    { s: 'Parker wanted to play outside, but it rained because a storm rolled in.', t: 4, why: 'Two main clauses joined by ", but" + the dependent "because a storm rolled in". COMPOUND-COMPLEX.' },
-    { s: 'The team that practiced hardest won, so the coach bought pizza.', t: 4, why: 'Two main clauses joined by ", so" + the dependent "that practiced hardest". COMPOUND-COMPLEX.' },
-    { s: 'Although the map was old, it was accurate, and we found the treasure.', t: 4, why: 'Two main clauses joined by ", and" + the dependent "Although the map was old". COMPOUND-COMPLEX.' },
-    { s: 'I will help you if you ask, but you must ask nicely.', t: 4, why: 'Two main clauses joined by ", but" + the dependent "if you ask". COMPOUND-COMPLEX.' },
-  ];
-  // Find the subject (hidden "you" in commands; subjects after the verb).
-  var SUBJ = [
-    { s: 'After dinner, please take out the trash.', a: 'you', why: 'A command: the subject is the hidden "you".' },
-    { s: "Don't forget your lunch!", a: 'you', why: 'A command: the subject is the hidden "you".' },
-    { s: 'Before the game starts, grab your helmet and stretch.', a: 'you', why: 'A command: "(you) grab and stretch". The subject is the hidden "you".' },
-    { s: 'Close to the door stood a tall man.', a: 'man', why: 'Who stood? A tall MAN. The subject comes after the verb here.' },
-    { s: 'Here comes the bus.', a: 'bus', why: 'What comes? The BUS. "Here" is never the subject.' },
-    { s: 'In the box were three sleepy puppies.', a: 'puppies', why: 'What were in the box? PUPPIES. "box" is inside a phrase, so it cannot be the subject.' },
-    { s: 'One of the players on the team was injured.', a: 'one', why: 'Who was injured? ONE (of the players). "players" sits inside the phrase "of the players".' },
-    { s: 'There are two creepers behind you.', a: 'creepers', why: 'What are behind you? CREEPERS. "There" is never the subject.' },
-  ];
+  // ── Grammar (advanced). Each item: s = the prompt, a = the answer, l = level 1-3, why = the breakdown. ──
+  var G = {
+    sentence: { k: 4, sub: 'Type 1 simple · 2 compound · 3 complex · 4 compound-complex', mode: 'num', items: [
+      { s: 'Parker and his cousin built a tower and defended it all night.', a: '1', l: 2, why: 'One subject (Parker and his cousin), one verb set (built and defended). One clause: SIMPLE.' },
+      { s: 'After the long, noisy storm, the creepers crept out of the cave.', a: '1', l: 2, why: '"After the long, noisy storm" has no verb: a phrase. One clause: SIMPLE.' },
+      { s: 'Running down the hallway, the dog slid into the wall.', a: '1', l: 2, why: '"Running down the hallway" has no subject doing a verb: a phrase. One clause: SIMPLE.' },
+      { s: 'During the game, neither the coach nor the players noticed the rain.', a: '1', l: 2, why: 'Two people in one subject, one verb (noticed). One clause: SIMPLE.' },
+      { s: 'The boy with the red backpack won the spelling bee.', a: '1', l: 1, why: '"with the red backpack" is a phrase. One clause: SIMPLE.' },
+      { s: 'Rolf jumped onto the counter and knocked over a glass of milk.', a: '1', l: 1, why: 'One subject (Rolf) with two verbs, no second subject. SIMPLE.' },
+      { s: 'The zombies attacked at midnight, but the villagers were ready.', a: '2', l: 1, why: 'Two full sentences joined by ", but". COMPOUND.' },
+      { s: 'Parker finished his math, so he earned extra game time.', a: '2', l: 1, why: 'Two full sentences joined by ", so". COMPOUND.' },
+      { s: 'The test was hard; however, everyone passed.', a: '2', l: 2, why: 'Two full sentences joined by a semicolon. COMPOUND.' },
+      { s: 'You can build the bridge, or you can swim across the river.', a: '2', l: 1, why: 'Two full sentences joined by ", or". COMPOUND.' },
+      { s: 'Mia likes soccer; her brother prefers chess.', a: '2', l: 2, why: 'Two full sentences joined by a semicolon. COMPOUND.' },
+      { s: 'Because the server crashed, nobody could log in.', a: '3', l: 1, why: '"Because the server crashed" cannot stand alone. One main + one dependent clause: COMPLEX.' },
+      { s: 'The player who found the diamond shared it with the team.', a: '3', l: 2, why: '"who found the diamond" is a dependent clause inside the main one. COMPLEX.' },
+      { s: 'When the bell rings, put your pencils down.', a: '3', l: 2, why: '"When the bell rings" is dependent; "(you) put your pencils down" is the main clause. COMPLEX.' },
+      { s: 'We stayed inside until the storm passed.', a: '3', l: 1, why: '"until the storm passed" is dependent. COMPLEX.' },
+      { s: 'The book that Parker borrowed is overdue.', a: '3', l: 2, why: '"that Parker borrowed" is a dependent clause. COMPLEX.' },
+      { s: 'Although he was tired, Parker finished the last level.', a: '3', l: 1, why: '"Although he was tired" is dependent. COMPLEX.' },
+      { s: 'When the creeper exploded, the wall fell, and the sheep ran away.', a: '4', l: 3, why: 'Two main clauses + one dependent (When the creeper exploded). COMPOUND-COMPLEX.' },
+      { s: 'Parker wanted to play outside, but it rained because a storm rolled in.', a: '4', l: 3, why: 'Two main clauses joined by ", but" + the dependent "because a storm rolled in". COMPOUND-COMPLEX.' },
+      { s: 'The team that practiced hardest won, so the coach bought pizza.', a: '4', l: 3, why: 'Two main clauses joined by ", so" + the dependent "that practiced hardest". COMPOUND-COMPLEX.' },
+      { s: 'Although the map was old, it was accurate, and we found the treasure.', a: '4', l: 3, why: 'Two main clauses joined by ", and" + the dependent "Although the map was old". COMPOUND-COMPLEX.' },
+      { s: 'I will help you if you ask, but you must ask nicely.', a: '4', l: 3, why: 'Two main clauses joined by ", but" + the dependent "if you ask". COMPOUND-COMPLEX.' },
+    ] },
+    subject: { sub: 'Type the SUBJECT (one word).', mode: 'text', items: [
+      { s: 'After dinner, please take out the trash.', a: 'you', l: 1, why: 'A command: the subject is the hidden "you".' },
+      { s: "Don't forget your lunch!", a: 'you', l: 1, why: 'A command: the subject is the hidden "you".' },
+      { s: 'Before the game starts, grab your helmet and stretch.', a: 'you', l: 2, why: 'A command: "(you) grab and stretch". The subject is the hidden "you".' },
+      { s: 'Close to the door stood a tall man.', a: 'man', l: 2, why: 'Who stood? A tall MAN. The subject comes after the verb here.' },
+      { s: 'Here comes the bus.', a: 'bus', l: 2, why: 'What comes? The BUS. "Here" is never the subject.' },
+      { s: 'In the box were three sleepy puppies.', a: 'puppies', l: 3, why: 'What were in the box? PUPPIES. "box" is inside a phrase, so it cannot be the subject.' },
+      { s: 'One of the players on the team was injured.', a: 'one', l: 3, why: 'Who was injured? ONE. "players" sits inside the phrase "of the players".' },
+      { s: 'There are two creepers behind you.', a: 'creepers', l: 2, why: 'What are behind you? CREEPERS. "There" is never the subject.' },
+    ] },
+    agreement: { k: 2, sub: 'Type the verb that agrees.', mode: 'text', items: [
+      { s: 'The box of old crayons (is / are) on the shelf.', a: 'is', l: 1, why: 'The subject is BOX (one). "of old crayons" is a phrase, so ignore it: box IS.' },
+      { s: 'The players on the team (practice / practices) every day.', a: 'practice', l: 1, why: 'The subject is PLAYERS (many). "on the team" is a phrase: players PRACTICE.' },
+      { s: 'The team (has / have) won every game this season.', a: 'has', l: 1, why: 'TEAM is one group acting together: the team HAS.' },
+      { s: 'Each of the players (has / have) a helmet.', a: 'has', l: 2, why: 'EACH is the subject and each means one: each HAS.' },
+      { s: 'Neither the coach nor the players (was / were) ready.', a: 'were', l: 2, why: 'With neither/nor, the verb agrees with the NEARER subject: players WERE.' },
+      { s: 'Neither the players nor the coach (was / were) ready.', a: 'was', l: 2, why: 'With neither/nor, the verb agrees with the NEARER subject: coach WAS.' },
+      { s: 'Everybody in the stands (cheer / cheers) when he scores.', a: 'cheers', l: 2, why: 'EVERYBODY is singular (every + body = one): everybody CHEERS.' },
+      { s: 'Mathematics (is / are) his best subject.', a: 'is', l: 3, why: 'Mathematics ends in s but is ONE subject: mathematics IS.' },
+      { s: 'Ten dollars (is / are) too much for that sword.', a: 'is', l: 3, why: 'An amount of money is treated as ONE sum: ten dollars IS.' },
+      { s: 'The news from the trip (was / were) good.', a: 'was', l: 3, why: 'NEWS is singular even though it ends in s: the news WAS.' },
+    ] },
+    pronoun: { k: 2, sub: 'Type the correct word.', mode: 'text', items: [
+      { s: 'Parker and (I / me) went to the game.', a: 'i', l: 1, why: 'Take away "Parker and": "I went", not "me went". So: Parker and I.' },
+      { s: 'The coach gave the prize to Mia and (he / him).', a: 'him', l: 1, why: 'Take away "Mia and": "gave the prize to him". After "to", use him.' },
+      { s: 'Between you and (I / me), the test was easy.', a: 'me', l: 2, why: '"Between" is a preposition, and after a preposition you use me: between you and ME.' },
+      { s: '(We / Us) kids want a longer recess.', a: 'we', l: 2, why: 'Take away "kids": "WE want a longer recess", not "us want".' },
+      { s: '(Who / Whom) is at the door?', a: 'who', l: 2, why: 'Answer it: "HE is at the door" (he = who). He → WHO.' },
+      { s: '(Who / Whom) did you invite to the party?', a: 'whom', l: 3, why: 'Answer it: "you invited HIM" (him = whom). Him → WHOM.' },
+      { s: 'Give the extra emeralds to (whoever / whomever) needs them.', a: 'whoever', l: 3, why: 'Inside its own clause, "WHOEVER needs them" (he needs them). The clause decides, not "to".' },
+      { s: 'The trophy belongs to (whoever / whomever) the judges choose.', a: 'whomever', l: 3, why: 'Inside the clause: "the judges choose HIM" (him = whomever).' },
+    ] },
+    fragrun: { k: 3, sub: 'Type C correct · F fragment · R run-on', mode: 'text', items: [
+      { s: 'Because the game crashed again.', a: 'f', l: 1, why: 'Starts with "Because" and nothing finishes the thought: a FRAGMENT.' },
+      { s: 'The game crashed, we lost all our progress.', a: 'r', l: 1, why: 'Two full sentences joined only by a comma (a comma splice): a RUN-ON.' },
+      { s: 'Parker loves Minecraft he plays it every day.', a: 'r', l: 1, why: 'Two full sentences with nothing between them: a RUN-ON.' },
+      { s: 'The game crashed; we lost all our progress.', a: 'c', l: 2, why: 'A semicolon can join two full sentences: CORRECT.' },
+      { s: 'Running through the forest with a torch in his hand.', a: 'f', l: 2, why: 'No subject doing a main verb ("running" is not a full verb here): a FRAGMENT.' },
+      { s: 'Although the creeper was close, Parker kept mining.', a: 'c', l: 2, why: 'Dependent clause + comma + full sentence: CORRECT.' },
+      { s: 'The dog that chased the cat across the yard.', a: 'f', l: 3, why: '"that chased the cat" describes the dog, but the dog never DOES anything: a FRAGMENT.' },
+      { s: 'Go.', a: 'c', l: 3, why: 'A command with the hidden subject "you": "(You) go." One word, still a CORRECT sentence.' },
+      { s: 'Parker studied hard, however, he still felt nervous.', a: 'r', l: 3, why: '"however" cannot join two sentences with commas: a RUN-ON. Fix: "hard; however, he".' },
+    ] },
+    verbals: { k: 3, sub: 'The CAPITAL word is a: type G gerund · P participle · I infinitive', mode: 'text', items: [
+      { s: 'SWIMMING is Parker\'s favorite sport.', a: 'g', l: 1, why: 'It names an activity and acts as a noun (the subject): GERUND.' },
+      { s: 'The SWIMMING dog finally reached the shore.', a: 'p', l: 1, why: 'It describes the dog, like an adjective: PARTICIPLE.' },
+      { s: 'Parker wants TO WIN the race.', a: 'i', l: 1, why: '"to" + verb: INFINITIVE.' },
+      { s: 'The BROKEN sword lay on the ground.', a: 'p', l: 2, why: 'It describes the sword: PARTICIPLE (past participles count too).' },
+      { s: 'Parker enjoys BUILDING with redstone.', a: 'g', l: 2, why: 'It is the thing he enjoys, a noun: GERUND.' },
+      { s: 'His goal is TO BUILD a castle.', a: 'i', l: 2, why: '"to" + verb: INFINITIVE.' },
+      { s: 'EXHAUSTED, the miners climbed out of the cave.', a: 'p', l: 3, why: 'It describes the miners: PARTICIPLE.' },
+      { s: 'After WINNING the match, the team celebrated.', a: 'g', l: 3, why: 'It follows the preposition "after" and acts as a noun: GERUND.' },
+    ] },
+    voice: { k: 2, sub: 'Type A active · P passive', mode: 'text', items: [
+      { s: 'The creeper destroyed the castle.', a: 'a', l: 1, why: 'The subject (creeper) DOES the action: ACTIVE.' },
+      { s: 'The castle was destroyed by the creeper.', a: 'p', l: 1, why: 'The subject (castle) RECEIVES the action, with "was + destroyed": PASSIVE.' },
+      { s: 'Parker has finished his homework.', a: 'a', l: 2, why: '"has finished" is just a tense; Parker still DOES the finishing: ACTIVE.' },
+      { s: 'The tests will be graded tomorrow.', a: 'p', l: 2, why: 'The tests RECEIVE the grading ("will be graded"), even with no "by": PASSIVE.' },
+      { s: 'Mistakes were made.', a: 'p', l: 3, why: 'Nobody is named as doing it; the mistakes RECEIVE the action: PASSIVE.' },
+      { s: 'The team was celebrating its win.', a: 'a', l: 3, why: '"was celebrating" is a past progressive verb; the team DOES the celebrating: ACTIVE.' },
+    ] },
+    irregular: { sub: 'Type the right form of the verb in brackets.', mode: 'text', items: [
+      { s: 'The pond has (freeze) solid.', a: 'frozen', l: 1, why: 'freeze, froze, has FROZEN.' },
+      { s: 'They had (choose) the blue team.', a: 'chosen', l: 1, why: 'choose, chose, had CHOSEN.' },
+      { s: 'Yesterday Parker (swim) across the lake.', a: 'swam', l: 1, why: 'swim, SWAM (yesterday), has swum.' },
+      { s: 'He had (swim) there many times before.', a: 'swum', l: 2, why: 'After had/has: swim, swam, had SWUM.' },
+      { s: 'The bell has already (ring).', a: 'rung', l: 2, why: 'ring, rang, has RUNG.' },
+      { s: 'The sun had (rise) before we woke up.', a: 'risen', l: 2, why: 'rise, rose, had RISEN.' },
+      { s: 'Yesterday she (lie) down for a nap.', a: 'lay', l: 3, why: 'lie (rest), LAY (yesterday), has lain. Trap: "lay" is also the present of a different verb.' },
+      { s: 'Yesterday he (lay) the book on the table.', a: 'laid', l: 3, why: 'lay (put something down), LAID (yesterday), has laid.' },
+    ] },
+  };
+  // Back-compat exports for scripts/check-school.js and the blind check.
+  var SENT = G.sentence.items.map(function (x) { return { s: x.s, t: Number(x.a), why: x.why }; });
+  var SUBJ = G.subject.items.map(function (x) { return { s: x.s, a: x.a, why: x.why }; });
 
-  // ── Picking ──
-  var MIX = [['dec-mul', 18], ['long-div', 16], ['dec-div', 16], ['rem-word', 10], ['zeros-div', 6], ['spell', 20], ['sentence', 14]];
-  function weightOf(k) {
-    var w = 0; MIX.forEach(function (m) { if (m[0] === k) w = m[1]; });
-    var s = sk(k); if (s.missAt && Date.now() - s.missAt < 86400000) w *= 1.8; // missed today: comes back more
-    return w;
+  // ── Mastery: push fast, confirm slowly ──
+  // 4 right in a row at a level moves him up straight away (push). That level is then "passed" and comes
+  // back as a recall check after 1, 3, 7 and 21 days; passing checks on 2 later days makes it MASTERED.
+  // Failing a check sends him back to that level. 2 misses in his last 3 at a level steps down one.
+  var DAY = 86400000, GAPS = [1, 3, 7, 21];
+  var SKILLS = {
+    'dec-mul': { levels: [3, 4, 5], w: 13 }, 'long-div': { levels: [3, 4, 5], w: 11 }, 'dec-div': { levels: [3, 4, 5], w: 11 },
+    'rem-word': { levels: [4, 5], w: 7 }, 'zeros-div': { levels: [3, 4, 5], w: 4 },
+    spell: { w: 18 },
+    sentence: { levels: [1, 2, 3], w: 6 }, subject: { levels: [1, 2, 3], w: 4 }, agreement: { levels: [1, 2, 3], w: 6 },
+    pronoun: { levels: [1, 2, 3], w: 5 }, fragrun: { levels: [1, 2, 3], w: 6 }, verbals: { levels: [1, 2, 3], w: 4 },
+    voice: { levels: [1, 2, 3], w: 3 }, irregular: { levels: [1, 2, 3], w: 4 },
+  };
+  function today(t) { var d = new Date(t || Date.now()); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function st(k) {
+    var s = load().skills; var x = s[k];
+    if (!x || x.v !== 2) x = s[k] = { v: 2, i: 0, run: [], passed: {}, n: 0, right: 0, missAt: 0 };
+    return x;
   }
+  function mastered(k) { var x = st(k), L = SKILLS[k].levels || []; return L.length > 0 && L.every(function (_, i) { return x.passed[i] && x.passed[i].mastered; }); }
+  function dueReview(k) {
+    var x = st(k), now = Date.now(), best = null;
+    Object.keys(x.passed).forEach(function (i) { var p = x.passed[i]; if (p.due <= now && (best === null || p.due < x.passed[best].due)) best = i; });
+    return best === null ? null : Number(best);
+  }
+
   function chooseSkill() {
-    var last = load().last, tot = 0, ws = MIX.map(function (m) { var w = m[0] === last ? 0 : weightOf(m[0]); tot += w; return [m[0], w]; });
-    var x = Math.random() * tot;
-    for (var i = 0; i < ws.length; i++) { x -= ws[i][1]; if (x <= 0) return ws[i][0]; }
+    var last = load().last, tot = 0, now = Date.now();
+    var ws = Object.keys(SKILLS).map(function (k) {
+      var w = k === last ? 0 : SKILLS[k].w, x = st(k);
+      if (x.missAt && now - x.missAt < DAY) w *= 1.8;        // missed today: back sooner
+      if (dueReview(k) !== null) w *= 1.5;                     // a recall check is due
+      if (mastered(k)) w *= 0.25;                              // mastered: light review only
+      tot += w; return [k, w];
+    });
+    var r = Math.random() * tot;
+    for (var i = 0; i < ws.length; i++) { r -= ws[i][1]; if (r <= 0) return ws[i][0]; }
     return ws[0][0];
   }
   function leastSeen(list, store, idOf) {
     var now = Date.now();
     var scored = list.map(function (it) {
-      var st = store[idOf(it)] || { n: 0, right: 0, missAt: 0 };
-      var pri = (st.missAt && now - st.missAt > 60000 && st.right < 2 ? -1000 : 0) + st.n * 10 + (st.right >= 2 ? 50 : 0) + Math.random();
+      var s = store[idOf(it)] || { n: 0, right: 0, missAt: 0 };
+      var pri = (s.missAt && now - s.missAt > 60000 && s.lastOk === false ? -1000 : 0) + s.n * 10 + Math.random();
       return [pri, it];
     });
     scored.sort(function (a, b) { return a[0] - b[0]; });
     return scored[0][1];
   }
 
-  function next() {
-    var k = chooseSkill(), s = sk(k), it;
-    if (GEN[k]) { it = GEN[k](s.lvl); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
-    else if (k === 'spell') {
-      var L = load();
-      var pool = WORDS.map(function (w) { return { kind: 'chunk', w: w }; }).concat(WORDS.map(function (w) { return { kind: 'fix', w: w }; }))
-        .concat(BUILDS.map(function (b) { return { kind: 'build', b: b }; }));
-      var p = leastSeen(pool, L.words, function (x) { return x.kind + ':' + (x.w ? x.w.w : x.b[2]); });
-      if (p.kind === 'chunk') {
-        var shown = p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · ');
-        it = { q: shown, sub: 'Type the WHOLE word.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
-          steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
-      } else if (p.kind === 'fix') {
-        it = { q: p.w.bad, sub: 'This is spelled wrong. Type it correctly.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
-          steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
-      } else {
-        var b = p.b, prefix = /\+$/.test(b[0]);
-        it = { q: prefix ? b[0].replace('+', '') + ' + ' + b[1] : b[0] + ' + ' + b[1].replace('+', ''), sub: 'Join them into one word.', ans: b[2], mode: 'text', value: 30, copies: 2,
-          steps: [b[3], 'So it is ' + b[2] + '.'] };
-      }
-      it.key = p.kind + ':' + (p.w ? p.w.w : p.b[2]); it.id = 'sch-spell-' + it.key.replace(':', '-');
+  function spellItem() {
+    var L = load(), now = Date.now();
+    var pool = WORDS.map(function (w) { return { kind: 'chunk', w: w }; }).concat(WORDS.map(function (w) { return { kind: 'fix', w: w }; }))
+      .concat(BUILDS.map(function (b) { return { kind: 'build', b: b }; }));
+    var idOf = function (x) { return x.kind + ':' + (x.w ? x.w.w : x.b[2]); };
+    var due = pool.filter(function (x) { var s = L.words[idOf(x)]; return s && s.due && s.due <= now; });
+    var fresh = pool.filter(function (x) { var s = L.words[idOf(x)]; return !s || !s.mastered; });
+    var p, review = false;
+    if (due.length && Math.random() < 0.4) { p = due[Math.floor(Math.random() * due.length)]; review = true; }
+    else p = leastSeen(fresh.length ? fresh : pool, L.words, idOf);
+    var it;
+    if (p.kind === 'chunk') {
+      it = { q: p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · '), sub: 'Type the WHOLE word.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
+        steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
+    } else if (p.kind === 'fix') {
+      it = { q: p.w.bad, sub: 'This is spelled wrong. Type it correctly.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
+        steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
     } else {
-      var G = load().gram;
-      if (Math.random() < 0.7) {
-        var x = leastSeen(SENT, G, function (y) { return 'sent:' + y.s.slice(0, 24); });
-        it = { q: x.s, sub: 'Type 1 simple · 2 compound · 3 complex · 4 compound-complex', ans: String(x.t), mode: 'num', value: 30, long: true, steps: [x.why], key: 'sent:' + x.s.slice(0, 24) };
-      } else {
-        var y = leastSeen(SUBJ, G, function (z) { return 'subj:' + z.s.slice(0, 24); });
-        it = { q: y.s, sub: 'Type the SUBJECT (one word).', ans: y.a, mode: 'text', value: 30, long: true, steps: [y.why], key: 'subj:' + y.s.slice(0, 24) };
-      }
-      it.id = 'sch-gram-' + it.key.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      var b = p.b, prefix = /\+$/.test(b[0]);
+      it = { q: prefix ? b[0].replace('+', '') + ' + ' + b[1] : b[0] + ' + ' + b[1].replace('+', ''), sub: 'Join them into one word.', ans: b[2], mode: 'text', value: 30, copies: 2,
+        steps: [b[3], 'So it is ' + b[2] + '.'] };
     }
-    it.skill = k; it.level = s.lvl; it.copies = it.copies || 1;
+    it.key = idOf(p); it.id = 'sch-spell-' + it.key.replace(':', '-'); it.review = review;
+    return it;
+  }
+
+  function next() {
+    var k = chooseSkill(), x = st(k), def = SKILLS[k], it;
+    if (k === 'spell') { it = spellItem(); it.skill = k; it.lvlIndex = 0; it.lvlCount = 1; }
+    else {
+      var rv = dueReview(k), review = rv !== null && Math.random() < 0.6;
+      var li = review ? rv : Math.min(x.i, def.levels.length - 1), lvl = def.levels[li];
+      if (GEN[k]) { it = GEN[k](lvl); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
+      else {
+        var g = G[k], items = g.items.filter(function (y) { return y.l === lvl; });
+        if (!items.length) items = g.items;
+        var y = leastSeen(items, load().gram, function (z) { return k + ':' + z.s.slice(0, 28); });
+        it = { q: y.s, sub: g.sub, ans: y.a, mode: g.mode, value: 30, long: true, steps: [y.why], key: k + ':' + y.s.slice(0, 28), k: g.k || 0 };
+        it.id = 'sch-' + k + '-' + it.key.slice(k.length + 1).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      }
+      it.skill = k; it.level = lvl; it.lvlIndex = li; it.lvlCount = def.levels.length; it.review = review;
+    }
+    it.copies = it.copies || 1;
+    // Anti-inflation: a recall check on something already passed pays half; a guess on a k-choice item
+    // costs value/(k-1) when wrong, so guessing is worth nothing on average.
+    if (it.review || (k === 'spell' && (load().words[it.key] || {}).mastered)) it.value = Math.round(it.value / 2);
+    it.penalty = it.k ? Math.round(it.value / (it.k - 1)) : 0;
     load().last = k; save();
     return it;
   }
@@ -283,22 +386,52 @@
 
   function record(it, correct, meta) {
     meta = meta || {};
-    var s = sk(it.skill);
-    s.n++; if (correct) { s.right++; s.streak++; if (s.streak >= 2 && s.lvl < 5) { s.lvl++; s.streak = 0; } }
-    else { s.streak = 0; s.missAt = Date.now(); if (s.lvl > 3) s.lvl--; }
-    if (it.key) {
-      var store = it.skill === 'spell' ? load().words : load().gram;
-      var st = store[it.key] || (store[it.key] = { n: 0, right: 0, missAt: 0 });
-      st.n++; if (correct) st.right++; else st.missAt = Date.now();
+    var now = Date.now(), d = today(now);
+    if (it.skill === 'spell') {
+      var w = load().words, s = w[it.key] || (w[it.key] = { n: 0, right: 0, days: [], step: -1, due: 0 });
+      s.n++; s.lastOk = !!correct;
+      if (correct) {
+        s.right++; if (s.days.indexOf(d) < 0) s.days.push(d);
+        s.step = Math.min(s.step + 1, GAPS.length - 1); s.due = now + GAPS[s.step] * DAY;
+        if (s.days.length >= 2) s.mastered = true;   // right on 2 separate days
+      } else { s.missAt = now; s.step = -1; s.due = now + 10 * 60000; s.mastered = false; s.days = []; }
+    } else {
+      var x = st(it.skill), def = SKILLS[it.skill];
+      x.n++; if (correct) x.right++; else x.missAt = now;
+      if (it.review) {
+        var p = x.passed[it.lvlIndex];
+        if (p && correct) {
+          if (p.days.indexOf(d) < 0) p.days.push(d);
+          p.step = Math.min(p.step + 1, GAPS.length - 1); p.due = now + GAPS[p.step] * DAY;
+          if (p.days.length >= 2) p.mastered = true;
+        } else if (p) { delete x.passed[it.lvlIndex]; x.i = Math.min(x.i, it.lvlIndex); x.run = []; }
+      } else {
+        x.run.push(correct ? 1 : 0); if (x.run.length > 6) x.run.shift();
+        var tail = x.run.slice(-4), last3 = x.run.slice(-3);
+        if (tail.length === 4 && tail.every(Boolean)) {                       // push: up a level now
+          if (!x.passed[x.i]) x.passed[x.i] = { at: now, step: 0, due: now + GAPS[0] * DAY, days: [], mastered: false };
+          if (x.i < def.levels.length - 1) x.i++;
+          x.run = [];
+        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > 0) { x.i--; x.run = []; }
+      }
+    }
+    if (it.key && it.skill !== 'spell') {
+      var gs = load().gram, g = gs[it.key] || (gs[it.key] = { n: 0, right: 0, missAt: 0 });
+      g.n++; g.lastOk = !!correct; if (correct) g.right++; else g.missAt = now;
     }
     save();
     if (root.arcadeLog && root.arcadeLog.event) {
+      var xs = it.skill === 'spell' ? null : st(it.skill);
       root.arcadeLog.event('learn.item', {
-        item_id: it.id, skill: it.skill, level: it.level, prompt: it.q, correct: !!correct, typed: meta.typed == null ? null : String(meta.typed),
-        answer: it.ans, total_ms: Math.round(meta.totalMs || 0), surface: meta.surface || null,
+        item_id: it.id, skill: it.skill, level: it.level == null ? null : it.level, level_index: it.lvlIndex, level_count: it.lvlCount,
+        review: !!it.review, prompt: it.q, correct: !!correct, typed: meta.typed == null ? null : String(meta.typed), answer: it.ans,
+        total_ms: Math.round(meta.totalMs || 0), surface: meta.surface || null,
+        now_level_index: xs ? xs.i : null, mastered_levels: xs ? Object.keys(xs.passed).filter(function (i) { return xs.passed[i].mastered; }).length : null,
+        passed_levels: xs ? Object.keys(xs.passed).length : null, skill_mastered: xs ? mastered(it.skill) : null,
+        word_mastered: it.skill === 'spell' ? !!(load().words[it.key] || {}).mastered : null,
       }, { game_key: meta.gameKey || null, question_id: it.id, severity: 'audit' });
     }
   }
 
-  root.School = { next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _divSteps: divSteps, _dstr: dstr, _dec: dec, levels: function () { return load().skills; } };
+  root.School = { next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _g: G, _skills: SKILLS, _divSteps: divSteps, _dstr: dstr, _dec: dec, _st: st, _mastered: mastered, levels: function () { return load().skills; } };
 })(typeof window !== 'undefined' ? window : globalThis);

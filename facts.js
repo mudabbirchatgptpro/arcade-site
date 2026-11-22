@@ -134,6 +134,7 @@
     meta = meta || {};
     var s = st(id), t = now();
     var fl = isFluentAttempt(correct, meta.firstKeyMs, meta.totalMs, meta.backspace);
+    var wasGold = status(id) === 'gold';
     s.n++;
     if (correct) s.right++; else s.wrong++;
     s.hist.push({ t: t, ok: !!correct, fk: meta.firstKeyMs == null ? null : Math.round(meta.firstKeyMs), tot: Math.round(meta.totalMs || 0), fl: fl, sf: meta.surface || null });
@@ -161,7 +162,7 @@
         answer: f ? f.ans : null, gear: 'sprint', surface: meta.surface || null,
       }, { game_key: meta.gameKey || null, question_id: id, severity: 'audit' });
     }
-    var earned = fuelEarn(correct, fl);
+    var earned = fuelEarn(correct, fl, wasGold);
     return { fluent: fl, status: status(id), earned: earned };
   }
 
@@ -170,7 +171,7 @@
   // retrieval all through play instead of one block he can bank and skip.
   // Fast fact = 20 s, right but slow = 10 s, wrong = nothing: knowing facts makes each stop shorter.
   var FUEL_KEY = 'pa_fuel_v1';
-  var EARN_FAST = 20000, EARN_SLOW = 10000, CHUNK = 60000, TANK_MAX = 60000;
+  var EARN_FAST = 20000, EARN_SLOW = 10000, EARN_GOLD = 5000, CHUNK = 60000, TANK_MAX = 60000;
   var SEGMENT_MAX = 90000; // a stop fires at most every ~75 s of play, so a longer gap means he left
   function fuelLoad() {
     var f;
@@ -180,10 +181,12 @@
     return f;
   }
   function fuelSave(f) { store.set(FUEL_KEY, JSON.stringify(f)); }
-  function fuelEarn(correct, fl) {
-    var add = !correct ? 0 : fl ? EARN_FAST : EARN_SLOW;
-    if (add) { var f = fuelLoad(); f.ms = Math.min(TANK_MAX, f.ms + add); fuelSave(f); }
-    return add;
+  // A locked-in (gold) fact is review: it pays 5 s, so cheap facts cannot fund play once he knows them.
+  function fuelEarn(correct, fl, gold) {
+    var add = !correct ? 0 : gold ? EARN_GOLD : fl ? EARN_FAST : EARN_SLOW;
+    if (!add) return 0;
+    var f = fuelLoad(), before = f.ms; f.ms = Math.min(TANK_MAX, f.ms + add); fuelSave(f);
+    return f.ms - before; // what actually went in (nothing once the tank is full)
   }
   // Burn the play time since the game last started or resumed.
   function fuelDrain() {
@@ -197,7 +200,7 @@
   }
   function fuelPlay() { var f = fuelLoad(); f.playingSince = now(); fuelSave(f); }
   function fuelMs() { return fuelLoad().ms; }
-  function fuelGive(ms) { var f = fuelLoad(); f.ms = Math.min(TANK_MAX, f.ms + ms); fuelSave(f); return ms; }
+  function fuelGive(ms) { var f = fuelLoad(); var before = f.ms; f.ms = Math.max(0, Math.min(TANK_MAX, f.ms + ms)); fuelSave(f); return f.ms - before; }
   function fmtFuel(ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
   // The pattern for a fact family, shown on the miss card. Never the answer.

@@ -44,7 +44,7 @@
     $('tankfill').style.width = Math.min(100, 100 * ms / NEED) + '%';
     $('tankms').textContent = E.fmtFuel(ms);
     $('tankneed').textContent = E.fmtFuel(NEED);
-    $('earn').textContent = earned ? '+' + Math.round(earned / 1000) + ' s' : '';
+    $('earn').textContent = earned > 0 ? '+' + Math.round(earned / 1000) + ' s' : earned < 0 ? Math.round(earned / 1000) + ' s' : (loadingPractice ? 'tank full' : '');
     $('rates').textContent = 'fast +' + E.FUEL.FAST / 1000 + ' s · slow +' + E.FUEL.SLOW / 1000 + ' s';
   }
 
@@ -58,25 +58,23 @@
 
   // One school item opens a stop when it comes up (what class is on, spelling, sentences);
   // facts stay the main diet until they are fluent (Gretchen's first priority).
-  var schoolFirst = false;
-  (function () {
-    if (!window.School) return;
-    var share = E.counts().fluent / 120;
-    schoolFirst = Math.random() < Math.min(0.9, 0.3 + 0.6 * share);
-    if (qs.get('school') === '1') schoolFirst = true; // testing
-  })();
+  // Each card is a school item with probability pSchool (rises as facts get fluent); while the game is
+  // loading after he is charged, mostly school items: the wait is learning time, and it earns nothing.
+  var schoolFirst = qs.get('school') === '1'; // testing
+  var pSchool = window.School ? Math.min(0.85, 0.25 + 0.6 * E.counts().fluent / 120) : 0;
+  var loadingPractice = false;
 
   function next() {
     copyMode = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
-    if (schoolFirst) {
+    if (window.School && (schoolFirst || Math.random() < (loadingPractice ? 0.8 : pSchool))) {
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;
       $fact.className = 'fact' + (cur.long || cur.q.length > 22 ? ' long' : cur.q.length > 12 ? ' mid' : '');
       $fact.innerHTML = esc(cur.q) + (cur.long || cur.mode === 'text' ? '' : ' <span class="eq">=</span>') + (cur.sub ? '<div class="ask">' + esc(cur.sub) + '</div>' : '');
-      $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + 'Worth +' + cur.value + ' s · Enter';
+      $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + (loadingPractice ? 'Practice while it loads' : 'Worth +' + cur.value + ' s' + (cur.penalty ? ' · a wrong guess costs ' + cur.penalty + ' s' : '')) + ' · Enter';
       setMode(cur.mode);
     } else {
       cur = E.pick(); cur.school = false;
@@ -100,11 +98,13 @@
       right++;
       gauge(E.fuelGive(cur.value * 1000));
       $card.className = 'card right';
-      if (E.fuelMs() >= NEED) setTimeout(factsDone, 300); else setTimeout(next, 300);
+      if (E.fuelMs() >= NEED && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
       return;
     }
-    // Break it down: every step, then he types the answer (spelling: twice). No charge for a miss.
-    gauge(0);
+    // Break it down: every step, then he types the answer (spelling: twice). A miss earns nothing,
+    // and a wrong guess on a choice item costs fuel (guessing is worth zero on average).
+    var lost = cur.penalty && !loadingPractice ? E.fuelGive(-cur.penalty * 1000) : 0;
+    gauge(lost);
     $card.className = 'card wrong';
     $hint.className = 'hint miss';
     copiesLeft = cur.copies || 1;
@@ -141,7 +141,7 @@
     if (correct) {
       right++;
       $card.className = 'card right';
-      if (E.fuelMs() >= NEED) setTimeout(factsDone, 300);
+      if (E.fuelMs() >= NEED && !loadingPractice) setTimeout(factsDone, 300);
       else setTimeout(next, 300);
     } else {
       // Show the fact and its pattern; he types it once. A miss earns no fuel.
@@ -161,10 +161,12 @@
     log('pit.done', { surface: surface, typed: typed, right: right, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
     if (isBreak) return leave('break');
     if (gameReady) return leave('ready');
-    $card.style.display = 'none';
-    $label.textContent = 'Charged';
+    // Charged but the game is still loading: keep the questions coming (the tank is full, so no fuel).
+    loadingPractice = true;
+    $label.textContent = '⚡ Charged · game loading, keep going';
     $sub.innerHTML = '<span class="loading-dot"></span>Game loading…';
     if (gameStuck) $go.style.display = 'inline-block';
+    next();
   }
 
   function leave(why) {
@@ -199,7 +201,7 @@
   // First-key time also from the input event (some input methods send no digit keydown).
   $ans.addEventListener('input', function () { if (firstKeyAt == null && !copyMode && $ans.value !== '') firstKeyAt = performance.now(); });
   document.addEventListener('mousedown', function (e) { if (e.target !== $go && e.target.id !== 'exit') setTimeout(function () { $ans.focus(); }, 0); });
-  window.addEventListener('focus', function () { if (!finishedFacts) $ans.focus(); });
+  window.addEventListener('focus', function () { if (!leaving) $ans.focus(); });
 
   $('exit').addEventListener('click', function () {
     log('pit.exit', { surface: surface, typed: typed, fuel_ms: E.fuelMs() });
