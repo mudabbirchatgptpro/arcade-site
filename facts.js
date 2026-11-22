@@ -197,6 +197,7 @@
   }
   function fuelPlay() { var f = fuelLoad(); f.playingSince = now(); fuelSave(f); }
   function fuelMs() { return fuelLoad().ms; }
+  function fuelGive(ms) { var f = fuelLoad(); f.ms = Math.min(TANK_MAX, f.ms + ms); fuelSave(f); return ms; }
   function fmtFuel(ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
   // The pattern for a fact family, shown on the miss card. Never the answer.
@@ -229,7 +230,7 @@
     pick: pick, record: record, status: status, counts: counts, recent: recent,
     run: run, saveRun: saveRun, runDoneToday: runDoneToday, ignitionCount: ignitionCount,
     today: today, isFluentAttempt: isFluentAttempt,
-    fuelMs: fuelMs, fuelDrain: fuelDrain, fuelPlay: fuelPlay, fmtFuel: fmtFuel,
+    fuelMs: fuelMs, fuelGive: fuelGive, fuelDrain: fuelDrain, fuelPlay: fuelPlay, fmtFuel: fmtFuel,
     FUEL: { FAST: EARN_FAST, SLOW: EARN_SLOW, CHUNK: CHUNK, MAX: TANK_MAX },
     _reset: function () { S = null; mem = {}; },
     _setNow: function (fn) { now = fn; },

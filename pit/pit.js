@@ -28,6 +28,7 @@
   var typed = 0, right = 0;
   var cur = null, shownAt = 0, firstKeyAt = null, backspace = false;
   var copyMode = false;      // after a miss: type the shown answer to continue
+  var inputMode = 'num', copiesLeft = 0;
   var busy = false, finishedFacts = false, gameReady = false, gameStuck = false, leaving = false;
 
   function log(type, payload) {
@@ -47,16 +48,69 @@
     $('rates').textContent = 'fast +' + E.FUEL.FAST / 1000 + ' s · slow +' + E.FUEL.SLOW / 1000 + ' s';
   }
 
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function setMode(mode) {
+    inputMode = mode;
+    $ans.setAttribute('inputmode', mode === 'text' ? 'text' : 'decimal');
+    $ans.maxLength = mode === 'num' && cur && !cur.school ? 4 : 24;
+    $ans.style.width = mode === 'num' && cur && !cur.school ? '220px' : '360px';
+  }
+
+  // One school item opens a stop when it comes up (what class is on, spelling, sentences);
+  // facts stay the main diet until they are fluent (Gretchen's first priority).
+  var schoolFirst = false;
+  (function () {
+    if (!window.School) return;
+    var share = E.counts().fluent / 120;
+    schoolFirst = Math.random() < Math.min(0.9, 0.3 + 0.6 * share);
+    if (qs.get('school') === '1') schoolFirst = true; // testing
+  })();
+
   function next() {
-    cur = E.pick();
-    copyMode = false; firstKeyAt = null; backspace = false; busy = false;
+    copyMode = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
     $card.className = 'card';
-    $fact.innerHTML = cur.q + ' <span class="eq">=</span>';
     $ans.value = '';
     $hint.className = 'hint';
-    $hint.textContent = 'Type it, then Enter';
+    if (schoolFirst) {
+      schoolFirst = false;
+      cur = window.School.next(); cur.school = true;
+      $fact.className = 'fact' + (cur.long || cur.q.length > 22 ? ' long' : cur.q.length > 12 ? ' mid' : '');
+      $fact.innerHTML = esc(cur.q) + (cur.long || cur.mode === 'text' ? '' : ' <span class="eq">=</span>') + (cur.sub ? '<div class="ask">' + esc(cur.sub) + '</div>' : '');
+      $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + 'Worth +' + cur.value + ' s · Enter';
+      setMode(cur.mode);
+    } else {
+      cur = E.pick(); cur.school = false;
+      $fact.className = 'fact';
+      $fact.innerHTML = cur.q + ' <span class="eq">=</span>';
+      $hint.textContent = 'Type it, then Enter';
+      setMode('num');
+    }
     shownAt = performance.now();
     $ans.focus();
+  }
+
+  function submitSchool(raw) {
+    var t = performance.now(), correct = window.School.check(cur, raw);
+    window.School.record(cur, correct, { typed: raw, totalMs: t - shownAt, surface: surface, gameKey: gameKey });
+    if (ov && ov.recordAttempt) {
+      ov.recordAttempt({ deviceLocalKey: player, attemptId: uuid(), overrideId: null, questionId: cur.id, correct: correct, gameKey: gameKey }).catch(function () {});
+    }
+    typed++;
+    if (correct) {
+      right++;
+      gauge(E.fuelGive(cur.value * 1000));
+      $card.className = 'card right';
+      if (E.fuelMs() >= NEED) setTimeout(factsDone, 300); else setTimeout(next, 300);
+      return;
+    }
+    // Break it down: every step, then he types the answer (spelling: twice). No charge for a miss.
+    gauge(0);
+    $card.className = 'card wrong';
+    $hint.className = 'hint miss';
+    copiesLeft = cur.copies || 1;
+    $hint.innerHTML = '<ol class="steps">' + cur.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
+      'Type <b>' + esc(cur.ans) + '</b>' + (copiesLeft > 1 ? ' ' + copiesLeft + ' times' : '') + ' to keep going';
+    $ans.value = ''; copyMode = true; busy = false; $ans.focus();
   }
 
   function submit() {
@@ -65,10 +119,13 @@
     if (raw === '') return;
     var val = parseInt(raw, 10);
     if (copyMode) {
-      if (val === cur.ans) { copyMode = false; busy = true; setTimeout(next, 250); }
+      var ok = cur.school ? window.School.check(cur, raw) : val === cur.ans;
+      if (ok && cur.school && --copiesLeft > 0) { $ans.value = ''; $hint.lastChild.textContent = ' once more to keep going'; $ans.focus(); return; }
+      if (ok) { copyMode = false; busy = true; setTimeout(next, 250); }
       else { $ans.value = ''; $ans.focus(); }
       return;
     }
+    if (cur.school) { busy = true; return submitSchool(raw); }
     busy = true;
     var t = performance.now();
     var correct = val === cur.ans;
@@ -132,7 +189,12 @@
       if (firstKeyAt == null && !copyMode) firstKeyAt = performance.now();
       return;
     }
-    if (e.key.length === 1) e.preventDefault(); // digits only
+    if (e.key.length === 1) {
+      var okKey = inputMode === 'text' ? /^[a-zA-Z' -]$/.test(e.key)
+        : inputMode === 'rem' ? /^[0-9rR ,]$/.test(e.key)
+        : (cur && cur.school ? /^[0-9.,]$/.test(e.key) : false);
+      if (!okKey) e.preventDefault();
+    }
   });
   // First-key time also from the input event (some input methods send no digit keydown).
   $ans.addEventListener('input', function () { if (firstKeyAt == null && !copyMode && $ans.value !== '') firstKeyAt = performance.now(); });
