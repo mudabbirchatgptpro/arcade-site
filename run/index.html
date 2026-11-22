@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Today's Run</title>
+<title>Fill the tank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
 <style>
@@ -48,7 +48,7 @@
 
   <!-- Intro -->
   <section id="intro" class="wrap" style="padding:0">
-    <h1>Today's Run</h1>
+    <h1>Fill the tank</h1>
     <div class="dim" id="introtext">3 heats of 40 right answers. Race your ghost.</div>
     <div class="dim" id="introsub"></div>
     <button class="big" id="start">Start heat 1</button>
@@ -56,7 +56,7 @@
 
   <!-- Heat -->
   <section id="heat" class="wrap hidden" style="padding:0">
-    <div class="row"><span id="count">0 / 40</span><span id="clock">0.0 s</span></div>
+    <div class="row"><span id="count">0 / 40</span><span>Fuel <b id="fuel">0:00</b> <span id="earn" style="color:var(--go)"></span></span><span id="clock">0.0 s</span></div>
     <div class="track"><div class="bar me" id="me"></div><div class="bar ghost" id="ghost"></div></div>
     <div class="row dim"><span>You</span><span id="ghostlabel">Ghost: none yet</span></div>
     <div class="card" id="card">
@@ -84,7 +84,7 @@
       <div class="loot" id="loot"></div>
       <div class="odds">Odds: common 60% · rare 28% · epic 10% · legendary 2%. Beat your ghost for better odds.</div>
     </div>
-    <div class="dim" id="perk">Perk unlocked: quick ignition today (1 fact to start a game, not 5).</div>
+    <div class="dim" id="perk"></div>
     <a href="/home/"><button class="big">Back to games</button></a>
   </section>
 </div>

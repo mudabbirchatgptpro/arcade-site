@@ -1,4 +1,4 @@
-/* Today's Run, Sprint gear (redesign 2026-11-22).
+/* Fill the tank (was Today's Run), Sprint gear (redesign 2026-11-22). Every fact earns fuel (play time).
  * 3 heats; a heat ends at N right answers (default 40, ?n= to change for testing), never on a timer.
  * Clock counts up; ghost = his best heat time. Same typed rules as the pit stop.
  * After heat 3: receipt, one loot card per day, quick-ignition perk for the rest of the day.
@@ -26,9 +26,10 @@
   function uuid() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2); }
   function fmt(ms) { return (ms / 1000).toFixed(1) + ' s'; }
 
-  $('introtext').textContent = HEATS + ' heat' + (HEATS > 1 ? 's' : '') + ' of ' + N + ' right answers. Race your ghost.';
-  if (E.runDoneToday()) $('introsub').textContent = 'Run already done today. Extra heats still grow your grid (no new loot).';
-  else $('introsub').textContent = 'Pays: 1 loot card, and quick ignition for the rest of today.';
+  E.fuelDrain();
+  function fuelShow(earned) { $('fuel').textContent = E.fmtFuel(E.fuelMs()); $('earn').textContent = earned ? '+' + Math.round(earned / 1000) + ' s' : ''; }
+  $('introtext').textContent = 'Fuel now ' + E.fmtFuel(E.fuelMs()) + '. Fast fact +30 s of play, slow +15 s.';
+  $('introsub').textContent = HEATS + ' heat' + (HEATS > 1 ? 's' : '') + ' of ' + N + '. Race your ghost.' + (E.runDoneToday() ? '' : ' First fill today pays a loot card.');
 
   function startHeat() {
     heat++; right = 0; tally.slow = null;
@@ -38,6 +39,7 @@
     $('ghost').style.width = '0%';
     $('ghostlabel').textContent = ghostMs ? 'Ghost: ' + fmt(ghostMs) : 'Ghost: none yet';
     show('heat');
+    fuelShow(0);
     t0 = performance.now();
     tick = setInterval(function () {
       var el = performance.now() - t0;
@@ -73,7 +75,8 @@
     var t = performance.now();
     var ok = val === cur.ans;
     var fk = firstKeyAt == null ? null : firstKeyAt - shownAt;
-    E.record(cur.id, ok, { firstKeyMs: fk, totalMs: t - shownAt, backspace: backspace, typed: raw, surface: 'heat', gameKey: 'run' });
+    var res = E.record(cur.id, ok, { firstKeyMs: fk, totalMs: t - shownAt, backspace: backspace, typed: raw, surface: 'heat', gameKey: 'run' });
+    fuelShow(res.earned);
     if (window.arcadeShell && window.arcadeShell.recordAttempt) {
       var player = (function () { try { return localStorage.getItem('isee_player_id') || 'parker'; } catch (e) { return 'parker'; } })();
       window.arcadeShell.recordAttempt({ deviceLocalKey: player, attemptId: uuid(), overrideId: null, questionId: cur.id, correct: ok, gameKey: 'run' }).catch(function () {});
@@ -139,6 +142,7 @@
       ['Right first time', Math.round(100 * tally.right / Math.max(1, tally.typed)) + '%'],
       ['Median first key', (median(tally.fks) / 1000).toFixed(1) + ' s'],
       ['Fluent cells', after.fluent + ' / 120 (' + (after.fluent - before.fluent >= 0 ? '+' : '') + (after.fluent - before.fluent) + ')'],
+      ['Fuel in tank', E.fmtFuel(E.fuelMs()) + ' of play'],
     ];
     $('stats').innerHTML = stats.map(function (s) { return '<div class="stat"><span class="dim">' + s[0] + '</span><b>' + s[1] + '</b></div>'; }).join('');
     R = E.run();
@@ -149,7 +153,7 @@
       dealLoot();
     } else {
       $('lootwrap').classList.add('hidden');
-      $('perk').textContent = 'Run was already done today: grid progress only.';
+      $('perk').textContent = 'Loot is once a day. The fuel is yours.';
     }
     log('run.done', { first_today: firstToday, typed: tally.typed, right: tally.right, median_fk: Math.round(median(tally.fks)), fluent: after.fluent, gained: after.fluent - before.fluent, beat_ghost: tally.beatGhost });
     $('heatlabel').textContent = '';

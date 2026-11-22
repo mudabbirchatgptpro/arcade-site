@@ -161,8 +161,42 @@
         answer: f ? f.ans : null, gear: 'sprint', surface: meta.surface || null,
       }, { game_key: meta.gameKey || null, question_id: id, severity: 'audit' });
     }
-    return { fluent: fl, status: status(id) };
+    var earned = fuelEarn(correct, fl);
+    return { fluent: fl, status: status(id), earned: earned };
   }
+
+  // ── Fuel (redesign 2026-11-22): play time is bought with typed facts ──
+  // Fast fact = 30 s of play, right but slow = 15 s, wrong = nothing. A game starts and
+  // continues only with fuel; a pit stop asks for facts until the next 3 minutes are paid.
+  // The tank empties at midnight, so every day needs fresh practice.
+  var FUEL_KEY = 'pa_fuel_v1';
+  var EARN_FAST = 30000, EARN_SLOW = 15000, CHUNK = 180000, TANK_MAX = 3600000;
+  var SEGMENT_MAX = 240000; // a pit stop fires at most every ~3.3 min of play, so a longer gap means he left
+  function fuelLoad() {
+    var f;
+    try { f = JSON.parse(store.get(FUEL_KEY) || 'null'); } catch (e) { f = null; }
+    if (!f || f.day !== today()) f = { day: today(), ms: 0, playingSince: null };
+    return f;
+  }
+  function fuelSave(f) { store.set(FUEL_KEY, JSON.stringify(f)); }
+  function fuelEarn(correct, fl) {
+    var add = !correct ? 0 : fl ? EARN_FAST : EARN_SLOW;
+    if (add) { var f = fuelLoad(); f.ms = Math.min(TANK_MAX, f.ms + add); fuelSave(f); }
+    return add;
+  }
+  // Burn the play time since the game last started or resumed.
+  function fuelDrain() {
+    var f = fuelLoad();
+    if (f.playingSince) {
+      var used = Math.min(SEGMENT_MAX, Math.max(0, now() - f.playingSince));
+      f.ms = Math.max(0, f.ms - used); f.playingSince = null; fuelSave(f);
+      if (root.arcadeLog && root.arcadeLog.event) root.arcadeLog.event('fuel.burn', { used_ms: used, left_ms: f.ms });
+    }
+    return f.ms;
+  }
+  function fuelPlay() { var f = fuelLoad(); f.playingSince = now(); fuelSave(f); }
+  function fuelMs() { return fuelLoad().ms; }
+  function fmtFuel(ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
   // The pattern for a fact family, shown on the miss card. Never the answer.
   var FAMILY = {
@@ -194,6 +228,8 @@
     pick: pick, record: record, status: status, counts: counts, recent: recent,
     run: run, saveRun: saveRun, runDoneToday: runDoneToday, ignitionCount: ignitionCount,
     today: today, isFluentAttempt: isFluentAttempt,
+    fuelMs: fuelMs, fuelDrain: fuelDrain, fuelPlay: fuelPlay, fmtFuel: fmtFuel,
+    FUEL: { FAST: EARN_FAST, SLOW: EARN_SLOW, CHUNK: CHUNK, MAX: TANK_MAX },
     _reset: function () { S = null; mem = {}; },
     _setNow: function (fn) { now = fn; },
   };

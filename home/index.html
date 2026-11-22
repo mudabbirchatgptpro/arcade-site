@@ -61,8 +61,10 @@
     #fdetail{min-height:18px;font-size:13px;font-weight:700;color:#cfd6f5;margin-top:6px}
   </style>
   <div class="run-card" id="run-card">
-    <div><h2 id="rc-title">Today's Run</h2><div class="rc-sub" id="rc-sub">3 heats, about 8 min. Pays: 1 loot card + quick ignition all day.</div></div>
-    <a href="/run/" id="rc-go">Start Run</a>
+    <div style="flex:1;margin-right:22px"><h2 id="rc-title">Fuel 0:00</h2>
+      <div style="height:14px;border-radius:7px;background:#ffffff14;overflow:hidden;margin:8px 0 6px"><i id="rc-tank" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#00e5a8)"></i></div>
+      <div class="rc-sub" id="rc-sub">Games run on fuel. Fast fact +30 s of play, slow +15 s.</div></div>
+    <a href="/run/" id="rc-go">Fill the tank</a>
   </div>
   <div class="fgrid-wrap">
     <div class="fgrid-head"><span>Fact grid</span><span id="fgrid-count"></span></div>
@@ -572,14 +574,16 @@ function loadHub(playerId) {
 <script>
 (function(){
   var E=window.FactEngine; if(!E) return;
-  var r=E.run();
-  if(E.runDoneToday()){
-    document.getElementById('run-card').classList.add('done');
-    document.getElementById('rc-title').textContent="Run done today ✓";
-    var l=r.last||{};
-    document.getElementById('rc-sub').textContent=(l.typed||0)+' facts typed. Quick ignition is on.';
-    document.getElementById('rc-go').textContent='Race again';
+  // Fuel gauge. Any sign of him on Home means the game is over: stop the fuel clock.
+  function tank(){
+    E.fuelDrain();
+    var ms=E.fuelMs();
+    document.getElementById('rc-title').textContent='Fuel '+E.fmtFuel(ms);
+    document.getElementById('rc-tank').style.width=Math.min(100,100*ms/E.FUEL.MAX)+'%';
+    document.getElementById('rc-go').textContent=ms>=E.FUEL.CHUNK?'Top up':'Fill the tank';
   }
+  tank();
+  ['pointermove','keydown','focus'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) tank(); }catch(e){} },true);});
   function build(op,el){
     var g=document.getElementById(el); g.innerHTML='<span></span>';
     for(var c=1;c<=12;c++){g.innerHTML+='<span style="text-align:center">'+c+'</span>';}
@@ -608,7 +612,7 @@ function loadHub(playerId) {
     var f0=E.byId(fresh[0]);
     H.say(fresh.length===1?'New gold: '+f0.q+'. Fast on three days.':fresh.length+' new gold squares, '+f0.q+' first.',{clip:true,trigger:'gold'});
   } else {
-    try{var k='pa_hoot_greet', d=E.today(); if(!E.runDoneToday() && localStorage.getItem(k)!==d){ if(H.say("Run's ready. Three heats, then a loot card.",{trigger:'greet'})) localStorage.setItem(k,d);} }catch(e){}
+    try{var k='pa_hoot_greet', d=E.today(); if(E.fuelMs()<E.FUEL.CHUNK && localStorage.getItem(k)!==d){ if(H.say("Tank's empty. Fast facts fill it twice as quick.",{trigger:'greet'})) localStorage.setItem(k,d);} }catch(e){}
   }
 })();
 </script>

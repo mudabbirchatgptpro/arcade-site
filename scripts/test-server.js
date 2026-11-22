@@ -19,6 +19,8 @@ function testManifest() {
   m.ui.overlay = '/pit/index.html';
   m.questions.mix = { facts: 1 };
   m.games = m.games.filter((g) => g.key !== 'fact-sprint');
+  // Fuel: a pit stop every ~3 min of play (the chunk the fuel stop sells).
+  m.breaks = { defaultIntervalMs: 180000, minMs: 150000, idealMs: 165000, hardMaxMs: 200000 };
   if (process.env.HOOT !== '1' && m.features.companion) m.features.companion.enabledKeys = [];
   m.version = m.version + '-redesign-test';
   return m;

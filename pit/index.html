@@ -13,9 +13,12 @@
   #root.fading { opacity: 0; }
   #exit { position: fixed; top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #ffffff14; color: var(--dim); font-size: 20px; cursor: pointer; }
   .label { font-family: 'Fredoka One', sans-serif; letter-spacing: 1px; color: var(--dim); font-size: 18px; text-transform: uppercase; }
-  .pips { display: flex; gap: 8px; height: 14px; }
-  .pip { width: 14px; height: 14px; border-radius: 50%; background: #ffffff1f; }
-  .pip.on { background: var(--go); }
+  .gauge { width: 440px; display: flex; flex-direction: column; gap: 6px; }
+  .tank { height: 18px; border-radius: 9px; background: #ffffff14; overflow: hidden; }
+  .tank i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd166, #00e5a8); transition: width .3s; }
+  .tankrow { display: flex; justify-content: space-between; font-weight: 800; font-size: 15px; color: var(--dim); }
+  .tankrow b { color: var(--ink); }
+  .earn { color: var(--go); font-weight: 900; min-width: 60px; text-align: right; }
   .card { background: var(--card); border-radius: 26px; padding: 34px 46px 28px; min-width: 440px; text-align: center; box-shadow: 0 20px 60px #0008; }
   .fact { font-family: 'Fredoka One', sans-serif; font-size: 84px; line-height: 1; white-space: nowrap; }
   .fact .eq { color: var(--dim); }
@@ -37,7 +40,8 @@
 <button id="exit" title="Back to arcade">←</button>
 <div id="root">
   <div class="label" id="label">Pit stop</div>
-  <div class="pips" id="pips"></div>
+  <div class="gauge" id="gauge"><div class="tank"><i id="tankfill"></i></div>
+    <div class="tankrow"><span>Fuel <b id="tankms">0:00</b> / <span id="tankneed">3:00</span></span><span class="earn" id="earn"></span><span>fast +30 s · slow +15 s</span></div></div>
   <div class="card" id="card">
     <div class="fact" id="fact">&nbsp;</div>
     <input id="ans" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="Your answer">
