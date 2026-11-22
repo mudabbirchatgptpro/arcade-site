@@ -17,6 +17,7 @@ function testManifest() {
   m.urls.hub = ORIGIN;
   m.ui.hub = '/home/';
   m.ui.overlay = '/pit/index.html';
+  m.ui.backButton = '/fuel-back.html';
   m.questions.mix = { facts: 1 };
   m.games = m.games.filter((g) => g.key !== 'fact-sprint');
   // Fuel: a pit stop every ~3 min of play (the chunk the fuel stop sells).

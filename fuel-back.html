@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>back + fuel</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100vw; height: 100vh;
+    background: transparent;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  .back-btn {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(20, 0, 40, 0.85);
+    border: 2px solid rgba(255, 102, 204, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 102, 204, 0.3);
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    -webkit-app-region: no-drag;
+    font-family: -apple-system, 'Avenir Next', sans-serif;
+  }
+  .back-btn:hover {
+    background: rgba(40, 0, 80, 0.95);
+    border-color: rgba(255, 102, 204, 0.9);
+    transform: scale(1.08);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6), 0 0 50px rgba(255, 102, 204, 0.5);
+  }
+  .back-btn:active {
+    transform: scale(0.95);
+  }
+  .label {
+    position: fixed;
+    top: 22px;
+    left: 78px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    background: rgba(20, 0, 40, 0.7);
+    padding: 7px 12px;
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: -apple-system, 'Avenir Next', sans-serif;
+    white-space: nowrap;
+  }
+  .back-btn:hover ~ .label { opacity: 1; }
+  .fuel {
+    position: fixed; top: 22px; left: 78px;
+    font: 800 15px -apple-system, 'Avenir Next', sans-serif; color: #fff;
+    background: rgba(20, 0, 40, 0.8); padding: 6px 12px; border-radius: 14px;
+    border: 2px solid rgba(0, 229, 168, 0.6); pointer-events: none; white-space: nowrap; display: none;
+  }
+  .fuel.low { border-color: #ffd166; color: #ffd166; }
+  .fuel.out { border-color: #ff6b6b; color: #ff6b6b; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .45; } }
+  .back-btn:hover ~ .fuel { display: none !important; }
+</style>
+</head>
+<body>
+  <button class="back-btn" id="back" aria-label="Back to arcade">←</button>
+  <div class="label">Back to arcade</div>
+  <div class="fuel" id="fuel"></div>
+  <script src="/env.js"></script>
+  <script src="/event-types.js"></script>
+  <script>window.__EVENT_SOURCE = 'arcade-hub-overlay';</script>
+  <script src="/event-logger.js"></script>
+  <script>
+    const btn = document.getElementById('back');
+    btn.addEventListener('click', () => {
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.5';
+      if (window.arcadeLog && window.ARCADE_EVENT_TYPES) {
+        window.arcadeLog.event(window.ARCADE_EVENT_TYPES.BACK_BUTTON_CLICK, { from: 'floating-button' });
+      }
+      if (window.arcadeOverlay && typeof window.arcadeOverlay.requestExit === 'function') {
+        window.arcadeOverlay.requestExit().catch(() => {
+          // If exit fails for any reason, re-enable so kid can try again.
+          btn.style.pointerEvents = 'auto';
+          btn.style.opacity = '1';
+        });
+      }
+    });
+  </script>
+  <script>
+    // Fuel left in this stretch of play, so a stop never comes as a surprise.
+    (function () {
+      var el = document.getElementById('fuel');
+      function tick() {
+        var f = null;
+        try { f = JSON.parse(localStorage.getItem('pa_fuel_v1') || 'null'); } catch (e) {}
+        if (!f || !f.playingSince) { el.style.display = 'none'; return; }
+        var left = Math.max(0, f.ms - (Date.now() - f.playingSince)), s = Math.ceil(left / 1000);
+        el.style.display = 'block';
+        el.className = 'fuel' + (s <= 0 ? ' out' : s <= 30 ? ' low' : '');
+        el.textContent = s <= 0 ? '⛽ Refuel next stop' : '⛽ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + (s <= 30 ? ' · P = stop now' : '');
+      }
+      tick(); setInterval(tick, 500);
+    })();
+  </script>
+</body>
+</html>
