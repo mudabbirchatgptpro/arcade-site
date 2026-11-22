@@ -166,16 +166,17 @@
   }
 
   // ── Fuel (redesign 2026-11-22): play time is bought with typed facts ──
-  // Fast fact = 30 s of play, right but slow = 15 s, wrong = nothing. A game starts and
-  // continues only with fuel; a pit stop asks for facts until the next 3 minutes are paid.
-  // The tank empties at midnight, so every day needs fresh practice.
+  // The tank holds one minute of play, so he charges up about every minute: short, spaced
+  // retrieval all through play instead of one block he can bank and skip.
+  // Fast fact = 20 s, right but slow = 10 s, wrong = nothing: knowing facts makes each stop shorter.
   var FUEL_KEY = 'pa_fuel_v1';
-  var EARN_FAST = 30000, EARN_SLOW = 15000, CHUNK = 180000, TANK_MAX = 3600000;
-  var SEGMENT_MAX = 240000; // a pit stop fires at most every ~3.3 min of play, so a longer gap means he left
+  var EARN_FAST = 20000, EARN_SLOW = 10000, CHUNK = 60000, TANK_MAX = 60000;
+  var SEGMENT_MAX = 90000; // a stop fires at most every ~75 s of play, so a longer gap means he left
   function fuelLoad() {
     var f;
     try { f = JSON.parse(store.get(FUEL_KEY) || 'null'); } catch (e) { f = null; }
     if (!f || f.day !== today()) f = { day: today(), ms: 0, playingSince: null };
+    if (f.ms > TANK_MAX) f.ms = TANK_MAX;
     return f;
   }
   function fuelSave(f) { store.set(FUEL_KEY, JSON.stringify(f)); }

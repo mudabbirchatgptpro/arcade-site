@@ -114,8 +114,8 @@
         if (!f || !f.playingSince) { el.style.display = 'none'; return; }
         var left = Math.max(0, f.ms - (Date.now() - f.playingSince)), s = Math.ceil(left / 1000);
         el.style.display = 'block';
-        el.className = 'fuel' + (s <= 0 ? ' out' : s <= 30 ? ' low' : '');
-        el.textContent = s <= 0 ? '⛽ Refuel next stop' : '⛽ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + (s <= 30 ? ' · P = stop now' : '');
+        el.className = 'fuel' + (s <= 0 ? ' out' : s <= 10 ? ' low' : '');
+        el.textContent = s <= 0 ? '⚡ Charge up · press P' : s <= 10 ? '⚡ Charge up soon · ' + s + ' s' : '⚡ ' + s + ' s';
       }
       tick(); setInterval(tick, 500);
     })();

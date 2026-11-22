@@ -381,10 +381,10 @@
     }
   ],
   "breaks": {
-    "defaultIntervalMs": 180000,
-    "minMs": 150000,
-    "idealMs": 165000,
-    "hardMaxMs": 200000
+    "defaultIntervalMs": 60000,
+    "minMs": 50000,
+    "idealMs": 55000,
+    "hardMaxMs": 75000
   },
   "questions": {
     "batchSize": 15,
@@ -440,5 +440,5 @@
     "heartbeatMs": 30000,
     "manifestMs": 60000
   },
-  "version": "2026-11-22.1-fuel"
+  "version": "2026-11-22.2-charge"
 }

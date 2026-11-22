@@ -1,9 +1,9 @@
 /* Fuel stop: ignition + pit stop (redesign 2026-11-22). Replaces /overlay/ when the manifest
  * points ui.overlay here.
- *   break=1  -> pit stop: the game paused because about 3 minutes of play went by.
+ *   break=1  -> pit stop: the game paused because about a minute of play went by.
  *   else     -> ignition: a game is starting.
  * Play costs fuel and fuel comes only from typed facts (fast +30 s, slow +15 s, wrong 0).
- * Either way he types until the tank holds the next 3 minutes; if it already does, the
+ * Either way he types until the tank holds the next minute (the tank holds no more); if it already does, the
  * stop is a one-second "tank ok" and the game carries on. Nothing opens with time; Enter is
  * required; a miss shows the fact and its pattern, he types it once, and it earns nothing.
  * The "start game" button only appears after the tank is full (and only if the shell says
@@ -44,6 +44,7 @@
     $('tankms').textContent = E.fmtFuel(ms);
     $('tankneed').textContent = E.fmtFuel(NEED);
     $('earn').textContent = earned ? '+' + Math.round(earned / 1000) + ' s' : '';
+    $('rates').textContent = 'fast +' + E.FUEL.FAST / 1000 + ' s · slow +' + E.FUEL.SLOW / 1000 + ' s';
   }
 
   function next() {
@@ -104,7 +105,7 @@
     if (isBreak) return leave('break');
     if (gameReady) return leave('ready');
     $card.style.display = 'none';
-    $label.textContent = 'Tank full';
+    $label.textContent = 'Charged';
     $sub.innerHTML = '<span class="loading-dot"></span>Game loading…';
     if (gameStuck) $go.style.display = 'inline-block';
   }
@@ -161,7 +162,7 @@
     if (isBreak) setTimeout(function () { leave('paid'); }, 900);
     else { $sub.innerHTML = '<span class="loading-dot"></span>Game loading…'; if (gameReady) leave('ready'); }
   } else {
-    $label.textContent = isBreak ? 'Pit stop: refuel' : (startFuel ? 'Top up to start' : 'Fill up to start');
+    $label.textContent = isBreak ? '⚡ Charge up' : '⚡ Charge up to start';
     next();
   }
 })();

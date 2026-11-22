@@ -20,8 +20,8 @@ function testManifest() {
   m.ui.backButton = '/fuel-back.html';
   m.questions.mix = { facts: 1 };
   m.games = m.games.filter((g) => g.key !== 'fact-sprint');
-  // Fuel: a pit stop every ~3 min of play (the chunk the fuel stop sells).
-  m.breaks = { defaultIntervalMs: 180000, minMs: 150000, idealMs: 165000, hardMaxMs: 200000 };
+  // Charge: a stop about every minute of play (the tank holds one minute).
+  m.breaks = { defaultIntervalMs: 60000, minMs: 50000, idealMs: 55000, hardMaxMs: 75000 };
   if (process.env.HOOT !== '1' && m.features.companion) m.features.companion.enabledKeys = [];
   m.version = m.version + '-redesign-test';
   return m;
