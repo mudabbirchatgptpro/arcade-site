@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Parker live</title><meta name="referrer" content="no-referrer"><style>
+:root{--bg:#0b1024;--card:#141b38;--line:#26305a;--ink:#eef1fb;--dim:#97a2c6;--go:#2fd69a;--bad:#ff6b6b;--warn:#ffc857;--hoot:#a78bfa}
+@media (prefers-color-scheme:light){:root{--bg:#f4f6fb;--card:#fff;--line:#e2e6f0;--ink:#141a2e;--dim:#5d6785}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,sans-serif}
+.w{max-width:1100px;margin:0 auto;padding:18px 16px 40px}h1{font-size:20px;margin:0}.dim{color:var(--dim)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-weight:700}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--dim)}.on .dot{background:var(--go);box-shadow:0 0 0 4px #2fd69a33}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.k{font-size:12px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.4px}.v{font-size:26px;font-weight:800;margin-top:2px}.s{font-size:13px;color:var(--dim)}
+.now{margin-top:14px;font-size:17px;font-weight:700}.now b{color:var(--warn)}
+.cols{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:14px}@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.feed{max-height:62vh;overflow:auto}.row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row time{color:var(--dim);min-width:68px;font-variant-numeric:tabular-nums}.ok{color:var(--go)}.bad{color:var(--bad)}.warn{color:var(--warn)}.hoot{color:var(--hoot)}.row span{color:var(--ink)}
+.tag{display:inline-block;width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:5px 2px;border-bottom:1px solid var(--line)}td:last-child{text-align:right}
+.fresh{animation:f 1.6s ease-out}@keyframes f{from{background:#2fd69a33}to{background:transparent}}
+</style></head><body><div class="w"><div id="login" class="card" style="max-width:360px;margin:40px auto;display:none">
+<div class="k">Parker · live dashboard</div><div style="margin:10px 0 6px">Sign in</div>
+<input id="lu" placeholder="Username" autocomplete="username" style="width:100%;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:8px">
+<input id="lp" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px">
+<button id="lb" style="width:100%;padding:10px;border-radius:10px;border:0;background:#2fd69a;color:#04121a;font-weight:800;cursor:pointer">Sign in</button>
+<div id="le" class="s" style="margin-top:8px"></div></div><div id="app" style="display:none">
+<div class="top"><h1>Parker · live</h1><div class="pill" id="st"><span class="dot"></span><span id="stt">…</span></div></div>
+<div class="now" id="now"></div>
+<div class="grid" id="kpi"></div>
+<div class="cols"><div class="card"><div class="k">What just happened</div><div class="feed" id="feed"></div></div>
+<div><div class="card"><div class="k">Boss questions today</div><table id="skills"></table></div>
+<div class="card" style="margin-top:12px"><div class="k">Setup</div><div class="s" id="setup"></div></div></div></div>
+<div class="dim" style="font-size:12px;margin-top:12px">Updates every 5 s. Times are Eastern. <a style="color:inherit" href="#" id="rep">Full progress report</a> · <a style="color:inherit" href="#" id="out">Sign out</a></div>
+</div></div><script>
+var API='https://api.qurios.io',K='parker',seen=0,AUTH=null,timer=null;
+try{AUTH=sessionStorage.getItem('pa_dash_auth')}catch(e){}
+function showLogin(msg){document.getElementById('app').style.display='none';document.getElementById('login').style.display='block';document.getElementById('le').textContent=msg||'';clearInterval(timer)}
+function startApp(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load();clearInterval(timer);timer=setInterval(load,5000)}
+document.getElementById('lb').onclick=function(){AUTH='Basic '+btoa(document.getElementById('lu').value+':'+document.getElementById('lp').value);
+ fetch(API+'/live/data?key='+K,{headers:{authorization:AUTH},cache:'no-store'}).then(function(r){if(r.status===401)throw 0;try{sessionStorage.setItem('pa_dash_auth',AUTH)}catch(e){}startApp()}).catch(function(){showLogin('Wrong username or password.')})};
+document.getElementById('lp').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lb').click()});
+document.getElementById('out').onclick=function(e){e.preventDefault();try{sessionStorage.removeItem('pa_dash_auth')}catch(x){}AUTH=null;showLogin('Signed out.')};
+document.getElementById('rep').onclick=function(e){e.preventDefault();var w=window.open('','_blank');fetch(API+'/report?key='+K,{headers:{authorization:AUTH}}).then(function(r){return r.text()}).then(function(h){w.document.open();w.document.write(h);w.document.close()})};
+function tm(ms){return new Date(ms).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',second:'2-digit'})}
+function ago(ms){var s=Math.round((Date.now()-ms)/1000);return s<60?s+' s ago':s<3600?Math.round(s/60)+' min ago':Math.round(s/3600)+' h ago'}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+function kp(k,v,s){return '<div class="card"><div class="k">'+k+'</div><div class="v">'+(v==null?'–':v)+'</div><div class="s">'+(s||'')+'</div></div>'}
+function load(){fetch(API+'/live/data?key='+encodeURIComponent(K),{cache:'no-store',headers:{authorization:AUTH}}).then(function(r){if(r.status===401){showLogin('Please sign in again.');throw 0}return r.json()}).then(function(d){
+ var st=document.getElementById('st');
+ st.className='pill'+(d.active?' on':'');
+ document.getElementById('stt').textContent=!d.online?('Laptop offline · last seen '+(d.lastSeen?ago(d.lastSeen):'never')):d.active?('Playing'+(d.game?' · '+d.game:' · on Home')):('App open · not playing (last active '+(d.lastActive?ago(d.lastActive):'never')+')');
+ var n=document.getElementById('now');
+ if(d.online&&d.stop){n.innerHTML='⏸ In a '+(d.stop.surface==='pit'?'recharge stop':'power-up screen')+' ('+esc(d.stop.game||'')+') for '+Math.round((Date.now()-d.stop.startedAt)/1000)+' s · facts <b>'+Math.min(5,d.stop.factsRight)+' / 5</b> · '+d.stop.typed+' answered';}
+ else n.textContent=d.active?(d.game?'▶ Playing '+d.game:'🏠 On Home'):'';
+ var t=d.today;
+ document.getElementById('kpi').innerHTML=kp('In games today',t.playMin+' min',t.stops+' stops cleared')+kp('Facts',t.facts,(t.factsRightPct==null?'':t.factsRightPct+'% right · '+t.factsFastPct+'% fast'))+
+  kp('5 facts in',t.medianFiveS==null?null:t.medianFiveS+' s','his typing time, typical stop')+kp('Boss questions',t.boss,t.bossRightPct==null?'':t.bossRightPct+'% right first try')+
+  kp('Guided steps',t.guided,t.guided?t.guidedSolved+' solved on his own after':'')+kp('Watch for',(t.quits+t.oldScreen+(t.junk||0))||0,((t.junk?t.junk+' throwaway answers · ':'')+(t.quits?t.quits+' stops quit · ':'')+(t.oldScreen?t.oldScreen+' old-screen events':''))||'nothing odd');
+ document.getElementById('skills').innerHTML=t.skills.length?t.skills.map(function(s){return '<tr><td>'+esc(s.name)+'</td><td>'+s.right+'/'+s.n+'</td></tr>'}).join(''):'<tr><td class="dim">None yet today</td><td></td></tr>';
+ document.getElementById('feed').innerHTML=d.feed.map(function(f){return '<div class="row'+(f.at>seen&&seen?' fresh':'')+'"><time>'+tm(f.at)+'</time><i class="tag" style="background:var(--'+({ok:'go',bad:'bad',warn:'warn',hoot:'hoot'}[f.kind]||'dim')+')"></i><span>'+esc(f.text)+'</span></div>'}).join('')||'<div class="dim">Nothing yet.</div>';
+ if(d.feed[0])seen=d.feed[0].at;
+ document.getElementById('setup').innerHTML='Site settings '+esc(d.manifest||'?')+'<br>App '+esc(d.app||'?');
+}).catch(function(){document.getElementById('stt').textContent='Reconnecting…'})}
+if(AUTH)startApp();else showLogin();
+</script></body></html>
