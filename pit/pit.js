@@ -121,7 +121,7 @@
     'rem-word': 'After dividing, decide what the leftover means: does it need one more (round up), get dropped, or IS it the answer?',
   };
   var hootMsgs = [], $hb = $('hootbox'), $hbsay = $('hbsay');
-  function hootReset() { hootMsgs = []; $hb.style.display = 'none'; $('askhoot').style.display = cur && cur.school ? 'inline-block' : 'none'; }
+  function hootReset() { hootMsgs = []; $hb.style.display = 'none'; var sc = cur && cur.school; $('askhoot').style.display = sc ? 'inline-block' : 'none'; $('callhoot').style.display = sc && MIC ? 'inline-block' : 'none'; }
   function hootSpeak(text) {
     if (!ov || !ov.speak) return;
     ov.speak(text).then(function (r) { if (r && r.audio) { try { new Audio('data:audio/mpeg;base64,' + r.audio).play().catch(function () {}); } catch (e) {} } }).catch(function () {});
@@ -132,7 +132,7 @@
     if (!ov || !ov.tutorChat) { $hbsay.textContent = '(Hoot can chat inside the arcade app.)'; return; }
     $hbsay.textContent = '🦉 thinking…';
     var ctx = { stem: cur.q + (cur.sub ? ' (' + cur.sub + ')' : ''), topic: cur.skill, correctText: '', chosenText: '',
-      learningObjective: 'Parker is CONFUSED and asked for help, he has not answered yet. Explain the idea and any grammar or maths words in the question in kid words, with ONE example that is NOT this question. Never give or hint the answer to this question. Use SAY only: never ask him to write anything and never mention a camera. No tags.' };
+      learningObjective: 'Parker is CONFUSED and asked for help, he has not answered yet. Answer what he asked in kid words: ONE short sentence, then ONE quick example that is NOT this question (under 30 words in total). Never give or hint the answer to this question. Use SAY only: never ask him to write anything and never mention a camera. No tags.' };
     ov.tutorChat({ context: ctx, messages: hootMsgs }).then(function (t) {
       t = String(t || '').replace(/\[\[[A-Z_]+\]\]/g, '').trim();
       if (!t) { $hbsay.textContent = '🦉 Hoot could not answer just now. Read the idea above.'; return; }
@@ -149,19 +149,38 @@
   $('hbsend').addEventListener('click', function () { var v = $('hbq').value.trim(); if (v) { $('hbq').value = ''; hootAsk(v); } $ans.focus(); });
   $('hbq').addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); $('hbsend').click(); } });
   $('hbclose').addEventListener('click', function () { $hb.style.display = 'none'; $('askhoot').style.display = 'inline-block'; $ans.focus(); });
-  // Hold-to-talk (only when learning.js says hootMic: true, i.e. after Gretchen's yes on the microphone).
-  if ((window.__LEARN || {}).hootMic && ov && ov.transcribe && navigator.mediaDevices) {
-    var rec = null, chunks = [], $mic = $('hbmic'); $mic.style.display = 'inline-block';
-    $mic.addEventListener('pointerdown', function () {
-      (ov.ensureMic ? ov.ensureMic() : Promise.resolve({ ok: true })).then(function () { return navigator.mediaDevices.getUserMedia({ audio: true }); }).then(function (st) {
-        chunks = []; rec = new MediaRecorder(st); rec.ondataavailable = function (e) { chunks.push(e.data); };
-        rec.onstop = function () { st.getTracks().forEach(function (t) { t.stop(); }); var b = new Blob(chunks, { type: 'audio/webm' }), fr = new FileReader();
-          fr.onload = function () { ov.transcribe(String(fr.result).split(',')[1], 'audio/webm').then(function (txt) { if (txt) hootAsk(txt); }); }; fr.readAsDataURL(b); };
-        rec.start(); $mic.textContent = '🔴 Listening';
-      }).catch(function () {});
-    });
-    window.addEventListener('pointerup', function () { if (rec && rec.state === 'recording') { rec.stop(); $mic.textContent = '🎤 Hold'; } });
-  }
+  $('hbmic').style.display = 'none';
+  // 📞 Call Hoot: hold the button and talk; let go and Hoot answers out loud (ElevenLabs speech-to-text + voice).
+  // Only when learning.js says hootMic: true. The mic is open only while the button is held.
+  var MIC = !!((window.__LEARN || {}).hootMic && ov && ov.transcribe && navigator.mediaDevices && window.MediaRecorder);
+  var rec = null, chunks = [], $call = $('callhoot');
+  $call.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    if (!MIC || (rec && rec.state === 'recording')) return;
+    $hb.style.display = 'block'; $('askhoot').style.display = 'none'; $('hbgloss').textContent = GLOSS[cur.skill] || '';
+    $hbsay.textContent = '🎙️ Talk now… let go when you are done';
+    (ov.ensureMic ? ov.ensureMic() : Promise.resolve({ ok: true })).then(function () { return navigator.mediaDevices.getUserMedia({ audio: true }); }).then(function (st) {
+      chunks = []; rec = new MediaRecorder(st); rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) chunks.push(ev.data); };
+      rec.onstop = function () {
+        st.getTracks().forEach(function (t) { t.stop(); });
+        var blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        if (blob.size < 2000) { $hbsay.textContent = '🦉 I did not catch that. Hold the button while you talk.'; return; }
+        $hbsay.textContent = '🦉 listening…';
+        var fr = new FileReader();
+        fr.onload = function () {
+          ov.transcribe(String(fr.result).split(',')[1], blob.type).then(function (txt) {
+            if (!txt) { $hbsay.textContent = '🦉 I did not catch that. Try again, or type it below.'; return; }
+            log('hoot.call', { skill: cur.skill, said: txt });
+            hootAsk(txt);
+          });
+        };
+        fr.readAsDataURL(blob);
+      };
+      rec.start(); $call.classList.add('live'); $call.textContent = '🔴 Listening… let go to send';
+    }).catch(function () { $hbsay.textContent = '🦉 The microphone is not allowed yet. Type your question below.'; });
+  });
+  function stopCall() { if (rec && rec.state === 'recording') { rec.stop(); } $call.classList.remove('live'); $call.textContent = '📞 Hold to talk to Hoot'; }
+  window.addEventListener('pointerup', stopCall); window.addEventListener('pointercancel', stopCall);
 
   function submitSchool(raw) {
     var t = performance.now(), correct = window.School.check(cur, raw);

@@ -16,6 +16,6 @@
   };
   var cfg = BY_PACE[PACE] || BY_PACE[2];
   cfg.pace = PACE;
-  cfg.hootMic = false; // hold-to-talk with Hoot: turn on only after Gretchen says yes to the microphone
+  cfg.hootMic = true; // 📞 Call Hoot (hold to talk, ElevenLabs speech-to-text + voice). Mudaber turned it on 2026-11-22. false = typing only
   window.__LEARN = cfg;
 })();
