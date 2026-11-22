@@ -1,0 +1,706 @@
+{
+ "react-think-1": {
+  "file": "react-think-1.mp3",
+  "text": "Hmm..."
+ },
+ "react-think-2": {
+  "file": "react-think-2.mp3",
+  "text": "Wait, let me think..."
+ },
+ "react-think-3": {
+  "file": "react-think-3.mp3",
+  "text": "Okay okay..."
+ },
+ "react-think-4": {
+  "file": "react-think-4.mp3",
+  "text": "Mm-hm, let me see..."
+ },
+ "react-think-5": {
+  "file": "react-think-5.mp3",
+  "text": "Hold on..."
+ },
+ "react-think-6": {
+  "file": "react-think-6.mp3",
+  "text": "Ahh, okay..."
+ },
+ "react-think-7": {
+  "file": "react-think-7.mp3",
+  "text": "Let me check that..."
+ },
+ "react-think-8": {
+  "file": "react-think-8.mp3",
+  "text": "Hmm, interesting..."
+ },
+ "react-chat-1": {
+  "file": "react-chat-1.mp3",
+  "text": "Ooh!"
+ },
+ "react-chat-2": {
+  "file": "react-chat-2.mp3",
+  "text": "Ha!"
+ },
+ "react-chat-3": {
+  "file": "react-chat-3.mp3",
+  "text": "Ooh, good one."
+ },
+ "react-chat-4": {
+  "file": "react-chat-4.mp3",
+  "text": "Ha ha ha!"
+ },
+ "react-chat-5": {
+  "file": "react-chat-5.mp3",
+  "text": "Oh, really?"
+ },
+ "react-chat-6": {
+  "file": "react-chat-6.mp3",
+  "text": "Ooh, nice."
+ },
+ "react-chat-7": {
+  "file": "react-chat-7.mp3",
+  "text": "Ha! Okay."
+ },
+ "react-chat-8": {
+  "file": "react-chat-8.mp3",
+  "text": "Whoa!"
+ },
+ "react-chat-9": {
+  "file": "react-chat-9.mp3",
+  "text": "Ooh, tell me more."
+ },
+ "react-chat-10": {
+  "file": "react-chat-10.mp3",
+  "text": "Interesting..."
+ },
+ "react-chat-11": {
+  "file": "react-chat-11.mp3",
+  "text": "Oho!"
+ },
+ "react-chat-12": {
+  "file": "react-chat-12.mp3",
+  "text": "Ha ha, okay."
+ },
+ "praise-1": {
+  "file": "praise-1.mp3",
+  "text": "Boom! Nailed it."
+ },
+ "praise-2": {
+  "file": "praise-2.mp3",
+  "text": "Yes! That's the one."
+ },
+ "praise-3": {
+  "file": "praise-3.mp3",
+  "text": "Ooh, you're quick!"
+ },
+ "praise-4": {
+  "file": "praise-4.mp3",
+  "text": "Right on the money."
+ },
+ "praise-5": {
+  "file": "praise-5.mp3",
+  "text": "Look at you go!"
+ },
+ "praise-6": {
+  "file": "praise-6.mp3",
+  "text": "Smooth. Super smooth."
+ },
+ "praise-7": {
+  "file": "praise-7.mp3",
+  "text": "Yes yes yes! Brain on fire."
+ },
+ "praise-8": {
+  "file": "praise-8.mp3",
+  "text": "Owl be darned, you got it."
+ },
+ "praise-9": {
+  "file": "praise-9.mp3",
+  "text": "That's it! Easy for you."
+ },
+ "praise-10": {
+  "file": "praise-10.mp3",
+  "text": "Correct, and not even breaking a sweat."
+ },
+ "praise-11": {
+  "file": "praise-11.mp3",
+  "text": "Ha! Too fast for me."
+ },
+ "praise-12": {
+  "file": "praise-12.mp3",
+  "text": "Bingo!"
+ },
+ "praise-13": {
+  "file": "praise-13.mp3",
+  "text": "Yes! You've got that one locked in."
+ },
+ "praise-14": {
+  "file": "praise-14.mp3",
+  "text": "Nice. My feathers are impressed."
+ },
+ "praise-15": {
+  "file": "praise-15.mp3",
+  "text": "That's the answer. Show-off."
+ },
+ "praise-16": {
+  "file": "praise-16.mp3",
+  "text": "Whoa, okay, mathematician."
+ },
+ "praise-17": {
+  "file": "praise-17.mp3",
+  "text": "Perfect. Do it again."
+ },
+ "praise-18": {
+  "file": "praise-18.mp3",
+  "text": "Okay, okay, I see you."
+ },
+ "praise-19": {
+  "file": "praise-19.mp3",
+  "text": "Yes! Gold star for you."
+ },
+ "praise-20": {
+  "file": "praise-20.mp3",
+  "text": "Cha-ching. That's right."
+ },
+ "notquite-1": {
+  "file": "notquite-1.mp3",
+  "text": "Ooh, so close. Try once more."
+ },
+ "notquite-2": {
+  "file": "notquite-2.mp3",
+  "text": "Almost! Give it another go."
+ },
+ "notquite-3": {
+  "file": "notquite-3.mp3",
+  "text": "Hmm, not quite. Want another shot?"
+ },
+ "notquite-4": {
+  "file": "notquite-4.mp3",
+  "text": "Close, but not that one. Try again."
+ },
+ "notquite-5": {
+  "file": "notquite-5.mp3",
+  "text": "Ooh, tricky one. One more try."
+ },
+ "notquite-6": {
+  "file": "notquite-6.mp3",
+  "text": "Not this time. Take another look."
+ },
+ "notquite-7": {
+  "file": "notquite-7.mp3",
+  "text": "So close I can feel it. Again?"
+ },
+ "notquite-8": {
+  "file": "notquite-8.mp3",
+  "text": "Mm, not quite. You've got this."
+ },
+ "notquite-9": {
+  "file": "notquite-9.mp3",
+  "text": "That one's sneaky. Try it again."
+ },
+ "notquite-10": {
+  "file": "notquite-10.mp3",
+  "text": "Almost there. Have another go."
+ },
+ "q-fact-m-8x6": {
+  "file": "q-fact-m-8x6.mp3",
+  "text": "What's eight times six?"
+ },
+ "q-fact-m-8x7": {
+  "file": "q-fact-m-8x7.mp3",
+  "text": "What's eight times seven?"
+ },
+ "q-fact-m-9x8": {
+  "file": "q-fact-m-9x8.mp3",
+  "text": "What's nine times eight?"
+ },
+ "q-fact-m-12x8": {
+  "file": "q-fact-m-12x8.mp3",
+  "text": "What's twelve times eight?"
+ },
+ "q-fact-m-9x6": {
+  "file": "q-fact-m-9x6.mp3",
+  "text": "What's nine times six?"
+ },
+ "q-fact-m-9x7": {
+  "file": "q-fact-m-9x7.mp3",
+  "text": "What's nine times seven?"
+ },
+ "q-fact-m-12x9": {
+  "file": "q-fact-m-12x9.mp3",
+  "text": "What's twelve times nine?"
+ },
+ "q-fact-m-12x6": {
+  "file": "q-fact-m-12x6.mp3",
+  "text": "What's twelve times six?"
+ },
+ "q-fact-m-12x7": {
+  "file": "q-fact-m-12x7.mp3",
+  "text": "What's twelve times seven?"
+ },
+ "q-fact-m-11x6": {
+  "file": "q-fact-m-11x6.mp3",
+  "text": "What's eleven times six?"
+ },
+ "q-fact-m-11x7": {
+  "file": "q-fact-m-11x7.mp3",
+  "text": "What's eleven times seven?"
+ },
+ "q-fact-m-11x8": {
+  "file": "q-fact-m-11x8.mp3",
+  "text": "What's eleven times eight?"
+ },
+ "q-fact-m-11x9": {
+  "file": "q-fact-m-11x9.mp3",
+  "text": "What's eleven times nine?"
+ },
+ "q-fact-m-12x11": {
+  "file": "q-fact-m-12x11.mp3",
+  "text": "What's twelve times eleven?"
+ },
+ "q-fact-m-8x1": {
+  "file": "q-fact-m-8x1.mp3",
+  "text": "What's eight times one?"
+ },
+ "q-fact-d-8-8": {
+  "file": "q-fact-d-8-8.mp3",
+  "text": "What's eight divided by eight?"
+ },
+ "q-fact-m-9x1": {
+  "file": "q-fact-m-9x1.mp3",
+  "text": "What's nine times one?"
+ },
+ "q-fact-d-9-9": {
+  "file": "q-fact-d-9-9.mp3",
+  "text": "What's nine divided by nine?"
+ },
+ "q-fact-m-10x1": {
+  "file": "q-fact-m-10x1.mp3",
+  "text": "What's ten times one?"
+ },
+ "q-fact-d-10-10": {
+  "file": "q-fact-d-10-10.mp3",
+  "text": "What's ten divided by ten?"
+ },
+ "q-fact-m-11x1": {
+  "file": "q-fact-m-11x1.mp3",
+  "text": "What's eleven times one?"
+ },
+ "q-fact-d-11-11": {
+  "file": "q-fact-d-11-11.mp3",
+  "text": "What's eleven divided by eleven?"
+ },
+ "q-fact-m-12x1": {
+  "file": "q-fact-m-12x1.mp3",
+  "text": "What's twelve times one?"
+ },
+ "q-fact-d-12-12": {
+  "file": "q-fact-d-12-12.mp3",
+  "text": "What's twelve divided by twelve?"
+ },
+ "q-fact-m-8x2": {
+  "file": "q-fact-m-8x2.mp3",
+  "text": "What's eight times two?"
+ },
+ "q-fact-d-16-8": {
+  "file": "q-fact-d-16-8.mp3",
+  "text": "What's sixteen divided by eight?"
+ },
+ "q-fact-m-9x2": {
+  "file": "q-fact-m-9x2.mp3",
+  "text": "What's nine times two?"
+ },
+ "q-fact-d-18-9": {
+  "file": "q-fact-d-18-9.mp3",
+  "text": "What's eighteen divided by nine?"
+ },
+ "q-fact-m-10x2": {
+  "file": "q-fact-m-10x2.mp3",
+  "text": "What's ten times two?"
+ },
+ "q-fact-d-20-10": {
+  "file": "q-fact-d-20-10.mp3",
+  "text": "What's twenty divided by ten?"
+ },
+ "q-fact-m-11x2": {
+  "file": "q-fact-m-11x2.mp3",
+  "text": "What's eleven times two?"
+ },
+ "q-fact-d-22-11": {
+  "file": "q-fact-d-22-11.mp3",
+  "text": "What's twenty-two divided by eleven?"
+ },
+ "q-fact-m-8x3": {
+  "file": "q-fact-m-8x3.mp3",
+  "text": "What's eight times three?"
+ },
+ "q-fact-m-12x2": {
+  "file": "q-fact-m-12x2.mp3",
+  "text": "What's twelve times two?"
+ },
+ "q-fact-d-24-8": {
+  "file": "q-fact-d-24-8.mp3",
+  "text": "What's twenty-four divided by eight?"
+ },
+ "q-fact-d-24-12": {
+  "file": "q-fact-d-24-12.mp3",
+  "text": "What's twenty-four divided by twelve?"
+ },
+ "q-fact-m-9x3": {
+  "file": "q-fact-m-9x3.mp3",
+  "text": "What's nine times three?"
+ },
+ "q-fact-d-27-9": {
+  "file": "q-fact-d-27-9.mp3",
+  "text": "What's twenty-seven divided by nine?"
+ },
+ "q-fact-m-10x3": {
+  "file": "q-fact-m-10x3.mp3",
+  "text": "What's ten times three?"
+ },
+ "q-fact-d-30-10": {
+  "file": "q-fact-d-30-10.mp3",
+  "text": "What's thirty divided by ten?"
+ },
+ "q-fact-m-8x4": {
+  "file": "q-fact-m-8x4.mp3",
+  "text": "What's eight times four?"
+ },
+ "q-fact-d-32-8": {
+  "file": "q-fact-d-32-8.mp3",
+  "text": "What's thirty-two divided by eight?"
+ },
+ "q-fact-m-11x3": {
+  "file": "q-fact-m-11x3.mp3",
+  "text": "What's eleven times three?"
+ },
+ "q-fact-d-33-11": {
+  "file": "q-fact-d-33-11.mp3",
+  "text": "What's thirty-three divided by eleven?"
+ },
+ "q-fact-m-9x4": {
+  "file": "q-fact-m-9x4.mp3",
+  "text": "What's nine times four?"
+ },
+ "q-fact-m-12x3": {
+  "file": "q-fact-m-12x3.mp3",
+  "text": "What's twelve times three?"
+ },
+ "q-fact-d-36-9": {
+  "file": "q-fact-d-36-9.mp3",
+  "text": "What's thirty-six divided by nine?"
+ },
+ "q-fact-d-36-12": {
+  "file": "q-fact-d-36-12.mp3",
+  "text": "What's thirty-six divided by twelve?"
+ },
+ "q-fact-m-8x5": {
+  "file": "q-fact-m-8x5.mp3",
+  "text": "What's eight times five?"
+ },
+ "q-fact-m-10x4": {
+  "file": "q-fact-m-10x4.mp3",
+  "text": "What's ten times four?"
+ },
+ "q-fact-d-40-8": {
+  "file": "q-fact-d-40-8.mp3",
+  "text": "What's forty divided by eight?"
+ },
+ "q-fact-d-40-10": {
+  "file": "q-fact-d-40-10.mp3",
+  "text": "What's forty divided by ten?"
+ },
+ "q-fact-m-11x4": {
+  "file": "q-fact-m-11x4.mp3",
+  "text": "What's eleven times four?"
+ },
+ "q-fact-d-44-11": {
+  "file": "q-fact-d-44-11.mp3",
+  "text": "What's forty-four divided by eleven?"
+ },
+ "q-fact-m-9x5": {
+  "file": "q-fact-m-9x5.mp3",
+  "text": "What's nine times five?"
+ },
+ "q-fact-d-45-9": {
+  "file": "q-fact-d-45-9.mp3",
+  "text": "What's forty-five divided by nine?"
+ },
+ "q-fact-m-12x4": {
+  "file": "q-fact-m-12x4.mp3",
+  "text": "What's twelve times four?"
+ },
+ "q-fact-d-48-8": {
+  "file": "q-fact-d-48-8.mp3",
+  "text": "What's forty-eight divided by eight?"
+ },
+ "q-fact-d-48-12": {
+  "file": "q-fact-d-48-12.mp3",
+  "text": "What's forty-eight divided by twelve?"
+ },
+ "q-fact-m-10x5": {
+  "file": "q-fact-m-10x5.mp3",
+  "text": "What's ten times five?"
+ },
+ "q-fact-d-50-10": {
+  "file": "q-fact-d-50-10.mp3",
+  "text": "What's fifty divided by ten?"
+ },
+ "q-fact-d-54-9": {
+  "file": "q-fact-d-54-9.mp3",
+  "text": "What's fifty-four divided by nine?"
+ },
+ "q-fact-m-11x5": {
+  "file": "q-fact-m-11x5.mp3",
+  "text": "What's eleven times five?"
+ },
+ "q-fact-d-55-11": {
+  "file": "q-fact-d-55-11.mp3",
+  "text": "What's fifty-five divided by eleven?"
+ },
+ "q-fact-d-56-8": {
+  "file": "q-fact-d-56-8.mp3",
+  "text": "What's fifty-six divided by eight?"
+ },
+ "q-fact-m-10x6": {
+  "file": "q-fact-m-10x6.mp3",
+  "text": "What's ten times six?"
+ },
+ "q-fact-m-12x5": {
+  "file": "q-fact-m-12x5.mp3",
+  "text": "What's twelve times five?"
+ },
+ "q-fact-d-60-10": {
+  "file": "q-fact-d-60-10.mp3",
+  "text": "What's sixty divided by ten?"
+ },
+ "q-fact-d-60-12": {
+  "file": "q-fact-d-60-12.mp3",
+  "text": "What's sixty divided by twelve?"
+ },
+ "q-fact-d-63-9": {
+  "file": "q-fact-d-63-9.mp3",
+  "text": "What's sixty-three divided by nine?"
+ },
+ "q-fact-m-8x8": {
+  "file": "q-fact-m-8x8.mp3",
+  "text": "What's eight times eight?"
+ },
+ "q-fact-d-64-8": {
+  "file": "q-fact-d-64-8.mp3",
+  "text": "What's sixty-four divided by eight?"
+ },
+ "q-fact-d-66-11": {
+  "file": "q-fact-d-66-11.mp3",
+  "text": "What's sixty-six divided by eleven?"
+ },
+ "q-fact-m-10x7": {
+  "file": "q-fact-m-10x7.mp3",
+  "text": "What's ten times seven?"
+ },
+ "q-fact-d-70-10": {
+  "file": "q-fact-d-70-10.mp3",
+  "text": "What's seventy divided by ten?"
+ },
+ "q-fact-m-8x9": {
+  "file": "q-fact-m-8x9.mp3",
+  "text": "What's eight times nine?"
+ },
+ "q-fact-d-72-8": {
+  "file": "q-fact-d-72-8.mp3",
+  "text": "What's seventy-two divided by eight?"
+ },
+ "q-fact-d-72-9": {
+  "file": "q-fact-d-72-9.mp3",
+  "text": "What's seventy-two divided by nine?"
+ },
+ "q-fact-d-72-12": {
+  "file": "q-fact-d-72-12.mp3",
+  "text": "What's seventy-two divided by twelve?"
+ },
+ "q-fact-d-77-11": {
+  "file": "q-fact-d-77-11.mp3",
+  "text": "What's seventy-seven divided by eleven?"
+ },
+ "q-fact-m-8x10": {
+  "file": "q-fact-m-8x10.mp3",
+  "text": "What's eight times ten?"
+ },
+ "q-fact-m-10x8": {
+  "file": "q-fact-m-10x8.mp3",
+  "text": "What's ten times eight?"
+ },
+ "q-fact-d-80-8": {
+  "file": "q-fact-d-80-8.mp3",
+  "text": "What's eighty divided by eight?"
+ },
+ "q-fact-d-80-10": {
+  "file": "q-fact-d-80-10.mp3",
+  "text": "What's eighty divided by ten?"
+ },
+ "q-fact-m-9x9": {
+  "file": "q-fact-m-9x9.mp3",
+  "text": "What's nine times nine?"
+ },
+ "q-fact-d-81-9": {
+  "file": "q-fact-d-81-9.mp3",
+  "text": "What's eighty-one divided by nine?"
+ },
+ "q-fact-d-84-12": {
+  "file": "q-fact-d-84-12.mp3",
+  "text": "What's eighty-four divided by twelve?"
+ },
+ "q-fact-m-8x11": {
+  "file": "q-fact-m-8x11.mp3",
+  "text": "What's eight times eleven?"
+ },
+ "q-fact-d-88-8": {
+  "file": "q-fact-d-88-8.mp3",
+  "text": "What's eighty-eight divided by eight?"
+ },
+ "q-fact-d-88-11": {
+  "file": "q-fact-d-88-11.mp3",
+  "text": "What's eighty-eight divided by eleven?"
+ },
+ "q-fact-m-9x10": {
+  "file": "q-fact-m-9x10.mp3",
+  "text": "What's nine times ten?"
+ },
+ "q-fact-m-10x9": {
+  "file": "q-fact-m-10x9.mp3",
+  "text": "What's ten times nine?"
+ },
+ "q-fact-d-90-9": {
+  "file": "q-fact-d-90-9.mp3",
+  "text": "What's ninety divided by nine?"
+ },
+ "q-fact-d-90-10": {
+  "file": "q-fact-d-90-10.mp3",
+  "text": "What's ninety divided by ten?"
+ },
+ "q-fact-m-8x12": {
+  "file": "q-fact-m-8x12.mp3",
+  "text": "What's eight times twelve?"
+ },
+ "q-fact-d-96-8": {
+  "file": "q-fact-d-96-8.mp3",
+  "text": "What's ninety-six divided by eight?"
+ },
+ "q-fact-d-96-12": {
+  "file": "q-fact-d-96-12.mp3",
+  "text": "What's ninety-six divided by twelve?"
+ },
+ "q-fact-m-9x11": {
+  "file": "q-fact-m-9x11.mp3",
+  "text": "What's nine times eleven?"
+ },
+ "q-fact-d-99-9": {
+  "file": "q-fact-d-99-9.mp3",
+  "text": "What's ninety-nine divided by nine?"
+ },
+ "q-fact-d-99-11": {
+  "file": "q-fact-d-99-11.mp3",
+  "text": "What's ninety-nine divided by eleven?"
+ },
+ "q-fact-m-10x10": {
+  "file": "q-fact-m-10x10.mp3",
+  "text": "What's ten times ten?"
+ },
+ "q-fact-d-100-10": {
+  "file": "q-fact-d-100-10.mp3",
+  "text": "What's one hundred divided by ten?"
+ },
+ "q-fact-m-9x12": {
+  "file": "q-fact-m-9x12.mp3",
+  "text": "What's nine times twelve?"
+ },
+ "q-fact-d-108-9": {
+  "file": "q-fact-d-108-9.mp3",
+  "text": "What's one hundred eight divided by nine?"
+ },
+ "q-fact-d-108-12": {
+  "file": "q-fact-d-108-12.mp3",
+  "text": "What's one hundred eight divided by twelve?"
+ },
+ "q-fact-m-10x11": {
+  "file": "q-fact-m-10x11.mp3",
+  "text": "What's ten times eleven?"
+ },
+ "q-fact-m-11x10": {
+  "file": "q-fact-m-11x10.mp3",
+  "text": "What's eleven times ten?"
+ },
+ "q-fact-d-110-10": {
+  "file": "q-fact-d-110-10.mp3",
+  "text": "What's one hundred ten divided by ten?"
+ },
+ "q-fact-d-110-11": {
+  "file": "q-fact-d-110-11.mp3",
+  "text": "What's one hundred ten divided by eleven?"
+ },
+ "q-fact-m-10x12": {
+  "file": "q-fact-m-10x12.mp3",
+  "text": "What's ten times twelve?"
+ },
+ "q-fact-m-12x10": {
+  "file": "q-fact-m-12x10.mp3",
+  "text": "What's twelve times ten?"
+ },
+ "q-fact-d-120-10": {
+  "file": "q-fact-d-120-10.mp3",
+  "text": "What's one hundred twenty divided by ten?"
+ },
+ "q-fact-d-120-12": {
+  "file": "q-fact-d-120-12.mp3",
+  "text": "What's one hundred twenty divided by twelve?"
+ },
+ "q-fact-m-11x11": {
+  "file": "q-fact-m-11x11.mp3",
+  "text": "What's eleven times eleven?"
+ },
+ "q-fact-d-121-11": {
+  "file": "q-fact-d-121-11.mp3",
+  "text": "What's one hundred twenty-one divided by eleven?"
+ },
+ "q-fact-m-11x12": {
+  "file": "q-fact-m-11x12.mp3",
+  "text": "What's eleven times twelve?"
+ },
+ "q-fact-d-132-11": {
+  "file": "q-fact-d-132-11.mp3",
+  "text": "What's one hundred thirty-two divided by eleven?"
+ },
+ "q-fact-d-132-12": {
+  "file": "q-fact-d-132-12.mp3",
+  "text": "What's one hundred thirty-two divided by twelve?"
+ },
+ "q-fact-m-12x12": {
+  "file": "q-fact-m-12x12.mp3",
+  "text": "What's twelve times twelve?"
+ },
+ "q-fact-d-144-12": {
+  "file": "q-fact-d-144-12.mp3",
+  "text": "What's one hundred forty-four divided by twelve?"
+ },
+ "trick-fact-m-9x6": {
+  "file": "trick-fact-m-9x6.mp3",
+  "text": "For nines: ten times six is sixty, minus six is fifty four."
+ },
+ "trick-fact-m-8x7": {
+  "file": "trick-fact-m-8x7.mp3",
+  "text": "Five, six, seven, eight: 56 equals 7 times 8."
+ },
+ "trick-fact-m-12x8": {
+  "file": "trick-fact-m-12x8.mp3",
+  "text": "Twelve is ten plus two: 80 plus 16 is 96."
+ },
+ "trick-fact-m-9x7": {
+  "file": "trick-fact-m-9x7.mp3",
+  "text": "Ten sevens is 70, take away 7: 63."
+ },
+ "trick-fact-m-9x8": {
+  "file": "trick-fact-m-9x8.mp3",
+  "text": "Ten eights is 80, take away 8: 72."
+ },
+ "trick-fact-m-9x9": {
+  "file": "trick-fact-m-9x9.mp3",
+  "text": "Ten nines is 90, take away 9: 81."
+ }
+}
