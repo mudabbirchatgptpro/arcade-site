@@ -16,6 +16,8 @@
   };
   var cfg = BY_PACE[PACE] || BY_PACE[2];
   cfg.pace = PACE;
-  cfg.hootMic = true; // 📞 Call Hoot (hold to talk, ElevenLabs speech-to-text + voice). Mudaber turned it on 2026-11-22. false = typing only
+  cfg.hootMic = false;          // old hold-to-talk button (replaced by Talk to Hoot below)
+  cfg.hootVoice = true;         // 🦉 Ask Hoot: live voice conversation (ElevenLabs agent), on Home and every stop
+  cfg.hootVoiceMinPerDay = 10;  // cost guard: total minutes of Hoot calls per day (each call also ends at 2 min)
   window.__LEARN = cfg;
 })();

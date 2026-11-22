@@ -34,6 +34,8 @@
   .fact.mid { font-size: 56px; }
   .ask { color: var(--gold); font-weight: 800; font-size: 17px; margin-top: 10px; }
   #hootbtns { display: flex; gap: 10px; }
+  #talkhoot { margin-top: 2px; font: 900 16px Nunito, sans-serif; padding: 8px 16px; border-radius: 12px; border: 0; background: #a78bfa; color: #0a1030; cursor: pointer; }
+  #talkhoot.live { background: #ff6b6b; color: #fff; }
   #callhoot { margin-top: 2px; font: 900 16px Nunito, sans-serif; padding: 8px 16px; border-radius: 12px; border: 0; background: #a78bfa; color: #0a1030; cursor: pointer; user-select: none; }
   #callhoot.live { background: #ff6b6b; color: #fff; }
   #askhoot { margin-top: 2px; font: 800 16px Nunito, sans-serif; padding: 8px 16px; border-radius: 12px; border: 2px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; }
@@ -71,7 +73,7 @@
   </div>
   <div class="sub" id="sub"></div>
   <button id="go">Start game →</button>
-  <div id="hootbtns"><button id="callhoot" style="display:none">📞 Hold to talk to Hoot</button><button id="askhoot" style="display:none">🦉 Ask Hoot</button></div>
+  <div id="hootbtns"><button id="talkhoot">🦉 Ask Hoot</button><button id="callhoot" style="display:none">📞 Hold to talk to Hoot</button><button id="askhoot" style="display:none">✍️ Type to Hoot</button></div>
   <div id="hootbox" style="display:none">
     <div class="hb-gloss" id="hbgloss"></div>
     <div class="hb-say" id="hbsay"></div>
@@ -86,6 +88,7 @@
 <script src="/learning.js"></script>
 <script src="/facts.js"></script>
 <script src="/school.js"></script>
+<script src="/hoot-voice.js"></script>
 <script src="pit.js"></script>
 </body>
 </html>

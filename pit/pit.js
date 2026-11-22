@@ -97,6 +97,7 @@
     shownAt = performance.now();
     window.__pitCur = cur; // read by the automated tests only
     hootReset();
+    if (window.HootVoice) window.HootVoice.screen();
     $ans.focus();
   }
 
@@ -182,6 +183,15 @@
   function stopCall() { if (rec && rec.state === 'recording') { rec.stop(); } $call.classList.remove('live'); $call.textContent = '📞 Hold to talk to Hoot'; }
   window.addEventListener('pointerup', stopCall); window.addEventListener('pointercancel', stopCall);
 
+  // 🦉 Ask Hoot (voice): tell Hoot what is on screen (never the answer).
+  function hootScreen() {
+    if (!cur) return '';
+    var on = cur.school ? 'a boss question (' + cur.skill + '): "' + cur.q + '"' + (cur.sub ? ' | ' + cur.sub : '') : 'the times-table fact "' + cur.q + '"';
+    var g = guide && cur.guide && cur.guide[guide.i] ? ' He got it wrong and is now on a guided step: "' + cur.guide[guide.i].p + '".' : '';
+    return 'SCREEN: Parker is on ' + on + '.' + g + ' Do not give or confirm the answer.';
+  }
+  if (window.HootVoice) window.HootVoice.mount($('talkhoot'), hootScreen);
+
   function submitSchool(raw) {
     var t = performance.now(), correct = window.School.check(cur, raw);
     window.School.record(cur, correct, { typed: raw, totalMs: t - shownAt, surface: surface, gameKey: gameKey });
@@ -207,6 +217,7 @@
 
   function showGuide() {
     busy = false; $ans.value = '';
+    if (window.HootVoice) setTimeout(function () { window.HootVoice.screen(); }, 0);
     $hint.className = 'hint miss';
     if (guide.i < guide.total) {
       var g = cur.guide[guide.i];
@@ -342,7 +353,7 @@
   });
   // First-key time also from the input event (some input methods send no digit keydown).
   $ans.addEventListener('input', function () { if (firstKeyAt == null && !copyMode && $ans.value !== '') firstKeyAt = performance.now(); });
-  document.addEventListener('mousedown', function (e) { if (e.target !== $go && e.target.id !== 'exit' && !$hb.contains(e.target) && e.target.id !== 'askhoot') setTimeout(function () { $ans.focus(); }, 0); });
+  document.addEventListener('mousedown', function (e) { if (e.target !== $go && e.target.id !== 'exit' && !$hb.contains(e.target) && e.target.id !== 'askhoot' && e.target.id !== 'talkhoot') setTimeout(function () { $ans.focus(); }, 0); });
   window.addEventListener('focus', function () { if (!leaving) $ans.focus(); });
 
   $('exit').addEventListener('click', function () {
