@@ -50,27 +50,12 @@
     .run-card .rc-sub{opacity:.8;font-weight:700;margin-top:4px}
     .run-card a{font:900 20px Nunito,sans-serif;padding:12px 24px;border-radius:14px;background:linear-gradient(135deg,#00ffcc,#0088ff);color:#001a33;text-decoration:none;white-space:nowrap}
     .run-card.done{border-color:#00e5a8}
-    .fgrid-wrap{background:#0e1433;border-radius:20px;padding:14px 18px;margin-bottom:18px}
-    .fgrid-head{display:flex;justify-content:space-between;font-weight:800;margin-bottom:8px}
-    .fgrid-blocks{display:flex;gap:22px;flex-wrap:wrap}
-    .fgrid{display:grid;grid-template-columns:28px repeat(12,22px);gap:3px;font-size:11px;font-weight:800;color:#8f9bc7;align-items:center}
-    .fcell{width:22px;height:22px;border-radius:5px;cursor:pointer}
-    .c-grey{background:#2a3150}.c-bronze{background:#b8733a}.c-silver{background:#c9d3e6}.c-gold{background:#ffd166}
-    .fgrid-legend{display:flex;gap:14px;font-size:12px;font-weight:700;color:#8f9bc7;margin-top:8px;flex-wrap:wrap}
-    .fgrid-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-    #fdetail{min-height:18px;font-size:13px;font-weight:700;color:#cfd6f5;margin-top:6px}
   </style>
   <div class="run-card" id="run-card">
     <div style="flex:1;margin-right:22px"><h2 id="rc-title">Fuel 0:00</h2>
       <div style="height:14px;border-radius:7px;background:#ffffff14;overflow:hidden;margin:8px 0 6px"><i id="rc-tank" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#00e5a8)"></i></div>
-      <div class="rc-sub" id="rc-sub">Games run on fuel. Fast fact +30 s of play, slow +15 s.</div></div>
+      <div class="rc-sub" id="rc-sub">Games run on fuel. Fast fact +30 s of play, slow +15 s.</div><div class="rc-sub" id="rc-facts"></div></div>
     <a href="/run/" id="rc-go">Fill the tank</a>
-  </div>
-  <div class="fgrid-wrap">
-    <div class="fgrid-head"><span>Fact grid</span><span id="fgrid-count"></span></div>
-    <div class="fgrid-blocks"><div><div style="font-weight:800;margin-bottom:4px">× times</div><div class="fgrid" id="fgrid-m"></div></div><div><div style="font-weight:800;margin-bottom:4px">÷ divide</div><div class="fgrid" id="fgrid-d"></div></div></div>
-    <div class="fgrid-legend"><span><i class="c-grey"></i>not yet</span><span><i class="c-bronze"></i>right, not fast yet</span><span><i class="c-silver"></i>fast today</span><span><i class="c-gold"></i>fast on 3 days</span></div>
-    <div id="fdetail">Tap a square to see your last times.</div>
   </div>
 
   <!-- 2026-05-27: mode toggles hidden — shell forces 'mixed' always (no choice for Parker). Buttons retained (display:none) so existing setMode/getElementById() refs don't break. -->
@@ -196,8 +181,9 @@ document.getElementById('footer-switch').addEventListener('click', function (e) 
 if (window.__inShell) {
   // no profile switching on the kiosk
   document.addEventListener('DOMContentLoaded', function(){ var w=document.getElementById('footer-switch-wrap'); if (w) w.style.display='none'; var b=document.getElementById('player-badge'); if (b) { b.onclick=null; b.removeAttribute('onclick'); b.title=''; b.style.cursor='default'; b.innerHTML=b.innerHTML.replace('✎',''); } });
-  _existingPlayer = 'parker';
-  try { localStorage.setItem(PLAYER_KEY, 'parker'); } catch (e) {}
+  // The Mac test copy sets __ARCADE_FORCE_KEY (test-server env.js) so its plays never count as Parker's.
+  _existingPlayer = window.__ARCADE_FORCE_KEY || 'parker';
+  try { localStorage.setItem(PLAYER_KEY, _existingPlayer); } catch (e) {}
 }
 if (_existingPlayer) {
   // Returning visitor — skip the picker, go straight in.
@@ -584,24 +570,7 @@ function loadHub(playerId) {
   }
   tank();
   ['pointermove','keydown','focus'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) tank(); }catch(e){} },true);});
-  function build(op,el){
-    var g=document.getElementById(el); g.innerHTML='<span></span>';
-    for(var c=1;c<=12;c++){g.innerHTML+='<span style="text-align:center">'+c+'</span>';}
-    [8,9,10,11,12].forEach(function(t){
-      g.innerHTML+='<span>'+(op==='m'?t+'×':'÷'+t)+'</span>';
-      for(var m=1;m<=12;m++){
-        var id=op==='m'?'fact-m-'+t+'x'+m:'fact-d-'+(t*m)+'-'+t;
-        g.innerHTML+='<span class="fcell c-'+E.status(id)+'" data-id="'+id+'"></span>';
-      }
-    });
-  }
-  build('m','fgrid-m'); build('d','fgrid-d');
-  var c=E.counts(); document.getElementById('fgrid-count').textContent=c.fluent+' / 120 fast · '+c.gold+' gold';
-  document.querySelector('.fgrid-blocks').addEventListener('click',function(e){
-    var id=e.target.getAttribute&&e.target.getAttribute('data-id'); if(!id) return;
-    var f=E.byId(id), h=E.recent(id);
-    document.getElementById('fdetail').textContent=f.full+' · '+(h.length?'last times: '+h.map(function(a){return (a.ok?'':'✗ ')+(a.fk==null?'?':(a.fk/1000).toFixed(1)+'s');}).join(', '):'not tried yet');
-  });
+  var c=E.counts(); document.getElementById('rc-facts').textContent=c.fluent+' of 120 facts fast'+(c.gold?' · '+c.gold+' locked in':'')+'. Fast facts = cheaper play.';
   // Hoot Lite: one line on the first Home visit of the day, a clip when a square turns gold.
   var H=window.HootLite; if(!H) return;
   H.setState({surface:'home',item:null});
