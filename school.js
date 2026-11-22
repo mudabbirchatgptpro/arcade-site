@@ -144,6 +144,36 @@
     },
   };
 
+  // ── Micro questions: one 20-second decision on the step he is missing (productive struggle, not a full problem) ──
+  // Built from a real item at his level, so the numbers stay as hard as his level.
+  var MICRO = {
+    'dec-mul': function (lvl) {
+      var it = GEN['dec-mul'](lvl), m = it.q.split(' × '), pl = (m[0].split('.')[1] || '').length + (m[1].split('.')[1] || '').length;
+      return { q: it.q, sub: 'Just this: how many digits go AFTER the point in the answer?', ans: String(pl), steps: ['Count the digits after the point in both numbers: ' + pl + '.'] };
+    },
+    'dec-div': function (lvl) {
+      var it = GEN['dec-div'](Math.max(4, lvl)), m = it.q.replace(/,/g, '').split(' ÷ '), sh = (m[1].split('.')[1] || '').length;
+      if (!sh) { var d = Number(m[1]), D = Number(m[0]); return { q: it.q, sub: 'Just this: about how much is it? Round to the nearest whole number.', ans: String(Math.round(D / d)), steps: ['Divide ignoring the point, then the point goes straight up: about ' + Math.round(D / d) + '.'] }; }
+      return { q: it.q, sub: 'Just this: how many places must BOTH points move right so you divide by a whole number?', ans: String(sh), steps: [m[1] + ' needs ' + sh + ' place' + (sh > 1 ? 's' : '') + ' to become whole, and the other number moves the same.'] };
+    },
+    'long-div': function (lvl) {
+      var it = GEN['long-div'](lvl), m = it.q.replace(/,/g, '').split(' ÷ '), D = String(m[0]), d = Number(m[1]), cur = 0, i = 0;
+      while (i < D.length && cur < d) { cur = cur * 10 + Number(D[i]); i++; }
+      var qd = Math.floor(cur / d);
+      return { q: 'How many ' + d + 's fit into ' + cur + '?', sub: 'First digit of ' + it.q + '. Round ' + d + ' to ' + Math.round(d / 10) * 10 + ' to guess, then check.', ans: String(qd), steps: [qd + ' × ' + d + ' = ' + qd * d + (qd < 9 ? ', and ' + (qd + 1) + ' × ' + d + ' = ' + (qd + 1) * d + ' is too big.' : '.')] };
+    },
+    'zeros-div': function (lvl) {
+      var it = GEN['zeros-div'](lvl), m = it.q.replace(/,/g, '').split(' ÷ '), z = Math.min((m[0].match(/0+$/) || [''])[0].length, (m[1].match(/0+$/) || [''])[0].length);
+      return { q: it.q, sub: 'Just this: how many zeros can you cross off BOTH numbers?', ans: String(z), steps: ['Both end in at least ' + z + ' zero' + (z > 1 ? 's' : '') + '.'] };
+    },
+    'rem-word': function () {
+      var d = R(12, 40), q = R(11, 60), r = R(1, d - 1), N = d * q + r, t = pickOf(['up', 'drop', 'left']);
+      var story = t === 'up' ? N + ' kids, ' + d + ' per bus. ' + N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '. How many buses?' : t === 'drop' ? N + ' cards, ' + d + ' per pack. ' + N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '. How many FULL packs?' : N + ' gems shared by ' + d + ' players. ' + N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '. How many are left over?';
+      var ans = t === 'up' ? q + 1 : t === 'drop' ? q : r;
+      return { q: story, sub: 'Just this: what does the remainder mean here?', ans: String(ans), long: true, steps: [t === 'up' ? 'The leftover still needs a bus: round up.' : t === 'drop' ? 'Leftovers cannot fill a pack: drop them.' : 'It asks for what is left: the remainder.'] };
+    },
+  };
+
   // Guided long division: he answers "how many fit?" at every step and "what's left?" at the first one.
   function divGuide(D, d) {
     var digits = String(D), cur = 0, started = false, g = [], first = true;
@@ -207,6 +237,7 @@
     { w: 'permission', d: 'being allowed to do something', c: ['per', 'mis', 'sion'], m: 2, bad: 'permision', r: 'permit → permission: double s.' },
   ];
   // Build items: base + suffix (or prefix + base). r = the rule that decides the spelling.
+  if (root.__FOCUS && Array.isArray(root.__FOCUS.words)) root.__FOCUS.words.forEach(function (w) { if (w && w.w && !WORDS.some(function (x) { return x.w === w.w; })) WORDS.push(w); });
   var BUILDS = [
     ['begin', '+ing', 'beginning', 'Stress on the last syllable (be-GIN) and one short vowel: double the last consonant.'],
     ['occur', '+ed', 'occurred', 'Stress on the last syllable (oc-CUR): double the r.'],
@@ -459,7 +490,10 @@
     else {
       var rv = dueReview(k), review = rv !== null && Math.random() < 0.6;
       var li = review ? rv : Math.min(x.i, def.levels.length - 1), lvl = def.levels[li];
-      if (GEN[k]) { it = GEN[k](lvl); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
+      if (MICRO[k] && !review && (x.scaffold || x.nearMiss)) {
+        it = MICRO[k](lvl); it.mode = 'num'; it.value = 20; it.micro = true; it.guide = []; it.finalPrompt = '';
+        it.id = 'sch-' + k + '-micro-' + Date.now().toString(36); x.nearMiss = null;
+      } else if (GEN[k]) { it = GEN[k](lvl); it.id = 'sch-' + k + '-' + Date.now().toString(36); }
       else {
         var g = G[k], items = g.items.filter(function (y) { return y.l === lvl; });
         if (!items.length) items = g.items;
@@ -546,13 +580,25 @@
           if (p.days.length >= 2) p.mastered = true;
         } else if (p) { delete x.passed[it.lvlIndex]; x.i = Math.min(x.i, it.lvlIndex); x.run = []; }
       } else {
-        x.run.push(correct ? 1 : 0); if (x.run.length > 6) x.run.shift();
+        if (it.micro) { // scaffold mode: 2 quick ones right -> back to full problems at the same level; 2 missed -> one level down
+          if (correct) { x.microRight = (x.microRight || 0) + 1; x.microMiss = 0; if (x.microRight >= 2) { x.scaffold = false; x.microRight = 0; } }
+          else { x.microMiss = (x.microMiss || 0) + 1; x.microRight = 0; if (x.microMiss >= 2) { if (x.i > 0) x.i--; x.microMiss = 0; x.scaffold = false; x.run = []; } }
+          save(); return logItem(it, correct, meta);
+        }
+        x.run.push(correct ? 1 : 0); if (x.run.length > 6) x.run.shift(); // micro items never count toward level-ups
+        if (!correct && MATHS[it.skill] && meta.typed != null) { // near miss: right digits, wrong point / within 5% -> a micro on that step next
+          var dg = function (v) { return String(v).replace(/[^0-9]/g, '').replace(/^0+|0+$/g, ''); }, tv = Number(String(meta.typed).replace(/,/g, '')), av = Number(String(it.ans).replace(/,/g, ''));
+          if (dg(meta.typed) && dg(meta.typed) === dg(it.ans)) x.nearMiss = 'point'; else if (av && Math.abs(tv - av) / Math.abs(av) <= 0.05) x.nearMiss = 'close';
+        }
         var need = LCFG().stepUp || 4, tail = x.run.slice(-need), last3 = x.run.slice(-3);
         if (tail.length === need && tail.every(Boolean)) {                       // push: up a level now
           if (!x.passed[x.i]) x.passed[x.i] = { at: now, step: 0, due: now + GAPS[0] * DAY, days: [], mastered: false };
           if (x.i < def.levels.length - 1) x.i++;
           x.run = [];
-        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > 0) { x.i--; x.run = []; }
+        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2) {
+          // Struggling: scaffold with micro questions first (productive struggle); the level only drops if those fail too.
+          if (MICRO[it.skill]) { x.scaffold = true; x.run = []; } else if (x.i > 0) { x.i--; x.run = []; }
+        }
       }
     }
     if (it.key && it.skill !== 'spell') {
@@ -560,11 +606,15 @@
       g.n++; g.lastOk = !!correct; if (correct) { g.right++; g.rightDay = today(now); } else g.missAt = now;
     }
     save();
+    logItem(it, correct, meta);
+  }
+
+  function logItem(it, correct, meta) {
     if (root.arcadeLog && root.arcadeLog.event) {
       var xs = it.skill === 'spell' ? null : st(it.skill);
       root.arcadeLog.event('learn.item', {
         item_id: it.id, skill: it.skill, level: it.level == null ? null : it.level, level_index: it.lvlIndex, level_count: it.lvlCount,
-        review: !!it.review, prompt: it.q, correct: !!correct, typed: meta.typed == null ? null : String(meta.typed), answer: it.ans,
+        review: !!it.review, micro: !!it.micro, scaffold: xs ? !!xs.scaffold : null, prompt: it.q, correct: !!correct, typed: meta.typed == null ? null : String(meta.typed), answer: it.ans,
         total_ms: Math.round(meta.totalMs || 0), surface: meta.surface || null,
         now_level_index: xs ? xs.i : null, mastered_levels: xs ? Object.keys(xs.passed).filter(function (i) { return xs.passed[i].mastered; }).length : null,
         passed_levels: xs ? Object.keys(xs.passed).length : null, skill_mastered: xs ? mastered(it.skill) : null,
@@ -573,5 +623,5 @@
     }
   }
 
-  root.School = { isPartial: isPartial, isJunk: isJunk, next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _g: G, _skills: SKILLS, _divSteps: divSteps, _dstr: dstr, _dec: dec, _st: st, _mastered: mastered, levels: function () { return load().skills; } };
+  root.School = { queue: function (k) { if (SKILLS[k]) { load().nextSkill = k; save(); } }, snapshot: function () { return JSON.parse(JSON.stringify(load())); }, isPartial: isPartial, isJunk: isJunk, next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _g: G, _skills: SKILLS, _divSteps: divSteps, _dstr: dstr, _dec: dec, _st: st, _mastered: mastered, levels: function () { return load().skills; } };
 })(typeof window !== 'undefined' ? window : globalThis);

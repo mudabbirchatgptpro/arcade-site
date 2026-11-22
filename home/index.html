@@ -568,7 +568,7 @@ function loadHub(playerId) {
   tank(true);
   // Stop the fuel clock only when the shell confirms no game is running (Home can get stray events during play).
   ['pointermove'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(!JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) return; var sh=window.arcadeShell; if(sh&&sh.isGameActive){ Promise.resolve(sh.isGameActive()).then(function(a){ if(!a) tank(); }).catch(function(){}); } else tank(); }catch(e){} },true);});
-  var c=E.counts(); document.getElementById('rc-facts').textContent='🔓 '+c.fluent+' / '+E.FACTS.length+' facts unlocked'+(c.gold?' · 🏆 '+c.gold+' mastered':'')+'. The more you unlock, the faster you get back in.';
+  var c=E.counts(); document.getElementById('rc-facts').textContent='🔓 '+c.fluent+' / '+c.total+' facts unlocked'+(c.tier>1?' · Tier '+c.tier:'')+(c.gold?' · 🏆 '+c.gold+' mastered':'')+'. The more you unlock, the faster you get back in.';
   // Hoot Lite: one line on the first Home visit of the day, a clip when a square turns gold.
   var H=window.HootLite; if(!H) return;
   H.setState({surface:'home',item:null});

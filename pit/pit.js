@@ -30,8 +30,13 @@
   var copyMode = false;      // after a miss: type the shown answer to continue
   var inputMode = 'num', copiesLeft = 0, guide = null;
   // Gretchen (2026-11-22): 5 quick math facts right before he continues, every stop and every game start.
-  var FACTS_REQ = 5, factsRight = 0, schoolCount = 0, stopStart = Date.now(), fiveAt = null, clockT = null;
+  // Quitting a stop does not dodge it: an unfinished stop carries over (missing facts + 3) and its boss comes back.
+  var OWED = null; try { OWED = JSON.parse(localStorage.getItem('pa_open_stop') || 'null'); } catch (e) {}
+  if (OWED && Date.now() - OWED.at > 3 * 3600000) OWED = null; // a stop left open hours ago (laptop closed) is forgiven
+  var FACTS_REQ = 5 + (OWED ? Math.min(8, Math.max(0, 5 - (OWED.right || 0)) + 3) : 0), factsRight = 0, schoolCount = 0, stopStart = Date.now(), fiveAt = null, clockT = null;
   function done() { return E.fuelMs() >= NEED && factsRight >= FACTS_REQ; }
+  function markOpen() { try { localStorage.setItem('pa_open_stop', JSON.stringify({ at: Date.now(), right: factsRight, boss: cur && cur.school ? cur.skill : (OWED && OWED.boss) || null })); } catch (e) {} }
+  if (OWED && OWED.boss && window.School) window.School.queue(OWED.boss);
   function clock() {
     if (loadingPractice || leaving) return;
     var secs = Math.floor((Date.now() - stopStart) / 1000);
@@ -60,7 +65,7 @@
   function setMode(mode) {
     inputMode = mode;
     $ans.setAttribute('inputmode', mode === 'text' ? 'text' : 'decimal');
-    $ans.maxLength = mode === 'num' && cur && !cur.school ? 4 : 24;
+    $ans.maxLength = mode === 'num' && cur && !cur.school ? 6 : 24;
     $ans.style.width = mode === 'num' && cur && !cur.school ? '220px' : '360px';
   }
 
@@ -70,9 +75,20 @@
   // loading after he is charged, mostly school items: the wait is learning time, and it earns nothing.
   var schoolFirst = qs.get('school') === '1'; // testing
   var LC = window.__LEARN || {};
-  var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / E.FACTS.length) : 0;
+  var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / Math.max(1, E.counts().total)) : 0;
   var BOSS_MAX = LC.bossPerStop || 1;
   var JUNK_COST = 20000, junkCount = 0, junkTotal = 0, factMs = 0;
+  // Flow guard: keep him in flow. After 2 long stops in a row (over 90 s), a quit, or 25 min of play in a session,
+  // the next 2 stops are facts only (quick wins), then bosses come back.
+  var FLOW = null; try { FLOW = JSON.parse(localStorage.getItem('pa_flow') || 'null'); } catch (e) {}
+  var nowT = Date.now();
+  if (!FLOW || nowT - (FLOW.last || 0) > 15 * 60000) FLOW = { start: nowT, last: nowT, long: 0, easy: 0, longBreakGiven: false };
+  FLOW.last = nowT;
+  if (OWED) FLOW.easy = Math.max(FLOW.easy, 1);                                     // just quit a stop: no boss now
+  if (!FLOW.longBreakGiven && nowT - FLOW.start > 25 * 60000) { FLOW.easy = Math.max(FLOW.easy, 2); FLOW.longBreakGiven = true; }
+  var flowEasy = FLOW.easy > 0; if (flowEasy) { BOSS_MAX = 0; FLOW.easy--; }
+  function saveFlow() { try { localStorage.setItem('pa_flow', JSON.stringify(FLOW)); } catch (e) {} }
+  saveFlow();
   try { if (isBreak && localStorage.getItem('pa_boss_free') === '1') { localStorage.removeItem('pa_boss_free'); BOSS_MAX = 0; } } catch (e) {} // won the last boss
   var loadingPractice = false;
 
@@ -102,6 +118,7 @@
     window.__pitCur = cur; // read by the automated tests only
     hootReset();
     if (window.HootVoice) window.HootVoice.screen();
+    if (cur.school && !loadingPractice) markOpen();
     $ans.focus();
   }
 
@@ -305,9 +322,10 @@
     if (busy || !cur) return;
     var raw = $ans.value.trim();
     if (raw === '') return;
-    var val = parseInt(raw, 10);
+    var val = parseFloat(String(raw).replace(/,/g, ''));
+    var factOk = function () { return !isNaN(val) && Math.abs(val - cur.ans) < 1e-9; };
     if (copyMode) {
-      var ok = cur.school ? window.School.check(cur, raw) : val === cur.ans;
+      var ok = cur.school ? window.School.check(cur, raw) : factOk();
       if (ok && cur.school && --copiesLeft > 0) { $ans.value = ''; $hint.lastChild.textContent = ' one more time to respawn'; $ans.focus(); return; }
       if (ok) { copyMode = false; busy = true; setTimeout(next, 250); }
       else { $ans.value = ''; $ans.focus(); }
@@ -323,7 +341,7 @@
     }
     busy = true;
     var t = performance.now();
-    var correct = val === cur.ans;
+    var correct = factOk();
     factMs += t - shownAt;
     var res = E.record(cur.id, correct, {
       firstKeyMs: firstKeyAt == null ? null : firstKeyAt - shownAt,
@@ -338,6 +356,7 @@
       right++;
       $card.className = 'card right';
       if (!loadingPractice && ++factsRight === FACTS_REQ) fiveAt = Date.now();
+      if (!loadingPractice) markOpen();
       clock();
       if (done() && !loadingPractice) setTimeout(factsDone, 300);
       else setTimeout(next, 300);
@@ -357,7 +376,9 @@
   function factsDone() {
     finishedFacts = true;
     clearInterval(clockT);
-    log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, fact_ms: Math.round(factMs), junk: junkTotal, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
+    try { localStorage.removeItem('pa_open_stop'); } catch (e) {}
+    var dur = Date.now() - stopStart; FLOW.long = dur > 90000 ? FLOW.long + 1 : 0; if (FLOW.long >= 2) { FLOW.easy = 2; FLOW.long = 0; } FLOW.last = Date.now(); saveFlow();
+    log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, flow_easy: flowEasy, fact_ms: Math.round(factMs), junk: junkTotal, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
     if (isBreak) return leave('break');
     if (gameReady) return leave('ready');
     // Charged but the game is still loading: keep the questions coming (the tank is full, so no fuel).
@@ -374,6 +395,7 @@
     if (leaving) return;
     leaving = true;
     E.fuelPlay(); // the clock on his fuel starts when the game does
+    try { if (window.arcadeLog) window.arcadeLog.event('state.snapshot', { v: 1, facts: E.snapshot(), school: window.School ? window.School.snapshot() : null, focus: (window.__FOCUS || {}).version || null }, { game_key: gameKey }); } catch (e) {}
     $root.classList.add('fading');
     // Send the log before the shell closes this view, or the attempts are lost.
     var flushed = (window.arcadeLog && window.arcadeLog.flush) ? window.arcadeLog.flush().catch(function () {}) : Promise.resolve();
@@ -395,7 +417,7 @@
     if (e.key.length === 1) {
       var okKey = inputMode === 'text' ? /^[a-zA-Z' -]$/.test(e.key)
         : inputMode === 'rem' ? /^[0-9rR ,]$/.test(e.key)
-        : (cur && cur.school ? /^[0-9.,]$/.test(e.key) : false);
+        : (cur && (cur.school || cur.dec) ? /^[0-9.,]$/.test(e.key) : false);
       if (!okKey) e.preventDefault();
     }
   });
@@ -419,9 +441,11 @@
     });
   }
 
-  log('pit.load', { surface: surface, fuel_ms: startFuel });
+  log('pit.load', { surface: surface, fuel_ms: startFuel, focus: (window.__FOCUS || {}).version || null, pace: (window.__LEARN || {}).pace || null });
   gauge(0);
   $label.textContent = isBreak ? '⚡ Recharge!' : '⚡ Power up to play';
+  if (OWED) { $label.textContent = (isBreak ? '⚡ Recharge!' : '⚡ Power up to play') + ' · unfinished stop: ' + FACTS_REQ + ' facts'; log('pit.owed', { facts: FACTS_REQ, boss: OWED.boss || null }); }
   clock(); clockT = setInterval(clock, 1000);
   next();
+  markOpen();
 })();

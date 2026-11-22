@@ -1,6 +1,6 @@
 /* Fact engine (redesign 2026-11-22). One engine for pit stops, ignition and heats.
  *
- * 72 facts: 8, 9, 11, 12 x 4..12 and the matching division. Gretchen (2026-11-22): no x or ÷ by 0-3 (too easy,
+ * Facts in three tiers (see below), unlocking as he masters each. Gretchen (2026-11-22): no x or ÷ by 0-3 (too easy,
  * e.g. 10 ÷ 10, 9 x 1), and the 10s table is dropped too (adding a zero is not a fact worth drilling).
  * Per-fact state lives in localStorage on the hub origin (the overlay shares it).
  * Fluent attempt = right, first key within 3 s, total within 5 s, no backspace.
@@ -37,20 +37,33 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  // ── The facts ──
-  var TABLES = [8, 9, 11, 12], M_FROM = 4, M_TO = 12;
+  // ── The facts: three tiers that unlock as he masters the one before (adaptive, strategic) ──
+  // Tier 1 core: 6, 7, 8, 9, 12 × 4..12 (+ ÷), plus 11×11, 11×12. (No ×/÷ by 0-3, no 10s, no easy 11s: Gretchen 2026-11-22.)
+  // Tier 2 tens: the same facts scaled by 10 (7 × 80, 4,200 ÷ 60): place value on top of the fact.
+  // Tier 3 decimals: 0.7 × 8, 0.7 × 0.8, 5.6 ÷ 8: the fact is the engine of his class decimal work.
+  // A tier opens when 60% of the tier below is fast (silver or gold).
+  var TABLES = [6, 7, 8, 9, 12], M_FROM = 4, M_TO = 12, UNLOCK = 0.6;
   var FACTS = [], BY_ID = {};
-  TABLES.forEach(function (t) {
-    for (var m = M_FROM; m <= M_TO; m++) {
-      FACTS.push({ id: 'fact-m-' + t + 'x' + m, op: 'mul', a: t, b: m, q: t + ' × ' + m, ans: t * m, full: t + ' × ' + m + ' = ' + (t * m), row: t, col: m });
-    }
+  function add(f) { if (!BY_ID[f.id]) { FACTS.push(f); BY_ID[f.id] = f; } }
+  function decStr(n) { return String(Math.round(n * 1000) / 1000); }
+  var CORE = [];
+  TABLES.forEach(function (t) { for (var m = M_FROM; m <= M_TO; m++) CORE.push([t, m]); });
+  CORE.push([11, 11], [11, 12]);
+  CORE.forEach(function (p) { var t = p[0], m = p[1];
+    add({ id: 'fact-m-' + t + 'x' + m, tier: 1, op: 'mul', a: t, b: m, q: t + ' × ' + m, ans: t * m, full: t + ' × ' + m + ' = ' + (t * m), row: t, col: m });
+    add({ id: 'fact-d-' + (t * m) + '-' + t, tier: 1, op: 'div', a: t * m, b: t, q: (t * m) + ' ÷ ' + t, ans: m, full: (t * m) + ' ÷ ' + t + ' = ' + m, row: t, col: m });
   });
-  TABLES.forEach(function (t) {
-    for (var m = M_FROM; m <= M_TO; m++) {
-      FACTS.push({ id: 'fact-d-' + (t * m) + '-' + t, op: 'div', a: t * m, b: t, q: (t * m) + ' ÷ ' + t, ans: m, full: (t * m) + ' ÷ ' + t + ' = ' + m, row: t, col: m });
-    }
+  var fmt = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); };
+  CORE.forEach(function (p, i) { var t = p[0], m = p[1]; if (t === 11 || i % 2) return; // half the pairs, so the tier stays a manageable size
+    add({ id: 'fact-m-' + t + 'x' + (m * 10), tier: 2, op: 'mul', a: t, b: m * 10, q: t + ' × ' + (m * 10), ans: t * m * 10, full: t + ' × ' + (m * 10) + ' = ' + fmt(t * m * 10), row: t, col: m });
+    add({ id: 'fact-d-' + (t * m * 100) + '-' + (t * 10), tier: 2, op: 'div', a: t * m * 100, b: t * 10, q: fmt(t * m * 100) + ' ÷ ' + (t * 10), ans: m * 10, full: fmt(t * m * 100) + ' ÷ ' + (t * 10) + ' = ' + (m * 10), row: t, col: m });
   });
-  FACTS.forEach(function (f) { BY_ID[f.id] = f; });
+  CORE.forEach(function (p, i) { var t = p[0], m = p[1]; if (t === 11 || m === 10 || !(i % 2)) return;
+    var a = t / 10, prod = t * m / 10;                              // 0.7 × 8 = 5.6
+    add({ id: 'fact-m-' + decStr(a) + 'x' + m, tier: 3, dec: true, op: 'mul', a: a, b: m, q: decStr(a) + ' × ' + m, ans: prod, full: decStr(a) + ' × ' + m + ' = ' + decStr(prod), row: t, col: m });
+    add({ id: 'fact-d-' + decStr(prod) + '-' + m, tier: 3, dec: true, op: 'div', a: prod, b: m, q: decStr(prod) + ' ÷ ' + m, ans: a, full: decStr(prod) + ' ÷ ' + m + ' = ' + decStr(a), row: t, col: m });
+    if (m < 10) add({ id: 'fact-m-' + decStr(a) + 'x' + decStr(m / 10), tier: 3, dec: true, op: 'mul', a: a, b: m / 10, q: decStr(a) + ' × ' + decStr(m / 10), ans: t * m / 100, full: decStr(a) + ' × ' + decStr(m / 10) + ' = ' + decStr(t * m / 100), row: t, col: m });
+  });
 
   // ── State ──
   var S = null;
@@ -85,9 +98,13 @@
   }
   function isFluentNow(id) { var c = status(id); return c === 'silver' || c === 'gold'; }
 
+  function tierShare(t) { var fs = FACTS.filter(function (f) { return f.tier === t; }); if (!fs.length) return 0; return fs.filter(function (f) { return isFluentNow(f.id); }).length / fs.length; }
+  function unlockedTier() { var t = 1; while (t < 3 && tierShare(t) >= UNLOCK) t++; return t; }
+  function active(id) { var f = BY_ID[id]; return !!f && f.tier <= unlockedTier(); }
   function counts() {
-    var c = { grey: 0, bronze: 0, silver: 0, gold: 0 };
-    FACTS.forEach(function (f) { c[status(f.id)]++; });
+    var c = { grey: 0, bronze: 0, silver: 0, gold: 0 }, ut = unlockedTier();
+    FACTS.forEach(function (f) { if (f.tier <= ut) c[status(f.id)]++; });
+    c.total = c.grey + c.bronze + c.silver + c.gold; c.tier = ut;
     c.fluent = c.silver + c.gold;
     return c;
   }
@@ -96,15 +113,17 @@
   function workingSet() {
     var s = load();
     var started = [], fresh = [];
+    var ut = unlockedTier();
     s.order.forEach(function (id) {
-      if (isFluentNow(id)) return;
+      if (BY_ID[id].tier > ut || isFluentNow(id)) return;
       if (s.f[id] && s.f[id].n) started.push(id); else fresh.push(id);
     });
-    // Least recently seen first, so a stuck slow fact rotates instead of clogging the set.
-    started.sort(function (a, b) {
-      var ha = s.f[a].hist, hb = s.f[b].hist;
-      return (ha.length ? ha[ha.length - 1].t : 0) - (hb.length ? hb[hb.length - 1].t : 0);
-    });
+    // Slowest first: rank by his recent first-key time (misses count as very slow), then least recently seen,
+    // so time goes to the facts that need it; a stuck fact still rotates out via recency.
+    var slowness = function (id) { var h = s.f[id].hist.slice(-3); if (!h.length) return 0; return h.reduce(function (a, x) { return a + (x.ok ? (x.fk == null ? 4000 : x.fk) : 8000); }, 0) / h.length; };
+    var lastT = function (id) { var h = s.f[id].hist; return h.length ? h[h.length - 1].t : 0; };
+    started.sort(function (a, b) { return (slowness(b) - slowness(a)) || (lastT(a) - lastT(b)); });
+    var nowT = now(); started = started.filter(function (id) { return nowT - lastT(id) > 20000; }).concat(started.filter(function (id) { return nowT - lastT(id) <= 20000; }));
     // Keep 2 slots for new facts while any remain, so every fact gets met.
     var nFresh = Math.min(fresh.length, Math.max(2, WORKING - started.length));
     return started.slice(0, WORKING - nFresh).concat(fresh.slice(0, nFresh));
@@ -114,9 +133,9 @@
     var s = load();
     var last = s.last;
     var ok = function (id) { return id !== last; };
-    var missed = s.order.filter(function (id) { return s.f[id] && s.f[id].miss && ok(id); });
+    var missed = s.order.filter(function (id) { return active(id) && s.f[id] && s.f[id].miss && ok(id); });
     if (missed.length) return BY_ID[missed[0]];
-    var fluent = s.order.filter(function (id) { return isFluentNow(id) && ok(id); });
+    var fluent = s.order.filter(function (id) { return active(id) && isFluentNow(id) && ok(id); });
     if (fluent.length && Math.random() < 0.2) {
       var due = fluent.filter(function (id) { return (s.f[id].due || 0) <= now(); });
       var pool = due.length ? due : fluent;
@@ -126,7 +145,7 @@
     var ws = workingSet().filter(ok);
     if (ws.length) return BY_ID[ws[Math.floor(Math.random() * ws.length)]];
     // Everything fluent: oldest due first.
-    var all = s.order.filter(ok);
+    var all = s.order.filter(function (id) { return active(id) && ok(id); });
     all.sort(function (a, b) { return ((s.f[a] || {}).due || 0) - ((s.f[b] || {}).due || 0); });
     return BY_ID[all[0]];
   }
@@ -224,6 +243,8 @@
   };
   function pattern(id) {
     var F = BY_ID[id]; if (!F) return null;
+    if (F.tier === 2) return F.op === 'mul' ? 'Do ' + F.a + ' × ' + (F.b / 10) + ', then stick the zero back on.' : 'Cross off a zero from each, then it is a fact you know.';
+    if (F.tier === 3) return F.op === 'mul' ? 'Do the fact without the points, then put back as many digits after the point as the question has.' : 'Do the fact without the point; the point goes straight up into the answer.';
     if (F.op === 'div') return F.a + ' ÷ ' + F.b + ' asks: ' + F.b + ' times what makes ' + F.a + '?';
     return FAMILY[F.row] || null;
   }
@@ -240,10 +261,12 @@
   function ignitionCount() { return runDoneToday() ? 1 : 5; }
 
   root.FactEngine = {
-    FACTS: FACTS, byId: function (id) { return BY_ID[id]; }, pattern: pattern,
+    FACTS: FACTS, unlockedTier: unlockedTier, tierShare: tierShare, active: active, byId: function (id) { return BY_ID[id]; }, pattern: pattern,
     pick: pick, record: record, status: status, counts: counts, recent: recent,
     run: run, saveRun: saveRun, runDoneToday: runDoneToday, ignitionCount: ignitionCount,
     today: today, isFluentAttempt: isFluentAttempt,
+    // Backup of his fact progress (sent to the server after each stop; restorable).
+    snapshot: function () { var f = load().f, o = {}; Object.keys(f).forEach(function (id) { var s = f[id]; o[id] = { n: s.n, right: s.right, wrong: s.wrong, fdays: s.fdays, lvl: s.lvl, due: s.due, hist: s.hist.slice(-3) }; }); return o; },
     fuelMs: fuelMs, fuelGive: fuelGive, fuelDrain: fuelDrain, fuelPlay: fuelPlay, fmtFuel: fmtFuel,
     FUEL: { FAST: EARN_FAST, SLOW: EARN_SLOW, CHUNK: CHUNK, MAX: TANK_MAX },
     _reset: function () { S = null; mem = {}; },

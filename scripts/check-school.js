@@ -44,4 +44,18 @@ for (const y of G.agreement.items) { n++; if (!y.subj || !y.s.toLowerCase().incl
 for (const y of G.pronoun.items) { n++; if (!y.g || !y.g.a) { bad++; console.log('PRON', y.s); } }
 for (const y of G.fragrun.items) { n++; if (y.n == null || (y.a === 'f') !== (y.n === 0)) { bad++; console.log('FRAG', y.s, y.n, y.a); } }
 for (let i = 0; i < 3000; i++) { const it = S.next(); n++; if (it.skill !== 'spell' && it.skill in S._g && (!it.guide || !it.guide.length)) { bad++; console.log('NO G GUIDE', it.skill, it.q); break; } if (it.skill === 'spell' && it.guide == null) { bad++; console.log('NO SPELL GUIDE', it.q); break; } }
+// Micro questions: answers recomputed independently.
+global.__scaffoldAll = true;
+for (const k of ['dec-mul', 'dec-div', 'long-div', 'zeros-div', 'rem-word']) for (const lvl of [3, 4, 5, 6]) for (let i = 0; i < 1500; i++) {
+  const x = S._st(k); x.scaffold = true; x.i = Math.min(lvl - 3, (S._skills[k].levels || [0]).length - 1);
+  let it; do { it = S.next(); } while (it.skill !== k); n++;
+  if (!it.micro) { bad++; console.log('NOT MICRO', k); break; }
+  const nums = (it.q + ' ' + it.sub).replace(/,/g, '').match(/\d+(\.\d+)?/g).map(Number);
+  if (k === 'dec-mul') { const [a, b] = it.q.split(' × '); const pl = (a.split('.')[1] || '').length + (b.split('.')[1] || '').length; if (String(pl) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'long-div') { const m = it.q.match(/How many (\d+)s fit into (\d+)/); const d = +m[1], c = +m[2], a = +it.ans; if (!(a * d <= c && (a + 1) * d > c && c >= d)) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'zeros-div') { const [A, B] = it.q.replace(/,/g, '').split(' ÷ '); const z = Math.min(A.match(/0*$/)[0].length, B.match(/0*$/)[0].length); if (String(z) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'dec-div' && /places/.test(it.sub)) { const d = it.q.split(' ÷ ')[1]; if (String((d.split('.')[1] || '').length) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  if (k === 'rem-word') { const m = it.q.match(/(\d+) ÷ (\d+) = (\d+) R (\d+)/); const N = +m[1], d = +m[2], q = +m[3], r = +m[4]; if (q * d + r !== N) { bad++; console.log('MICRO R', it.q); } const want = /buses/.test(it.q) ? q + 1 : /FULL/.test(it.q) ? q : r; if (String(want) !== it.ans) { bad++; console.log('MICRO', it.q, it.ans); } }
+  x.scaffold = false;
+}
 console.log(n, 'checks,', bad, 'problems'); process.exit(bad ? 1 : 0);
