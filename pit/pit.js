@@ -72,6 +72,8 @@
   var LC = window.__LEARN || {};
   var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / E.FACTS.length) : 0;
   var BOSS_MAX = LC.bossPerStop || 1;
+  var JUNK_COST = 20000, junkCount = 0, junkTotal = 0, factMs = 0;
+  try { if (isBreak && localStorage.getItem('pa_boss_free') === '1') { localStorage.removeItem('pa_boss_free'); BOSS_MAX = 0; } } catch (e) {} // won the last boss
   var loadingPractice = false;
 
   function next() {
@@ -84,7 +86,9 @@
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;
       $fact.className = 'fact' + (cur.long || cur.q.length > 22 ? ' long' : cur.q.length > 12 ? ' mid' : '');
-      $fact.innerHTML = esc(cur.q) + (cur.long || cur.mode === 'text' ? '' : ' <span class="eq">=</span>') + (cur.sub ? '<div class="ask">' + esc(cur.sub) + '</div>' : '');
+      $fact.innerHTML = esc(cur.q) + (cur.long || cur.mode === 'text' ? '' : ' <span class="eq">=</span>') + (cur.sub ? '<div class="ask">' + esc(cur.sub) + '</div>' : '') +
+        (cur.say ? '<div><button id="sayit" class="sayit">🔊 Hear the word</button></div>' : '');
+      if (cur.say) sayWord();
       $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + (loadingPractice ? '⚔️ Bonus boss while it loads' : '⚔️ Boss · win +' + cur.value + ' s' + (cur.penalty ? ' · lose -' + cur.penalty + ' s' : '')) + ' · Enter';
       setMode(cur.mode);
     } else {
@@ -198,9 +202,33 @@
   }
   if (window.HootVoice) window.HootVoice.mount($('talkhoot'), hootScreen, hootOpener);
 
+  // Spelling: the word is spoken (Hoot's voice), so a chunk question is always answerable.
+  function sayWord() { if (cur && cur.say && ov && ov.speak) ov.speak(cur.say).then(function (r) { if (r && r.audio) { try { new Audio('data:audio/mpeg;base64,' + r.audio).play().catch(function () {}); } catch (e) {} } }).catch(function () {}); }
+  document.addEventListener('click', function (e) { if (e.target && e.target.id === 'sayit') { sayWord(); $ans.focus(); } });
+
   function submitSchool(raw) {
-    var t = performance.now(), correct = window.School.check(cur, raw);
-    window.School.record(cur, correct, { typed: raw, totalMs: t - shownAt, surface: surface, gameKey: gameKey });
+    var S = window.School, t = performance.now(), correct = S.check(cur, raw), ms = t - shownAt;
+    // Typed only a chunk of the word: a nudge, not a miss.
+    if (!correct && S.isPartial && S.isPartial(cur, raw)) {
+      busy = false; $ans.value = ''; $hint.className = 'hint'; $hint.textContent = '✏️ Good start. Now type the WHOLE word.'; $ans.focus(); return;
+    }
+    // A throwaway answer ("0", a key-mash, an instant guess): costs power, changes nothing, and he stays on this question.
+    if (!correct && !loadingPractice && S.isJunk && S.isJunk(cur, raw, ms)) {
+      junkCount++; junkTotal++;
+      S.record(cur, false, { junk: true, typed: raw, totalMs: ms, surface: surface, gameKey: gameKey });
+      gauge(E.fuelGive(-JUNK_COST));
+      $card.className = 'card wrong'; busy = false; $ans.value = '';
+      if (junkCount >= 2) {          // second throwaway in a row: straight into one step, he has to engage
+        junkCount = 0;
+        guide = { i: 0, phase: 'step', stepsRight: 0, total: Math.min(1, (cur.guide || []).length), start: Date.now() };
+        return showGuide();
+      }
+      $hint.className = 'hint miss';
+      $hint.innerHTML = '🎯 That is a guess, not an answer. Guesses cost ' + JUNK_COST / 1000 + ' s of power and you stay on this one. A real try earns +' + cur.value + ' s.';
+      $ans.focus(); return;
+    }
+    junkCount = 0;
+    S.record(cur, correct, { typed: raw, totalMs: ms, surface: surface, gameKey: gameKey });
     if (ov && ov.recordAttempt) {
       ov.recordAttempt({ deviceLocalKey: player, attemptId: uuid(), overrideId: null, questionId: cur.id, correct: correct, gameKey: gameKey }).catch(function () {});
     }
@@ -209,6 +237,7 @@
       right++;
       gauge(E.fuelGive(cur.value * 1000));
       $card.className = 'card right';
+      if (!loadingPractice) { try { localStorage.setItem('pa_boss_free', '1'); } catch (e) {} } // beat it: next stop has no boss
       if (done() && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
       return;
     }
@@ -216,8 +245,13 @@
     var lost = cur.penalty && !loadingPractice ? E.fuelGive(-cur.penalty * 1000) : 0;
     gauge(lost);
     $card.className = 'card wrong';
-    // Make him understand, not copy: he answers each step himself, then the question again from scratch.
-    guide = { i: 0, phase: 'step', stepsRight: 0, total: (cur.guide || []).length };
+    // One step aimed at his mistake (not the whole walkthrough), then he answers again himself.
+    // A point slip (right digits, wrong place) gets the decimal-point step; anything else gets the first step.
+    var gs = cur.guide || [], pick = 0, digits = function (v) { return String(v).replace(/[^0-9]/g, '').replace(/^0+|0+$/g, ''); };
+    if (gs.length && digits(raw) && digits(raw) === digits(cur.ans)) {
+      for (var gi = 0; gi < gs.length; gi++) if (/point|after the point|places/i.test(gs[gi].p)) pick = gi;
+    }
+    guide = { i: pick, phase: 'step', stepsRight: 0, total: Math.min(gs.length, pick + 1), start: Date.now() };
     showGuide();
   }
 
@@ -228,7 +262,7 @@
     if (guide.i < guide.total) {
       var g = cur.guide[guide.i];
       setMode(g.mode || 'num'); guide.phase = 'step';
-      $hint.innerHTML = '<div class="gtitle">🔧 Break it down · step ' + (guide.i + 1) + ' of ' + guide.total + '</div>' +
+      $hint.innerHTML = '<div class="gtitle">🔧 One step to unlock it</div>' +
         (guide.i === 0 && GLOSS[cur.skill] ? '<div class="gsub">💡 ' + esc(GLOSS[cur.skill]) + '</div>' : '') + '<div class="gq">' + esc(g.p) + '</div>';
     } else {
       setMode(cur.mode); guide.phase = 'final';
@@ -240,12 +274,13 @@
 
   function guideSubmit(raw) {
     var S = window.School;
+    if (guide.start && Date.now() - guide.start > 60000 && guide.phase !== 'final') { guide.i = guide.total; return showGuide(); } // 60 s cap: straight to his own try
     if (guide.phase === 'step' || guide.phase === 'stepCopy') {
       var g = cur.guide[guide.i], ok = S.norm(raw, g.mode || 'num') === S.norm(g.a, g.mode || 'num');
       if (ok) { if (guide.phase === 'step') guide.stepsRight++; guide.i++; $card.className = 'card'; return showGuide(); }
       if (guide.phase === 'step') {
         guide.phase = 'stepCopy';
-        $hint.innerHTML = '<div class="gtitle">🔧 Step ' + (guide.i + 1) + ' of ' + guide.total + '</div><div class="gq">' + esc(g.p) + '</div>' +
+        $hint.innerHTML = '<div class="gtitle">🔧 One step to unlock it</div><div class="gq">' + esc(g.p) + '</div>' +
           '<div class="gsub">It is <b>' + esc(g.a) + '</b>.' + (g.why ? ' ' + esc(g.why) : '') + ' Type it to go on.</div>';
       }
       $ans.value = ''; $ans.focus(); return;
@@ -280,9 +315,16 @@
     }
     if (guide) return guideSubmit(raw);
     if (cur.school) { busy = true; return submitSchool(raw); }
+    if (val === 0 && cur.ans !== 0 && !loadingPractice) { // "0" on a fact is a skip attempt: costs power, stays
+      gauge(E.fuelGive(-JUNK_COST / 2)); $card.className = 'card wrong'; $ans.value = ''; $hint.className = 'hint miss';
+      $hint.textContent = '🎯 0 is a skip, not an answer. It costs ' + JUNK_COST / 2000 + ' s. Real try?';
+      if (window.arcadeLog) window.arcadeLog.event('learn.junk', { item_id: cur.id, skill: 'fact', typed: raw, answer: cur.ans }, { game_key: gameKey });
+      return;
+    }
     busy = true;
     var t = performance.now();
     var correct = val === cur.ans;
+    factMs += t - shownAt;
     var res = E.record(cur.id, correct, {
       firstKeyMs: firstKeyAt == null ? null : firstKeyAt - shownAt,
       totalMs: t - shownAt, backspace: backspace, typed: raw, surface: surface, gameKey: gameKey,
@@ -315,7 +357,7 @@
   function factsDone() {
     finishedFacts = true;
     clearInterval(clockT);
-    log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
+    log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, fact_ms: Math.round(factMs), junk: junkTotal, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
     if (isBreak) return leave('break');
     if (gameReady) return leave('ready');
     // Charged but the game is still loading: keep the questions coming (the tank is full, so no fuel).
@@ -363,8 +405,10 @@
   window.addEventListener('focus', function () { if (!leaving) $ans.focus(); });
 
   $('exit').addEventListener('click', function () {
-    log('pit.exit', { surface: surface, typed: typed, fuel_ms: E.fuelMs() });
-    if (ov && ov.requestExit) ov.requestExit();
+    log('pit.exit', { surface: surface, typed: typed, facts_right: factsRight, fuel_ms: E.fuelMs() });
+    var go = function () { if (ov && ov.requestExit) ov.requestExit(); };
+    var f = (window.arcadeLog && window.arcadeLog.flush) ? window.arcadeLog.flush().catch(function () {}) : Promise.resolve();
+    Promise.race([f, new Promise(function (r) { setTimeout(r, 1200); })]).then(go); // the quit must reach the log
   });
   $go.addEventListener('click', function () { if (finishedFacts) leave('manual'); });
 

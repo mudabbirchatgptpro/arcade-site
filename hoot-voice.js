@@ -9,6 +9,7 @@
   var AGENT = 'agent_5001m8226pa4fp08rkff74rhs9tz';
   var LIB = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.35.0/dist/lib.iife.js';
   var KEY = 'pa_hootvoice_v1';
+  var gen = 0; // bumps on every start/stop; callbacks from an older session are ignored
   var conv = null, starting = false, startedAt = 0, btn = null, ctxFn = null, openFn = null, lastCtx = '', libP = null, lastTap = 0;
 
   function cfg() { return window.__LEARN || {}; }
@@ -28,22 +29,26 @@
     if (conv || starting) return;
     if (usage().ms >= capMs()) { label('🦉 Hoot is resting. Back tomorrow!'); log('hoot.voice', { role: 'system', text: 'daily cap reached' }); return; }
     starting = true; label('🦉 Calling Hoot…', true);
+    var my = ++gen;
     loadLib().then(function (L) {
+      if (my !== gen) throw new Error('cancelled');
       return L.Conversation.startSession({
         agentId: AGENT, connectionType: 'websocket',
         dynamicVariables: { opener: (openFn && openFn()) || 'Hoo! Ask me anything.' },
         onConnect: function () { startedAt = Date.now(); log('hoot.voice', { role: 'system', text: 'call started' }); },
-        onDisconnect: function () { end(true); },
+        onDisconnect: function () { if (my === gen) end(true); },
         onError: function (m) { log('hoot.voice', { role: 'system', text: 'error: ' + String(m).slice(0, 120) }); },
-        onModeChange: function (m) { if (conv) label(m && m.mode === 'speaking' ? '🦉 Hoot is talking… (tap to end)' : '🎙️ Listening… (tap to end)', true); },
+        onModeChange: function (m) { if (my === gen && conv) label(m && m.mode === 'speaking' ? '🦉 Hoot is talking… (tap to end)' : '🎙️ Listening… (tap to end)', true); },
         onMessage: function (m) { if (m && m.message) log('hoot.voice', { role: m.role || m.source, text: String(m.message).slice(0, 400) }); },
       });
     }).then(function (c) {
+      if (my !== gen) { try { c.endSession(); } catch (e) {} return; } // tapped off while connecting: close it
       starting = false; conv = c; label('🎙️ Listening… (tap to end)', true);
       sendCtx(true); // only now is the call ready to receive what is on his screen
       // Stay inside today's cap even mid-call.
       var left = Math.max(5000, capMs() - usage().ms); setTimeout(function () { if (conv) stop(); }, Math.min(left, 125000));
     }).catch(function (e) {
+      if (my !== gen) return;
       starting = false; conv = null; label('🦉 Hoot could not answer. Try again.'); log('hoot.voice', { role: 'system', text: 'start failed: ' + String(e && e.message || e).slice(0, 120) });
     });
   }
@@ -51,7 +56,7 @@
     if (startedAt) { addUsage(Date.now() - startedAt); log('hoot.voice', { role: 'system', text: 'call ended', seconds: Math.round((Date.now() - startedAt) / 1000) }); }
     startedAt = 0; conv = null; starting = false; label('🦉 Ask Hoot');
   }
-  function stop() { var c = conv; if (c) { try { c.endSession(); } catch (e) {} } else if (starting) { starting = false; } end(false); }
+  function stop() { gen++; var c = conv; if (c) { try { c.endSession(); } catch (e) {} } starting = false; end(false); }
   function sendCtx(force) {
     var t = ctxFn ? ctxFn() : ''; if (!conv || !t || (!force && t === lastCtx)) return;
     lastCtx = t; try { conv.sendContextualUpdate(t); } catch (e) {}

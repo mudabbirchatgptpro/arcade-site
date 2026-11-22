@@ -174,37 +174,37 @@
   // ── Spelling: chunks (phonics breakdown) and rules. Every answer is the word itself. ──
   // c = the word in chunks; m = index of the hard chunk; bad = the common misspelling; r = the rule.
   var WORDS = [
-    { w: 'necessary', c: ['nec', 'es', 'sar', 'y'], m: 2, bad: 'neccesary', r: 'One c, two s (one collar, two sleeves).' },
-    { w: 'separate', c: ['sep', 'a', 'rate'], m: 1, bad: 'seperate', r: 'There is "a rat" in sep-A-RATe.' },
-    { w: 'definitely', c: ['def', 'i', 'nite', 'ly'], m: 2, bad: 'definately', r: 'Built from finite: de + FINITE + ly.' },
-    { w: 'receive', c: ['re', 'ceive'], m: 1, bad: 'recieve', r: 'i before e, except after c.' },
-    { w: 'ceiling', c: ['ceil', 'ing'], m: 0, bad: 'cieling', r: 'After c it is ei.' },
-    { w: 'achieve', c: ['a', 'chieve'], m: 1, bad: 'acheive', r: 'Sounds like "ee" and not after c: ie.' },
-    { w: 'weird', c: ['weird'], m: 0, bad: 'wierd', r: 'Rule breaker: weird is weird, it breaks i before e.' },
-    { w: 'neighbor', c: ['neigh', 'bor'], m: 0, bad: 'nieghbor', r: 'ei when it sounds like "ay", as in neigh.' },
-    { w: 'foreign', c: ['for', 'eign'], m: 1, bad: 'foriegn', r: 'Rule breaker: for + EIGN, like reign.' },
-    { w: 'environment', c: ['en', 'vi', 'ron', 'ment'], m: 2, bad: 'enviroment', r: 'Hidden IRON: env-IRON-ment.' },
-    { w: 'government', c: ['gov', 'ern', 'ment'], m: 1, bad: 'goverment', r: 'govern + ment: keep the n.' },
-    { w: 'February', c: ['Feb', 'ru', 'ar', 'y'], m: 1, bad: 'Febuary', r: 'Say the first r: Feb-RU-ary.' },
-    { w: 'Wednesday', c: ['Wed', 'nes', 'day'], m: 1, bad: 'Wensday', r: 'Say it in chunks: WED-NES-day.' },
-    { w: 'restaurant', c: ['res', 'tau', 'rant'], m: 1, bad: 'resturant', r: 'The tricky middle is TAU.' },
-    { w: 'embarrass', c: ['em', 'bar', 'rass'], m: 2, bad: 'embarass', r: 'Double r AND double s: you go Really Red and Smile Shyly.' },
-    { w: 'accommodate', c: ['ac', 'com', 'mo', 'date'], m: 1, bad: 'accomodate', r: 'Double c AND double m: room for two of each.' },
-    { w: 'occasion', c: ['oc', 'ca', 'sion'], m: 0, bad: 'ocassion', r: 'Double c, one s.' },
-    { w: 'recommend', c: ['rec', 'om', 'mend'], m: 2, bad: 'reccomend', r: 're + commend: one c, double m.' },
-    { w: 'privilege', c: ['priv', 'i', 'lege'], m: 2, bad: 'priviledge', r: 'No d anywhere: privi-LEGE.' },
-    { w: 'knowledge', c: ['know', 'ledge'], m: 1, bad: 'knowlege', r: 'know + LEDGE: silent k, and keep the d.' },
-    { w: 'conscience', c: ['con', 'science'], m: 1, bad: 'concience', r: 'con + SCIENCE.' },
-    { w: 'muscle', c: ['mus', 'cle'], m: 1, bad: 'mussle', r: 'Silent c: mus-CLE.' },
-    { w: 'guarantee', c: ['guar', 'an', 'tee'], m: 0, bad: 'garantee', r: 'Silent u after g: GUar.' },
-    { w: 'interrupt', c: ['in', 'ter', 'rupt'], m: 2, bad: 'interupt', r: 'inter + rupt: two r where they meet.' },
-    { w: 'responsible', c: ['re', 'spon', 'si', 'ble'], m: 3, bad: 'responsable', r: '-ible when what is left is not a whole word (respons- is not a word).' },
-    { w: 'visible', c: ['vis', 'i', 'ble'], m: 2, bad: 'visable', r: '-ible: vis- is not a word on its own.' },
-    { w: 'comfortable', c: ['com', 'fort', 'a', 'ble'], m: 2, bad: 'comfortible', r: '-able: comfort IS a whole word.' },
-    { w: 'dependable', c: ['de', 'pend', 'a', 'ble'], m: 2, bad: 'dependible', r: '-able: depend IS a whole word.' },
-    { w: 'musician', c: ['mu', 'si', 'cian'], m: 2, bad: 'musition', r: '-cian for a person who does it (music → musician).' },
-    { w: 'explanation', c: ['ex', 'pla', 'na', 'tion'], m: 1, bad: 'explaination', r: 'explain loses its i: ex-PLA-nation.' },
-    { w: 'permission', c: ['per', 'mis', 'sion'], m: 2, bad: 'permision', r: 'permit → permission: double s.' },
+    { w: 'necessary', d: 'needed; you must have it', c: ['nec', 'es', 'sar', 'y'], m: 2, bad: 'neccesary', r: 'One c, two s (one collar, two sleeves).' },
+    { w: 'separate', d: 'apart; not together', c: ['sep', 'a', 'rate'], m: 1, bad: 'seperate', r: 'There is "a rat" in sep-A-RATe.' },
+    { w: 'definitely', d: 'for sure, no doubt', c: ['def', 'i', 'nite', 'ly'], m: 2, bad: 'definately', r: 'Built from finite: de + FINITE + ly.' },
+    { w: 'receive', d: 'to get something given to you', c: ['re', 'ceive'], m: 1, bad: 'recieve', r: 'i before e, except after c.' },
+    { w: 'ceiling', d: 'the top of a room, above your head', c: ['ceil', 'ing'], m: 0, bad: 'cieling', r: 'After c it is ei.' },
+    { w: 'achieve', d: 'to reach a goal by working for it', c: ['a', 'chieve'], m: 1, bad: 'acheive', r: 'Sounds like "ee" and not after c: ie.' },
+    { w: 'weird', d: 'strange or odd', c: ['weird'], m: 0, bad: 'wierd', r: 'Rule breaker: weird is weird, it breaks i before e.' },
+    { w: 'neighbor', d: 'a person who lives next door', c: ['neigh', 'bor'], m: 0, bad: 'nieghbor', r: 'ei when it sounds like "ay", as in neigh.' },
+    { w: 'foreign', d: 'from another country', c: ['for', 'eign'], m: 1, bad: 'foriegn', r: 'Rule breaker: for + EIGN, like reign.' },
+    { w: 'environment', d: 'the world around you: air, water, land, nature', c: ['en', 'vi', 'ron', 'ment'], m: 2, bad: 'enviroment', r: 'Hidden IRON: env-IRON-ment.' },
+    { w: 'government', d: 'the people who run a country or state', c: ['gov', 'ern', 'ment'], m: 1, bad: 'goverment', r: 'govern + ment: keep the n.' },
+    { w: 'February', d: 'the second month of the year', c: ['Feb', 'ru', 'ar', 'y'], m: 1, bad: 'Febuary', r: 'Say the first r: Feb-RU-ary.' },
+    { w: 'Wednesday', d: 'the day after Tuesday', c: ['Wed', 'nes', 'day'], m: 1, bad: 'Wensday', r: 'Say it in chunks: WED-NES-day.' },
+    { w: 'restaurant', d: 'a place where you pay to eat a meal', c: ['res', 'tau', 'rant'], m: 1, bad: 'resturant', r: 'The tricky middle is TAU.' },
+    { w: 'embarrass', d: 'to make someone feel awkward or ashamed', c: ['em', 'bar', 'rass'], m: 2, bad: 'embarass', r: 'Double r AND double s: you go Really Red and Smile Shyly.' },
+    { w: 'accommodate', d: 'to make room for someone or something', c: ['ac', 'com', 'mo', 'date'], m: 1, bad: 'accomodate', r: 'Double c AND double m: room for two of each.' },
+    { w: 'occasion', d: 'a special event or time', c: ['oc', 'ca', 'sion'], m: 0, bad: 'ocassion', r: 'Double c, one s.' },
+    { w: 'recommend', d: 'to say something is good and someone should try it', c: ['rec', 'om', 'mend'], m: 2, bad: 'reccomend', r: 're + commend: one c, double m.' },
+    { w: 'privilege', d: 'a special right or advantage', c: ['priv', 'i', 'lege'], m: 2, bad: 'priviledge', r: 'No d anywhere: privi-LEGE.' },
+    { w: 'knowledge', d: 'what you know', c: ['know', 'ledge'], m: 1, bad: 'knowlege', r: 'know + LEDGE: silent k, and keep the d.' },
+    { w: 'conscience', d: 'the voice inside you that says right from wrong', c: ['con', 'science'], m: 1, bad: 'concience', r: 'con + SCIENCE.' },
+    { w: 'muscle', d: 'the body part that moves your bones', c: ['mus', 'cle'], m: 1, bad: 'mussle', r: 'Silent c: mus-CLE.' },
+    { w: 'guarantee', d: 'a promise that something will happen', c: ['guar', 'an', 'tee'], m: 0, bad: 'garantee', r: 'Silent u after g: GUar.' },
+    { w: 'interrupt', d: 'to cut in while someone is talking', c: ['in', 'ter', 'rupt'], m: 2, bad: 'interupt', r: 'inter + rupt: two r where they meet.' },
+    { w: 'responsible', d: 'in charge; someone you can count on', c: ['re', 'spon', 'si', 'ble'], m: 3, bad: 'responsable', r: '-ible when what is left is not a whole word (respons- is not a word).' },
+    { w: 'visible', d: 'able to be seen', c: ['vis', 'i', 'ble'], m: 2, bad: 'visable', r: '-ible: vis- is not a word on its own.' },
+    { w: 'comfortable', d: 'cozy and relaxed', c: ['com', 'fort', 'a', 'ble'], m: 2, bad: 'comfortible', r: '-able: comfort IS a whole word.' },
+    { w: 'dependable', d: 'someone you can count on', c: ['de', 'pend', 'a', 'ble'], m: 2, bad: 'dependible', r: '-able: depend IS a whole word.' },
+    { w: 'musician', d: 'a person who plays music', c: ['mu', 'si', 'cian'], m: 2, bad: 'musition', r: '-cian for a person who does it (music → musician).' },
+    { w: 'explanation', d: 'words that make something clear', c: ['ex', 'pla', 'na', 'tion'], m: 1, bad: 'explaination', r: 'explain loses its i: ex-PLA-nation.' },
+    { w: 'permission', d: 'being allowed to do something', c: ['per', 'mis', 'sion'], m: 2, bad: 'permision', r: 'permit → permission: double s.' },
   ];
   // Build items: base + suffix (or prefix + base). r = the rule that decides the spelling.
   var BUILDS = [
@@ -399,12 +399,14 @@
   function chooseSkill() {
     var last = load().last, tot = 0, now = Date.now();
     var ws = Object.keys(SKILLS).map(function (k) {
-      var w = k === last ? 0 : SKILLS[k].w, x = st(k);
+      var F = (root.__FOCUS && root.__FOCUS.weights) || {};
+      var w = k === last ? 0 : (k in F ? F[k] : SKILLS[k].w), x = st(k);
       if (x.missAt && now - x.missAt < DAY) w *= 1.8;        // missed today: back sooner
       if (dueReview(k) !== null) w *= 1.5;                     // a recall check is due
       if (mastered(k)) w *= 0.25;                              // mastered: light review only
       tot += w; return [k, w];
     });
+    var q = load().nextSkill; if (q && SKILLS[q]) { load().nextSkill = null; save(); return q; } // missed last stop: a fresh one now
     var r = Math.random() * tot;
     for (var i = 0; i < ws.length; i++) { r -= ws[i][1]; if (r <= 0) return ws[i][0]; }
     return ws[0][0];
@@ -432,7 +434,7 @@
     else p = leastSeen(fresh.length ? fresh : pool, L.words, idOf);
     var it;
     if (p.kind === 'chunk') {
-      it = { q: p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · '), sub: 'Type the WHOLE word.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
+      it = { q: p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · '), sub: 'Meaning: ' + p.w.d + '. Type the WHOLE word.', say: p.w.w, ans: p.w.w, mode: 'text', value: 30, copies: 2,
         steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
       it.guide = [{ p: 'The trick: ' + p.w.r + ' Type just the missing chunk.', a: p.w.c[p.w.m], mode: 'text' }];
       it.finalPrompt = 'Now the whole word, from memory.';
@@ -494,6 +496,23 @@
     fragrun: { correct: 'c', fragment: 'f', runon: 'r', runonsentence: 'r', commasplice: 'r' },
     sentence: { simple: '1', compound: '2', complex: '3', compoundcomplex: '4' },
   };
+  // Throwaway answers (he types "0" or a key-mash to skip): never pay, never lower his level, never let him move on.
+  var MATHS = { 'dec-mul': 1, 'long-div': 1, 'dec-div': 1, 'rem-word': 1, 'zeros-div': 1 };
+  function isJunk(it, typed, ms) {
+    var t = String(typed || '').trim().toLowerCase(), a = String(it.ans || '').toLowerCase();
+    if (check(it, typed)) return false;
+    if (/^0+([.,]0*)?$/.test(t) && !/^0+$/.test(a)) return true;              // "0", "00", "0.0"
+    if (MATHS[it.skill] && ms < 5000) return true;                              // no real working in under 5 s
+    if (it.mode === 'text' && a.length >= 4 && t.length <= 1) return true;      // one letter for a word
+    if (/^(.)\1{2,}$/.test(t) || /^(asdf|qwer|idk|dunno|skip|pass|no|xxx)$/.test(t)) return true; // mash / refusal
+    return false;
+  }
+  // Typed only part of the word (e.g. the missing chunk): not a miss, just a nudge to type the whole word.
+  function isPartial(it, typed) {
+    if (it.skill !== 'spell') return false;
+    var t = norm(typed, 'text'), a = norm(it.ans, 'text');
+    return t.length >= 2 && t.length < a.length && a.indexOf(t) >= 0;
+  }
   function check(it, typed) {
     var w = WORDS_FOR[it.skill], t = String(typed || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     if (w && w[t]) return w[t] === String(it.ans).toLowerCase();
@@ -503,6 +522,11 @@
   function record(it, correct, meta) {
     meta = meta || {};
     var now = Date.now(), d = today(now);
+    if (meta.junk) { // a throwaway answer: logged, but it never changes his level or mastery
+      if (root.arcadeLog && root.arcadeLog.event) root.arcadeLog.event('learn.junk', { item_id: it.id, skill: it.skill, typed: meta.typed == null ? null : String(meta.typed), answer: it.ans, total_ms: Math.round(meta.totalMs || 0), surface: meta.surface || null }, { game_key: meta.gameKey || null, question_id: it.id, severity: 'audit' });
+      return;
+    }
+    if (!correct && it.skill) { load().nextSkill = it.skill; }
     if (it.skill === 'spell') {
       var w = load().words, s = w[it.key] || (w[it.key] = { n: 0, right: 0, days: [], step: -1, due: 0 });
       s.n++; s.lastOk = !!correct;
@@ -549,5 +573,5 @@
     }
   }
 
-  root.School = { next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _g: G, _skills: SKILLS, _divSteps: divSteps, _dstr: dstr, _dec: dec, _st: st, _mastered: mastered, levels: function () { return load().skills; } };
+  root.School = { isPartial: isPartial, isJunk: isJunk, next: next, check: check, record: record, norm: norm, _gen: GEN, _words: WORDS, _builds: BUILDS, _sent: SENT, _subj: SUBJ, _g: G, _skills: SKILLS, _divSteps: divSteps, _dstr: dstr, _dec: dec, _st: st, _mastered: mastered, levels: function () { return load().skills; } };
 })(typeof window !== 'undefined' ? window : globalThis);

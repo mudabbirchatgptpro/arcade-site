@@ -141,13 +141,16 @@
     var everGold = !!(prev && prev.fdays && prev.fdays.length >= 3);        // locked in once = review rate for good
     var echo = !!(prev && prev.miss);                                        // answer was just shown after a miss
     if (echo) fl = false;                                                    // no speed credit for repeating a shown answer
+    var lastH = prev && prev.hist && prev.hist[prev.hist.length - 1];
+    var warm = !!(lastH && !lastH.fl && now() - lastH.t < 600000);         // slow 10 min ago, fast now = short-term memory
+    var flCredit = fl && !warm;
     s.n++;
     if (correct) s.right++; else s.wrong++;
-    s.hist.push({ t: t, ok: !!correct, fk: meta.firstKeyMs == null ? null : Math.round(meta.firstKeyMs), tot: Math.round(meta.totalMs || 0), fl: fl, sf: meta.surface || null });
+    s.hist.push({ t: t, ok: !!correct, fk: meta.firstKeyMs == null ? null : Math.round(meta.firstKeyMs), tot: Math.round(meta.totalMs || 0), fl: flCredit, sf: meta.surface || null });
     if (s.hist.length > 8) s.hist.splice(0, s.hist.length - 8);
     s.miss = !correct;
     var d = today(t);
-    if (fl) {
+    if (flCredit) {
       if (s.fdays.indexOf(d) === -1) s.fdays.push(d);
       if (s.fdays.length > 10) s.fdays.splice(0, s.fdays.length - 10);
       s.due = t + SPACING_DAYS[s.lvl] * DAY;                               // first check after 1 day, then 3, 7, 21
@@ -189,7 +192,7 @@
   function fuelSave(f) { store.set(FUEL_KEY, JSON.stringify(f)); }
   // A locked-in (gold) fact is review: it pays 5 s, so cheap facts cannot fund play once he knows them.
   function fuelEarn(correct, fl, gold) {
-    var add = !correct ? 0 : gold ? EARN_GOLD : fl ? EARN_FAST : EARN_SLOW;
+    var add = !correct ? 0 : fl ? EARN_FAST : EARN_SLOW; // fast always pays full (mastery must not make stops longer)
     if (!add) return 0;
     var f = fuelLoad(), before = f.ms; f.ms = Math.min(TANK_MAX, f.ms + add); fuelSave(f);
     return f.ms - before; // what actually went in (nothing once the tank is full)
