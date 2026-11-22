@@ -52,8 +52,8 @@
     .run-card.done{border-color:#00e5a8}
   </style>
   <div class="run-card" id="run-card">
-    <div style="flex:1"><h2 id="rc-title">⚡ Games run on charge</h2>
-      <div class="rc-sub" id="rc-sub">About every minute, charge up with quick facts. Fast fact +20 s of play, slow +10 s.</div><div class="rc-sub" id="rc-facts"></div></div>
+    <div style="flex:1"><h2 id="rc-title">⚡ Power up. Play. Repeat.</h2>
+      <div class="rc-sub" id="rc-sub">Your power drains as you play. Fast answers charge double. Boss questions charge the most.</div><div class="rc-sub" id="rc-facts"></div></div>
   </div>
 
   <!-- 2026-05-27: mode toggles hidden — shell forces 'mixed' always (no choice for Parker). Buttons retained (display:none) so existing setMode/getElementById() refs don't break. -->
@@ -564,7 +564,7 @@ function loadHub(playerId) {
   }
   tank();
   ['pointermove','keydown','focus'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) tank(); }catch(e){} },true);});
-  var c=E.counts(); document.getElementById('rc-facts').textContent=c.fluent+' of 120 facts fast'+(c.gold?' · '+c.gold+' locked in':'')+'. Fast facts = shorter stops.';
+  var c=E.counts(); document.getElementById('rc-facts').textContent='🔓 '+c.fluent+' / 120 facts unlocked'+(c.gold?' · 🏆 '+c.gold+' mastered':'')+'. The more you unlock, the faster you get back in.';
   // Hoot Lite: one line on the first Home visit of the day, a clip when a square turns gold.
   var H=window.HootLite; if(!H) return;
   H.setState({surface:'home',item:null});
@@ -575,7 +575,7 @@ function loadHub(playerId) {
     var f0=E.byId(fresh[0]);
     H.say(fresh.length===1?'New gold: '+f0.q+'. Fast on three days.':fresh.length+' new gold squares, '+f0.q+' first.',{clip:true,trigger:'gold'});
   } else {
-    try{var k='pa_hoot_greet', d=E.today(); if(E.fuelMs()<E.FUEL.CHUNK && localStorage.getItem(k)!==d){ if(H.say("Fast facts charge you twice as quick.",{trigger:'greet'})) localStorage.setItem(k,d);} }catch(e){}
+    try{var k='pa_hoot_greet', d=E.today(); if(E.fuelMs()<E.FUEL.CHUNK && localStorage.getItem(k)!==d){ if(H.say("Pro tip: fast answers charge double.",{trigger:'greet'})) localStorage.setItem(k,d);} }catch(e){}
   }
 })();
 </script>

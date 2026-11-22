@@ -2,7 +2,7 @@
  * points ui.overlay here.
  *   break=1  -> pit stop: the game paused because about a minute of play went by.
  *   else     -> ignition: a game is starting.
- * Play costs fuel and fuel comes only from typed facts (fast +30 s, slow +15 s, wrong 0).
+ * Play costs fuel and fuel comes only from typed answers (fast fact +20 s, slow +10 s, school item +30/40 s, wrong 0).
  * Either way he types until the tank holds the next minute (the tank holds no more); if it already does, the
  * stop is a one-second "tank ok" and the game carries on. Nothing opens with time; Enter is
  * required; a miss shows the fact and its pattern, he types it once, and it earns nothing.
@@ -44,8 +44,8 @@
     $('tankfill').style.width = Math.min(100, 100 * ms / NEED) + '%';
     $('tankms').textContent = E.fmtFuel(ms);
     $('tankneed').textContent = E.fmtFuel(NEED);
-    $('earn').textContent = earned > 0 ? '+' + Math.round(earned / 1000) + ' s' : earned < 0 ? Math.round(earned / 1000) + ' s' : (loadingPractice ? 'tank full' : '');
-    $('rates').textContent = 'fast +' + E.FUEL.FAST / 1000 + ' s · slow +' + E.FUEL.SLOW / 1000 + ' s';
+    $('earn').textContent = earned > 0 ? '+' + Math.round(earned / 1000) + ' s' : earned < 0 ? Math.round(earned / 1000) + ' s' : (loadingPractice ? 'full power' : '');
+    $('rates').textContent = 'fast ⚡+' + E.FUEL.FAST / 1000 + ' · slow +' + E.FUEL.SLOW / 1000;
   }
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -74,13 +74,13 @@
       cur = window.School.next(); cur.school = true;
       $fact.className = 'fact' + (cur.long || cur.q.length > 22 ? ' long' : cur.q.length > 12 ? ' mid' : '');
       $fact.innerHTML = esc(cur.q) + (cur.long || cur.mode === 'text' ? '' : ' <span class="eq">=</span>') + (cur.sub ? '<div class="ask">' + esc(cur.sub) + '</div>' : '');
-      $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + (loadingPractice ? 'Practice while it loads' : 'Worth +' + cur.value + ' s' + (cur.penalty ? ' · a wrong guess costs ' + cur.penalty + ' s' : '')) + ' · Enter';
+      $hint.textContent = (cur.hint ? cur.hint + ' · ' : '') + (loadingPractice ? '⚔️ Bonus boss while it loads' : '⚔️ Boss · win +' + cur.value + ' s' + (cur.penalty ? ' · lose -' + cur.penalty + ' s' : '')) + ' · Enter';
       setMode(cur.mode);
     } else {
       cur = E.pick(); cur.school = false;
       $fact.className = 'fact';
       $fact.innerHTML = cur.q + ' <span class="eq">=</span>';
-      $hint.textContent = 'Type it, then Enter';
+      $hint.textContent = 'Type it + Enter';
       setMode('num');
     }
     shownAt = performance.now();
@@ -109,7 +109,7 @@
     $hint.className = 'hint miss';
     copiesLeft = cur.copies || 1;
     $hint.innerHTML = '<ol class="steps">' + cur.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
-      'Type <b>' + esc(cur.ans) + '</b>' + (copiesLeft > 1 ? ' ' + copiesLeft + ' times' : '') + ' to keep going';
+      'Type <b>' + esc(cur.ans) + '</b>' + (copiesLeft > 1 ? ' ' + copiesLeft + ' times' : '') + ' to respawn';
     $ans.value = ''; copyMode = true; busy = false; $ans.focus();
   }
 
@@ -120,7 +120,7 @@
     var val = parseInt(raw, 10);
     if (copyMode) {
       var ok = cur.school ? window.School.check(cur, raw) : val === cur.ans;
-      if (ok && cur.school && --copiesLeft > 0) { $ans.value = ''; $hint.lastChild.textContent = ' once more to keep going'; $ans.focus(); return; }
+      if (ok && cur.school && --copiesLeft > 0) { $ans.value = ''; $hint.lastChild.textContent = ' one more time to respawn'; $ans.focus(); return; }
       if (ok) { copyMode = false; busy = true; setTimeout(next, 250); }
       else { $ans.value = ''; $ans.focus(); }
       return;
@@ -148,7 +148,7 @@
       $card.className = 'card wrong';
       $fact.innerHTML = cur.full.replace('=', '<span class="eq">=</span>');
       $hint.className = 'hint miss';
-      $hint.innerHTML = 'Type <b>' + cur.ans + '</b> to keep going' + (E.pattern(cur.id) ? '<div class="pat">' + E.pattern(cur.id) + '</div>' : '');
+      $hint.innerHTML = 'Type <b>' + cur.ans + '</b> to respawn' + (E.pattern(cur.id) ? '<div class="pat">' + E.pattern(cur.id) + '</div>' : '');
       $ans.value = '';
       copyMode = true;
       busy = false;
@@ -163,7 +163,7 @@
     if (gameReady) return leave('ready');
     // Charged but the game is still loading: keep the questions coming (the tank is full, so no fuel).
     loadingPractice = true;
-    $label.textContent = '⚡ Charged · game loading, keep going';
+    $label.textContent = '⚡ Full power · bonus round while the game loads';
     $sub.innerHTML = '<span class="loading-dot"></span>Game loading…';
     if (gameStuck) $go.style.display = 'inline-block';
     next();
@@ -221,12 +221,12 @@
   if (startFuel >= NEED) {
     // Paid up: no facts, straight back to the game.
     $card.style.display = 'none';
-    $label.textContent = 'Fuel ' + E.fmtFuel(startFuel) + ' ✓';
+    $label.textContent = '⚡ Full power';
     finishedFacts = true;
     if (isBreak) setTimeout(function () { leave('paid'); }, 900);
     else { $sub.innerHTML = '<span class="loading-dot"></span>Game loading…'; if (gameReady) leave('ready'); }
   } else {
-    $label.textContent = isBreak ? '⚡ Charge up' : '⚡ Charge up to start';
+    $label.textContent = isBreak ? '⚡ Recharge!' : '⚡ Power up to play';
     next();
   }
 })();

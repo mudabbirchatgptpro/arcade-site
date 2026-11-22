@@ -115,7 +115,7 @@
         var left = Math.max(0, f.ms - (Date.now() - f.playingSince)), s = Math.ceil(left / 1000);
         el.style.display = 'block';
         el.className = 'fuel' + (s <= 0 ? ' out' : s <= 10 ? ' low' : '');
-        el.textContent = s <= 0 ? '⚡ Charge up · press P' : s <= 10 ? '⚡ Charge up soon · ' + s + ' s' : '⚡ ' + s + ' s';
+        el.textContent = s <= 0 ? '⚡ Out of power · P to recharge' : s <= 10 ? '⚡ Low power · ' + s + ' s' : '⚡ ' + s + ' s';
       }
       tick(); setInterval(tick, 500);
     })();
