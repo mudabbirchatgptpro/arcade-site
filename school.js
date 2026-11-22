@@ -34,6 +34,8 @@
   function dPlaces(d) { var t = dstr(d); return t.indexOf('.') < 0 ? 0 : t.length - t.indexOf('.') - 1; }
 
   // ── Maths generators: {q, ans, accept(fn), steps[], value, mode} ──
+  // Each generator returns the question, the answer, steps (the full worked solution, shown only as a last
+  // resort) and guide: the steps HE answers after a miss, so he rebuilds the method instead of copying.
   var GEN = {
     'dec-mul': function (lvl) { // Topic 4-5: multiply a decimal by a decimal
       var a, b;
@@ -41,13 +43,17 @@
       else if (lvl === 4) { a = dec(R(12, 98), 1); b = dec(R(12, 98), 1); }
       else { a = dec(R(102, 989), 2); b = pickOf([dec(R(2, 9), 2), dec(R(12, 89), 1), dec(R(3, 9), 1)]); }
       if (a.i % 10 === 0) a.i += 3; if (b.i % 10 === 0 && b.s) b.i += 1;
-      var p = dec(a.i * b.i, a.s + b.s), ans = dstr(p);
+      var p = dec(a.i * b.i, a.s + b.s), ans = dstr(p), q = dstr(a) + ' × ' + dstr(b), pl = a.s + b.s;
       return {
-        q: dstr(a) + ' × ' + dstr(b), ans: ans, mode: 'num', value: 30,
+        q: q, ans: ans, mode: 'num', value: 30,
+        guide: [
+          { p: 'Forget the points for now. What is ' + a.i + ' × ' + b.i + '?', a: String(a.i * b.i), why: a.i + ' × ' + b.i + ' = ' + fmtInt(a.i * b.i) + '.' },
+          { p: dstr(a) + ' has ' + a.s + ' digit' + (a.s === 1 ? '' : 's') + ' after the point and ' + dstr(b) + ' has ' + b.s + '. How many digits go after the point in the answer?', a: String(pl), why: 'Add them: ' + a.s + ' + ' + b.s + ' = ' + pl + '.' },
+        ],
+        finalPrompt: 'Put the point ' + pl + ' place' + (pl > 1 ? 's' : '') + ' in from the right of ' + (a.i * b.i) + '. So ' + q + ' = ?',
         steps: ['Ignore the points: ' + a.i + ' × ' + b.i + ' = ' + fmtInt(a.i * b.i) + '.',
-          'Count decimal places: ' + a.s + ' + ' + b.s + ' = ' + (a.s + b.s) + '.',
-          'Put the point ' + (a.s + b.s) + ' place' + (a.s + b.s > 1 ? 's' : '') + ' in from the right: ' + ans + '.',
-          'Check by estimating: about ' + Math.round(a.i / Math.pow(10, a.s)) + ' × ' + (Math.round(b.i / Math.pow(10, b.s) * 10) / 10) + '.'],
+          'Count decimal places: ' + a.s + ' + ' + b.s + ' = ' + pl + '.',
+          'Put the point ' + pl + ' place' + (pl > 1 ? 's' : '') + ' in from the right: ' + ans + '.'],
       };
     },
     'long-div': function (lvl) { // Topic 5: divide by 2-digit divisors
@@ -59,40 +65,76 @@
       var D = d * q + r;
       return {
         q: fmtInt(D) + ' ÷ ' + d, ans: r ? q + ' R ' + r : String(q), mode: r ? 'rem' : 'num', value: r ? 40 : 30,
-        hint: r ? 'Answer like 207 R 12' : '', steps: divSteps(D, d),
+        hint: r ? 'Answer like 207 R 12' : '', steps: divSteps(D, d), guide: divGuide(D, d),
+        finalPrompt: 'Read your digits from the top' + (r ? ', then the last thing left is the remainder' : '') + '. So ' + fmtInt(D) + ' ÷ ' + d + ' = ?',
       };
     },
     'dec-div': function (lvl) { // Topic 6: divide decimals
-      var q, dv, D;
-      if (lvl <= 3) { q = dec(R(21, 99), 1); dv = R(12, 48); D = dec(q.i * dv, 1);
-        return { q: dstr(D) + ' ÷ ' + dv, ans: dstr(q), mode: 'num', value: 30,
+      var q, dv, D, g = 0;
+      if (lvl <= 3) {
+        do { q = dec(R(21, 99), 1); if (q.i % 10 === 0) q.i += 1; dv = R(12, 48); D = dec(q.i * dv, 1); } while (D.i % 10 === 0 && ++g < 50);
+        var qs3 = dstr(D) + ' ÷ ' + dv;
+        return { q: qs3, ans: dstr(q), mode: 'num', value: 30,
+          guide: [{ p: 'Divide as if the point were not there: ' + fmtInt(D.i) + ' ÷ ' + dv + ' = ?', a: String(q.i), why: fmtInt(D.i) + ' ÷ ' + dv + ' = ' + q.i + '.' },
+            { p: 'How many digits come after the point in ' + dstr(D) + '?', a: '1', why: 'One: the ' + String(D.i).slice(-1) + '.' }],
+          finalPrompt: 'The point goes straight up: the answer also has 1 digit after the point. So ' + qs3 + ' = ?',
           steps: ['Divide as if there were no point: ' + fmtInt(D.i) + ' ÷ ' + dv + ' = ' + q.i + '.', 'The point goes straight up into the answer: ' + dstr(q) + '.'] }; }
       if (lvl === 4) { q = R(12, 86); dv = dec(R(12, 89), 2); if (dv.i % 10 === 0) dv.i += 1; D = dec(q * dv.i, 2);
-        return { q: dstr(D) + ' ÷ ' + dstr(dv), ans: String(q), mode: 'num', value: 30,
-          steps: ['Make the divisor whole: move both points 2 places right.', dstr(D) + ' ÷ ' + dstr(dv) + ' becomes ' + fmtInt(D.i) + ' ÷ ' + dv.i + '.', fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q + '.'] }; }
+        var qs4 = dstr(D) + ' ÷ ' + dstr(dv);
+        return { q: qs4, ans: String(q), mode: 'num', value: 30,
+          guide: [{ p: 'Make the divisor a whole number: move the point in ' + dstr(dv) + ' 2 places right. What is it now?', a: String(dv.i), why: dstr(dv) + ' → ' + dv.i + '.' },
+            { p: 'Move the point in ' + dstr(D) + ' the SAME 2 places right. What is it now?', a: String(D.i), why: dstr(D) + ' → ' + fmtInt(D.i) + '.' },
+            { p: 'Now ' + fmtInt(D.i) + ' ÷ ' + dv.i + ' = ?', a: String(q), why: fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q + '.' }],
+          finalPrompt: 'Moving both points the same way keeps the answer the same. So ' + qs4 + ' = ?',
+          steps: ['Make the divisor whole: move both points 2 places right.', qs4 + ' becomes ' + fmtInt(D.i) + ' ÷ ' + dv.i + '.', fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q + '.'] }; }
       var k = R(2, 9), m = R(2, 9) * pickOf([10, 100]), sh = pickOf([1, 2]);
-      dv = dec(k, sh); var whole = k * m; // whole ÷ 0.k or 0.0k
-      var ansN = m * Math.pow(10, sh);
-      return { q: fmtInt(whole) + ' ÷ ' + dstr(dv), ans: String(ansN), mode: 'num', value: 30,
-        steps: ['Make the divisor whole: move both points ' + sh + ' place' + (sh > 1 ? 's' : '') + ' right.', fmtInt(whole) + ' becomes ' + fmtInt(whole * Math.pow(10, sh)) + ', and ' + dstr(dv) + ' becomes ' + k + '.', fmtInt(whole * Math.pow(10, sh)) + ' ÷ ' + k + ' = ' + fmtInt(ansN) + '.', 'Dividing by a number less than 1 makes the answer BIGGER.'] };
+      dv = dec(k, sh); var whole = k * m, big = whole * Math.pow(10, sh), ansN = m * Math.pow(10, sh), qs5 = fmtInt(whole) + ' ÷ ' + dstr(dv);
+      return { q: qs5, ans: String(ansN), mode: 'num', value: 30,
+        guide: [{ p: 'Make ' + dstr(dv) + ' a whole number: how many places must its point move right?', a: String(sh), why: dstr(dv) + ' → ' + k + ' is ' + sh + ' place' + (sh > 1 ? 's' : '') + '.' },
+          { p: 'Move the point in ' + fmtInt(whole) + ' the same ' + sh + ' place' + (sh > 1 ? 's' : '') + ' (add zeros). What is it now?', a: String(big), why: fmtInt(whole) + ' → ' + fmtInt(big) + '.' },
+          { p: 'Now ' + fmtInt(big) + ' ÷ ' + k + ' = ?', a: String(ansN), why: fmtInt(big) + ' ÷ ' + k + ' = ' + fmtInt(ansN) + '.' }],
+        finalPrompt: 'Dividing by a number smaller than 1 makes the answer BIGGER. So ' + qs5 + ' = ?',
+        steps: ['Make the divisor whole: move both points ' + sh + ' place' + (sh > 1 ? 's' : '') + ' right.', fmtInt(whole) + ' becomes ' + fmtInt(big) + ', and ' + dstr(dv) + ' becomes ' + k + '.', fmtInt(big) + ' ÷ ' + k + ' = ' + fmtInt(ansN) + '.'] };
     },
     'zeros-div': function (lvl) { // his dropped-zero mistake (4800 ÷ 6 answered 80)
       var a = R(2, 9), b = R(2, 9), z1 = lvl >= 5 ? R(3, 5) : R(2, 4), z2 = R(1, Math.min(2, z1 - 1));
-      var D = a * b * Math.pow(10, z1), d = b * Math.pow(10, z2), q = a * Math.pow(10, z1 - z2);
-      return { q: fmtInt(D) + ' ÷ ' + fmtInt(d), ans: String(q), mode: 'num', value: 30,
-        steps: ['Cancel the same number of zeros from both: take ' + z2 + ' off each.', fmtInt(D / Math.pow(10, z2)) + ' ÷ ' + b + ' = ' + fmtInt(q) + '.', 'Count the zeros in your answer: ' + (z1 - z2) + '.'] };
+      var D = a * b * Math.pow(10, z1), d = b * Math.pow(10, z2), q = a * Math.pow(10, z1 - z2), D2 = D / Math.pow(10, z2), qs = fmtInt(D) + ' ÷ ' + fmtInt(d);
+      return { q: qs, ans: String(q), mode: 'num', value: 30,
+        guide: [{ p: 'Cross off the same number of zeros from both. How many zeros does ' + fmtInt(d) + ' have?', a: String(z2), why: fmtInt(d) + ' has ' + z2 + '.' },
+          { p: 'Cross ' + z2 + ' off ' + fmtInt(D) + ' too. What is left?', a: String(D2), why: fmtInt(D) + ' → ' + fmtInt(D2) + '.' },
+          { p: 'Now ' + fmtInt(D2) + ' ÷ ' + b + ' = ?', a: String(q), why: fmtInt(D2) + ' ÷ ' + b + ' = ' + fmtInt(q) + '.' }],
+        finalPrompt: 'Crossing off the same zeros does not change the answer. So ' + qs + ' = ?',
+        steps: ['Cancel the same number of zeros from both: take ' + z2 + ' off each.', fmtInt(D2) + ' ÷ ' + b + ' = ' + fmtInt(q) + '.'] };
     },
     'rem-word': function (lvl) { // remainder word problems: round up, drop, or leftover
       var d = R(lvl >= 5 ? 24 : 12, lvl >= 5 ? 48 : 30), q = R(lvl >= 5 ? 21 : 11, lvl >= 5 ? 79 : 40), r = R(1, d - 1), N = d * q + r;
-      var t = pickOf(['up', 'drop', 'left']);
-      if (t === 'up') return { q: N + ' kids are going on a field trip. Each bus holds ' + d + '. How many buses do they need?', ans: String(q + 1), mode: 'num', value: 40, long: true,
-        steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'The ' + r + ' leftover kids still need a bus, so round UP.', 'Answer: ' + (q + 1) + ' buses.'] };
-      if (t === 'drop') return { q: 'A pack holds ' + d + ' trading cards. Parker has ' + N + ' cards. How many FULL packs can he make?', ans: String(q), mode: 'num', value: 40, long: true,
-        steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'The ' + r + ' leftover cards cannot fill a pack, so drop them.', 'Answer: ' + q + ' full packs.'] };
-      return { q: N + ' emeralds are shared equally among ' + d + ' players. How many emeralds are left over?', ans: String(r), mode: 'num', value: 40, long: true,
-        steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'The question asks for what is LEFT, so the answer is the remainder.', 'Answer: ' + r + '.'] };
+      var t = pickOf(['up', 'drop', 'left']), it;
+      var g = [{ p: N + ' ÷ ' + d + ': how many WHOLE times does ' + d + ' fit?', a: String(q), why: d + ' × ' + q + ' = ' + d * q + '.' },
+        { p: 'And how many are left over?', a: String(r), why: N + ' − ' + d * q + ' = ' + r + '.' }];
+      if (t === 'up') it = { q: N + ' kids are going on a field trip. Each bus holds ' + d + '. How many buses do they need?', ans: String(q + 1),
+        finalPrompt: 'The ' + 'leftover kids cannot stay home. So how many buses?', steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'The leftover kids still need a bus, so round UP: ' + (q + 1) + '.'] };
+      else if (t === 'drop') it = { q: 'A pack holds ' + d + ' trading cards. Parker has ' + N + ' cards. How many FULL packs can he make?', ans: String(q),
+        finalPrompt: 'Can the leftover cards fill a whole pack? So how many FULL packs?', steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'The leftover cards cannot fill a pack, so drop them: ' + q + '.'] };
+      else it = { q: N + ' emeralds are shared equally among ' + d + ' players. How many emeralds are left over?', ans: String(r),
+        finalPrompt: 'Read the question again: what is it asking for?', steps: [N + ' ÷ ' + d + ' = ' + q + ' R ' + r + '.', 'It asks what is LEFT: the remainder, ' + r + '.'] };
+      it.mode = 'num'; it.value = 40; it.long = true; it.guide = g;
+      return it;
     },
   };
+
+  // Guided long division: he answers "how many fit?" at every step and "what's left?" at the first one.
+  function divGuide(D, d) {
+    var digits = String(D), cur = 0, started = false, g = [], first = true;
+    for (var i = 0; i < digits.length; i++) {
+      cur = cur * 10 + Number(digits[i]);
+      if (!started && cur < d) continue;
+      var qd = Math.floor(cur / d);
+      g.push({ p: (started ? 'Bring down the ' + digits[i] + ' to make ' + cur + '. ' : 'Start with ' + cur + ' (' + d + ' is about ' + Math.round(d / 10) * 10 + '). ') + 'How many ' + d + 's fit into ' + cur + '?', a: String(qd), why: qd + ' × ' + d + ' = ' + qd * d + (qd < 9 ? ', and ' + (qd + 1) + ' × ' + d + ' = ' + (qd + 1) * d + ' is too big.' : '.') });
+      if (first) { g.push({ p: cur + ' − ' + qd * d + ' = ? (what is left)', a: String(cur - qd * d), why: cur + ' − ' + qd * d + ' = ' + (cur - qd * d) + '.' }); first = false; }
+      started = true; cur -= qd * d;
+    }
+    return g;
+  }
 
   function divSteps(D, d) {
     var digits = String(D), cur = 0, q = '', steps = ['Estimate first: ' + d + ' is about ' + Math.round(d / 10) * 10 + '.'];
@@ -207,37 +249,37 @@
       { s: 'There are two creepers behind you.', a: 'creepers', l: 2, why: 'What are behind you? CREEPERS. "There" is never the subject.' },
     ] },
     agreement: { k: 2, sub: 'Type the verb that agrees.', mode: 'text', items: [
-      { s: 'The box of old crayons (is / are) on the shelf.', a: 'is', l: 1, why: 'The subject is BOX (one). "of old crayons" is a phrase, so ignore it: box IS.' },
-      { s: 'The players on the team (practice / practices) every day.', a: 'practice', l: 1, why: 'The subject is PLAYERS (many). "on the team" is a phrase: players PRACTICE.' },
-      { s: 'The team (has / have) won every game this season.', a: 'has', l: 1, why: 'TEAM is one group acting together: the team HAS.' },
-      { s: 'Each of the players (has / have) a helmet.', a: 'has', l: 2, why: 'EACH is the subject and each means one: each HAS.' },
-      { s: 'Neither the coach nor the players (was / were) ready.', a: 'were', l: 2, why: 'With neither/nor, the verb agrees with the NEARER subject: players WERE.' },
-      { s: 'Neither the players nor the coach (was / were) ready.', a: 'was', l: 2, why: 'With neither/nor, the verb agrees with the NEARER subject: coach WAS.' },
-      { s: 'Everybody in the stands (cheer / cheers) when he scores.', a: 'cheers', l: 2, why: 'EVERYBODY is singular (every + body = one): everybody CHEERS.' },
-      { s: 'Mathematics (is / are) his best subject.', a: 'is', l: 3, why: 'Mathematics ends in s but is ONE subject: mathematics IS.' },
-      { s: 'Ten dollars (is / are) too much for that sword.', a: 'is', l: 3, why: 'An amount of money is treated as ONE sum: ten dollars IS.' },
-      { s: 'The news from the trip (was / were) good.', a: 'was', l: 3, why: 'NEWS is singular even though it ends in s: the news WAS.' },
+      { s: 'The box of old crayons (is / are) on the shelf.', a: 'is', l: 1, subj: 'box', num: 'one', why: 'The subject is BOX (one). "of old crayons" is a phrase, so ignore it: box IS.' },
+      { s: 'The players on the team (practice / practices) every day.', a: 'practice', l: 1, subj: 'players', num: 'many', why: 'The subject is PLAYERS (many). "on the team" is a phrase: players PRACTICE.' },
+      { s: 'The team (has / have) won every game this season.', a: 'has', l: 1, subj: 'team', num: 'one', why: 'TEAM is one group acting together: the team HAS.' },
+      { s: 'Each of the players (has / have) a helmet.', a: 'has', l: 2, subj: 'each', num: 'one', why: 'EACH is the subject and each means one: each HAS.' },
+      { s: 'Neither the coach nor the players (was / were) ready.', a: 'were', l: 2, subj: 'players', num: 'many', why: 'With neither/nor, the verb agrees with the NEARER subject: players WERE.' },
+      { s: 'Neither the players nor the coach (was / were) ready.', a: 'was', l: 2, subj: 'coach', num: 'one', why: 'With neither/nor, the verb agrees with the NEARER subject: coach WAS.' },
+      { s: 'Everybody in the stands (cheer / cheers) when he scores.', a: 'cheers', l: 2, subj: 'everybody', num: 'one', why: 'EVERYBODY is singular (every + body = one): everybody CHEERS.' },
+      { s: 'Mathematics (is / are) his best subject.', a: 'is', l: 3, subj: 'mathematics', num: 'one', why: 'Mathematics ends in s but is ONE subject: mathematics IS.' },
+      { s: 'Ten dollars (is / are) too much for that sword.', a: 'is', l: 3, subj: 'dollars', num: 'one', why: 'An amount of money is treated as ONE sum: ten dollars IS.' },
+      { s: 'The news from the trip (was / were) good.', a: 'was', l: 3, subj: 'news', num: 'one', why: 'NEWS is singular even though it ends in s: the news WAS.' },
     ] },
     pronoun: { k: 2, sub: 'Type the correct word.', mode: 'text', items: [
-      { s: 'Parker and (I / me) went to the game.', a: 'i', l: 1, why: 'Take away "Parker and": "I went", not "me went". So: Parker and I.' },
-      { s: 'The coach gave the prize to Mia and (he / him).', a: 'him', l: 1, why: 'Take away "Mia and": "gave the prize to him". After "to", use him.' },
-      { s: 'Between you and (I / me), the test was easy.', a: 'me', l: 2, why: '"Between" is a preposition, and after a preposition you use me: between you and ME.' },
-      { s: '(We / Us) kids want a longer recess.', a: 'we', l: 2, why: 'Take away "kids": "WE want a longer recess", not "us want".' },
-      { s: '(Who / Whom) is at the door?', a: 'who', l: 2, why: 'Answer it: "HE is at the door" (he = who). He → WHO.' },
-      { s: '(Who / Whom) did you invite to the party?', a: 'whom', l: 3, why: 'Answer it: "you invited HIM" (him = whom). Him → WHOM.' },
-      { s: 'Give the extra emeralds to (whoever / whomever) needs them.', a: 'whoever', l: 3, why: 'Inside its own clause, "WHOEVER needs them" (he needs them). The clause decides, not "to".' },
-      { s: 'The trophy belongs to (whoever / whomever) the judges choose.', a: 'whomever', l: 3, why: 'Inside the clause: "the judges choose HIM" (him = whomever).' },
+      { s: 'Parker and (I / me) went to the game.', a: 'i', l: 1, g: { p: 'Cover up "Parker and". Which sounds right: "___ went to the game"? type I or me', a: 'I' }, why: 'Take away "Parker and": "I went", not "me went". So: Parker and I.' },
+      { s: 'The coach gave the prize to Mia and (he / him).', a: 'him', l: 1, g: { p: 'Cover up "Mia and". Which sounds right: "gave the prize to ___"? type he or him', a: 'him' }, why: 'Take away "Mia and": "gave the prize to him". After "to", use him.' },
+      { s: 'Between you and (I / me), the test was easy.', a: 'me', l: 2, g: { p: '"Between" is a preposition (like to, for, with). After a preposition, is it I or me?', a: 'me' }, why: '"Between" is a preposition, and after a preposition you use me: between you and ME.' },
+      { s: '(We / Us) kids want a longer recess.', a: 'we', l: 2, g: { p: 'Cover up "kids". Which sounds right: "___ want a longer recess"? type we or us', a: 'we' }, why: 'Take away "kids": "WE want a longer recess", not "us want".' },
+      { s: '(Who / Whom) is at the door?', a: 'who', l: 2, g: { p: 'Answer the question with he or him: "___ is at the door."', a: 'he' }, why: 'Answer it: "HE is at the door" (he = who). He → WHO.' },
+      { s: '(Who / Whom) did you invite to the party?', a: 'whom', l: 3, g: { p: 'Answer the question with he or him: "You invited ___."', a: 'him' }, why: 'Answer it: "you invited HIM" (him = whom). Him → WHOM.' },
+      { s: 'Give the extra emeralds to (whoever / whomever) needs them.', a: 'whoever', l: 3, g: { p: 'Look only at the little clause: "___ needs them". he or him?', a: 'he' }, why: 'Inside its own clause, "WHOEVER needs them" (he needs them). The clause decides, not "to".' },
+      { s: 'The trophy belongs to (whoever / whomever) the judges choose.', a: 'whomever', l: 3, g: { p: 'Look only at the little clause: "the judges choose ___". he or him?', a: 'him' }, why: 'Inside the clause: "the judges choose HIM" (him = whomever).' },
     ] },
     fragrun: { k: 3, sub: 'Type C correct · F fragment · R run-on', mode: 'text', items: [
-      { s: 'Because the game crashed again.', a: 'f', l: 1, why: 'Starts with "Because" and nothing finishes the thought: a FRAGMENT.' },
-      { s: 'The game crashed, we lost all our progress.', a: 'r', l: 1, why: 'Two full sentences joined only by a comma (a comma splice): a RUN-ON.' },
-      { s: 'Parker loves Minecraft he plays it every day.', a: 'r', l: 1, why: 'Two full sentences with nothing between them: a RUN-ON.' },
-      { s: 'The game crashed; we lost all our progress.', a: 'c', l: 2, why: 'A semicolon can join two full sentences: CORRECT.' },
-      { s: 'Running through the forest with a torch in his hand.', a: 'f', l: 2, why: 'No subject doing a main verb ("running" is not a full verb here): a FRAGMENT.' },
-      { s: 'Although the creeper was close, Parker kept mining.', a: 'c', l: 2, why: 'Dependent clause + comma + full sentence: CORRECT.' },
-      { s: 'The dog that chased the cat across the yard.', a: 'f', l: 3, why: '"that chased the cat" describes the dog, but the dog never DOES anything: a FRAGMENT.' },
-      { s: 'Go.', a: 'c', l: 3, why: 'A command with the hidden subject "you": "(You) go." One word, still a CORRECT sentence.' },
-      { s: 'Parker studied hard, however, he still felt nervous.', a: 'r', l: 3, why: '"however" cannot join two sentences with commas: a RUN-ON. Fix: "hard; however, he".' },
+      { s: 'Because the game crashed again.', a: 'f', l: 1, n: 0, why: 'Starts with "Because" and nothing finishes the thought: a FRAGMENT.' },
+      { s: 'The game crashed, we lost all our progress.', a: 'r', l: 1, n: 2, why: 'Two full sentences joined only by a comma (a comma splice): a RUN-ON.' },
+      { s: 'Parker loves Minecraft he plays it every day.', a: 'r', l: 1, n: 2, why: 'Two full sentences with nothing between them: a RUN-ON.' },
+      { s: 'The game crashed; we lost all our progress.', a: 'c', l: 2, n: 2, why: 'A semicolon can join two full sentences: CORRECT.' },
+      { s: 'Running through the forest with a torch in his hand.', a: 'f', l: 2, n: 0, why: 'No subject doing a main verb ("running" is not a full verb here): a FRAGMENT.' },
+      { s: 'Although the creeper was close, Parker kept mining.', a: 'c', l: 2, n: 1, why: 'Dependent clause + comma + full sentence: CORRECT.' },
+      { s: 'The dog that chased the cat across the yard.', a: 'f', l: 3, n: 0, why: '"that chased the cat" describes the dog, but the dog never DOES anything: a FRAGMENT.' },
+      { s: 'Go.', a: 'c', l: 3, n: 1, why: 'A command with the hidden subject "you": "(You) go." One word, still a CORRECT sentence.' },
+      { s: 'Parker studied hard, however, he still felt nervous.', a: 'r', l: 3, n: 2, why: '"however" cannot join two sentences with commas: a RUN-ON. Fix: "hard; however, he".' },
     ] },
     verbals: { k: 3, sub: 'The CAPITAL word is a: type G gerund · P participle · I infinitive', mode: 'text', items: [
       { s: 'SWIMMING is Parker\'s favorite sport.', a: 'g', l: 1, why: 'It names an activity and acts as a noun (the subject): GERUND.' },
@@ -271,6 +313,36 @@
   // Back-compat exports for scripts/check-school.js and the blind check.
   var SENT = G.sentence.items.map(function (x) { return { s: x.s, t: Number(x.a), why: x.why }; });
   var SUBJ = G.subject.items.map(function (x) { return { s: x.s, a: x.a, why: x.why }; });
+
+  // Guided steps after a miss on an authored item: he works out the key idea, then answers again himself.
+  function gGuide(k, y) {
+    var T = function (p, a, mode) { return { p: p, a: a, mode: mode || 'text' }; };
+    if (k === 'sentence') {
+      var n = (y.a === '2' || y.a === '4') ? '2' : '1', dep = (y.a === '3' || y.a === '4') ? 'y' : 'n';
+      return { guide: [T('How many parts could stand alone as a full sentence (a subject + a verb)? type 1 or 2', n, 'num'),
+        T('Is there a part that CANNOT stand alone (it starts with because, when, although, if, until, who, that...)? type y or n', dep)],
+        finalPrompt: '1 alone = simple · 2 = compound · 1 + a dependent = complex · 2 + a dependent = compound-complex. Which number?' };
+    }
+    if (k === 'subject') return { guide: [T('Is it a command (telling someone to do something)? type y or n', y.a === 'you' ? 'y' : 'n')],
+      finalPrompt: y.a === 'you' ? 'In a command, who is being told to do it? So the subject is?' : 'Ask: who or what does the verb? (Never "here" or "there", never a word inside a phrase.) Subject?' };
+    if (k === 'agreement') return { guide: [T('Find the REAL subject (skip phrases like "of the..." or "on the..."; with neither/nor, take the nearer one). Type it.', y.subj),
+      T('Is "' + y.subj + '" one thing or many? type one or many', y.num)], finalPrompt: 'One goes with is / has / was / a verb ending in s. Many goes with are / have / were. So?' };
+    if (k === 'pronoun') return { guide: [T(y.g.p, y.g.a)], finalPrompt: 'I / he / who do the action; me / him / whom receive it. So?' };
+    if (k === 'fragrun') {
+      var g = [T('How many complete sentences (subject + verb + a finished thought) are in it? type 0, 1 or 2', String(y.n), 'num')];
+      if (y.n === 2) g.push(T('Are the two joined the right way (a semicolon, or a comma + and/but/so)? type y or n', y.a === 'c' ? 'y' : 'n'));
+      return { guide: g, finalPrompt: '0 complete = F · joined right (or just 1) = C · two run together = R. So?' };
+    }
+    if (k === 'verbals') return { guide: [T('What job does the CAPITAL word do here: a thing, a describer, or "to + verb"? type thing, describer or to', { g: 'thing', p: 'describer', i: 'to' }[y.a])],
+      finalPrompt: 'thing = G · describer = P · to + verb = I. So?' };
+    if (k === 'voice') return { guide: [T('Look at the subject. Does it DO the action or RECEIVE it? type do or receive', y.a === 'a' ? 'do' : 'receive')], finalPrompt: 'do = A · receive = P. So?' };
+    if (k === 'irregular') {
+      var helper = /\b(has|have|had)\b[^(]*\(/.test(y.s);
+      return { guide: [T('Is there a has, have or had before the verb? type y or n', helper ? 'y' : 'n')],
+        finalPrompt: helper ? 'With has/have/had you need the 3rd form (like eaten, gone). So?' : 'With no helper it is the simple past (like ate, went). So?' };
+    }
+    return { guide: [], finalPrompt: '' };
+  }
 
   // ── Mastery: push fast, confirm slowly ──
   // 4 right in a row at a level moves him up straight away (push). That level is then "passed" and comes
@@ -336,13 +408,18 @@
     if (p.kind === 'chunk') {
       it = { q: p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · '), sub: 'Type the WHOLE word.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
         steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
+      it.guide = [{ p: 'The trick: ' + p.w.r + ' Type just the missing chunk.', a: p.w.c[p.w.m], mode: 'text' }];
+      it.finalPrompt = 'Now the whole word, from memory.';
     } else if (p.kind === 'fix') {
       it = { q: p.w.bad, sub: 'This is spelled wrong. Type it correctly.', ans: p.w.w, mode: 'text', value: 30, copies: 2,
         steps: ['In chunks: ' + p.w.c.join(' · ') + '.', p.w.r] };
+      it.guide = [{ p: 'The trick: ' + p.w.r + ' It splits into ' + p.w.c.map(function (c, i) { return i === p.w.m ? '___' : c; }).join(' · ') + '. Type the missing chunk.', a: p.w.c[p.w.m], mode: 'text' }];
+      it.finalPrompt = 'Now spell the whole word correctly, from memory.';
     } else {
       var b = p.b, prefix = /\+$/.test(b[0]);
       it = { q: prefix ? b[0].replace('+', '') + ' + ' + b[1] : b[0] + ' + ' + b[1].replace('+', ''), sub: 'Join them into one word.', ans: b[2], mode: 'text', value: 30, copies: 2,
         steps: [b[3], 'So it is ' + b[2] + '.'] };
+      it.guide = []; it.finalPrompt = 'The rule: ' + b[3] + ' Try the word again.';
     }
     it.key = idOf(p); it.id = 'sch-spell-' + it.key.replace(':', '-'); it.review = review;
     return it;
@@ -360,6 +437,7 @@
         if (!items.length) items = g.items;
         var y = leastSeen(items, load().gram, function (z) { return k + ':' + z.s.slice(0, 28); });
         it = { q: y.s, sub: g.sub, ans: y.a, mode: g.mode, value: 30, long: true, steps: [y.why], key: k + ':' + y.s.slice(0, 28), k: g.k || 0 };
+        var gg = gGuide(k, y); it.guide = gg.guide; it.finalPrompt = gg.finalPrompt;
         it.id = 'sch-' + k + '-' + it.key.slice(k.length + 1).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
       }
       it.skill = k; it.level = lvl; it.lvlIndex = li; it.lvlCount = def.levels.length; it.review = review;
@@ -367,7 +445,8 @@
     it.copies = it.copies || 1;
     // Anti-inflation: a recall check on something already passed pays half; a guess on a k-choice item
     // costs value/(k-1) when wrong, so guessing is worth nothing on average.
-    if (it.review || (k === 'spell' && (load().words[it.key] || {}).mastered)) it.value = Math.round(it.value / 2);
+    var seenToday = it.key && ((k === 'spell' ? load().words : load().gram)[it.key] || {}).rightDay === today();
+    if (it.review || seenToday || (k === 'spell' && (load().words[it.key] || {}).mastered)) it.value = Math.round(it.value / 2);
     it.penalty = it.k ? Math.round(it.value / (it.k - 1)) : 0;
     load().last = k; save();
     return it;
@@ -391,7 +470,7 @@
       var w = load().words, s = w[it.key] || (w[it.key] = { n: 0, right: 0, days: [], step: -1, due: 0 });
       s.n++; s.lastOk = !!correct;
       if (correct) {
-        s.right++; if (s.days.indexOf(d) < 0) s.days.push(d);
+        s.right++; s.rightDay = d; if (s.days.indexOf(d) < 0) s.days.push(d);
         s.step = Math.min(s.step + 1, GAPS.length - 1); s.due = now + GAPS[s.step] * DAY;
         if (s.days.length >= 2) s.mastered = true;   // right on 2 separate days
       } else { s.missAt = now; s.step = -1; s.due = now + 10 * 60000; s.mastered = false; s.days = []; }
@@ -417,7 +496,7 @@
     }
     if (it.key && it.skill !== 'spell') {
       var gs = load().gram, g = gs[it.key] || (gs[it.key] = { n: 0, right: 0, missAt: 0 });
-      g.n++; g.lastOk = !!correct; if (correct) g.right++; else g.missAt = now;
+      g.n++; g.lastOk = !!correct; if (correct) { g.right++; g.rightDay = today(now); } else g.missAt = now;
     }
     save();
     if (root.arcadeLog && root.arcadeLog.event) {

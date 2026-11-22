@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Pit stop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
   :root { --bg: rgba(6, 10, 30, 0.94); --card: #121a3a; --ink: #f2f5ff; --dim: #8f9bc7; --go: #00e5a8; --miss: #ff6b6b; --gold: #ffd166; }
   * { box-sizing: border-box; }
@@ -31,6 +31,10 @@
   .fact.long { font-family: Nunito, system-ui, sans-serif; font-weight: 800; font-size: 30px; line-height: 1.3; white-space: normal; max-width: 640px; }
   .fact.mid { font-size: 56px; }
   .ask { color: var(--gold); font-weight: 800; font-size: 17px; margin-top: 10px; }
+  .gtitle { color: var(--gold); font-weight: 900; font-size: 16px; letter-spacing: .5px; }
+  .gq { color: var(--ink); font-size: 21px; font-weight: 800; line-height: 1.4; margin: 6px auto 0; max-width: 620px; }
+  .gsub { color: var(--dim); font-size: 17px; font-weight: 700; margin-top: 8px; }
+  .gsub b { color: var(--ink); }
   .steps { text-align: left; margin: 10px auto 0; max-width: 600px; color: var(--ink); font-size: 17px; font-weight: 700; line-height: 1.5; }
   .steps li { margin: 2px 0; }
   .hint .pat { color: var(--ink); font-size: 17px; font-weight: 700; margin-top: 6px; opacity: .85; }

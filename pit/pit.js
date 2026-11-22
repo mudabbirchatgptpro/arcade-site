@@ -28,7 +28,7 @@
   var typed = 0, right = 0;
   var cur = null, shownAt = 0, firstKeyAt = null, backspace = false;
   var copyMode = false;      // after a miss: type the shown answer to continue
-  var inputMode = 'num', copiesLeft = 0;
+  var inputMode = 'num', copiesLeft = 0, guide = null;
   var busy = false, finishedFacts = false, gameReady = false, gameStuck = false, leaving = false;
 
   function log(type, payload) {
@@ -65,7 +65,7 @@
   var loadingPractice = false;
 
   function next() {
-    copyMode = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
+    guide = null; copyMode = false; copiesLeft = 0; firstKeyAt = null; backspace = false; busy = false;
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
@@ -84,6 +84,7 @@
       setMode('num');
     }
     shownAt = performance.now();
+    window.__pitCur = cur; // read by the automated tests only
     $ans.focus();
   }
 
@@ -101,16 +102,56 @@
       if (E.fuelMs() >= NEED && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
       return;
     }
-    // Break it down: every step, then he types the answer (spelling: twice). A miss earns nothing,
-    // and a wrong guess on a choice item costs fuel (guessing is worth zero on average).
+    // A miss earns nothing, and a wrong guess on a choice item costs fuel (guessing is worth zero on average).
     var lost = cur.penalty && !loadingPractice ? E.fuelGive(-cur.penalty * 1000) : 0;
     gauge(lost);
     $card.className = 'card wrong';
+    // Make him understand, not copy: he answers each step himself, then the question again from scratch.
+    guide = { i: 0, phase: 'step', stepsRight: 0, total: (cur.guide || []).length };
+    showGuide();
+  }
+
+  function showGuide() {
+    busy = false; $ans.value = '';
     $hint.className = 'hint miss';
-    copiesLeft = cur.copies || 1;
-    $hint.innerHTML = '<ol class="steps">' + cur.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
-      'Type <b>' + esc(cur.ans) + '</b>' + (copiesLeft > 1 ? ' ' + copiesLeft + ' times' : '') + ' to respawn';
-    $ans.value = ''; copyMode = true; busy = false; $ans.focus();
+    if (guide.i < guide.total) {
+      var g = cur.guide[guide.i];
+      setMode(g.mode || 'num'); guide.phase = 'step';
+      $hint.innerHTML = '<div class="gtitle">🔧 Break it down · step ' + (guide.i + 1) + ' of ' + guide.total + '</div><div class="gq">' + esc(g.p) + '</div>';
+    } else {
+      setMode(cur.mode); guide.phase = 'final';
+      $hint.innerHTML = '<div class="gtitle">🎯 Your turn</div><div class="gq">' + esc(cur.finalPrompt || 'Answer the question above.') + '</div>' +
+        (cur.hint ? '<div class="gsub">' + esc(cur.hint) + '</div>' : '');
+    }
+    $ans.focus();
+  }
+
+  function guideSubmit(raw) {
+    var S = window.School;
+    if (guide.phase === 'step' || guide.phase === 'stepCopy') {
+      var g = cur.guide[guide.i], ok = S.norm(raw, g.mode || 'num') === S.norm(g.a, g.mode || 'num');
+      if (ok) { if (guide.phase === 'step') guide.stepsRight++; guide.i++; $card.className = 'card'; return showGuide(); }
+      if (guide.phase === 'step') {
+        guide.phase = 'stepCopy';
+        $hint.innerHTML = '<div class="gtitle">🔧 Step ' + (guide.i + 1) + ' of ' + guide.total + '</div><div class="gq">' + esc(g.p) + '</div>' +
+          '<div class="gsub">It is <b>' + esc(g.a) + '</b>.' + (g.why ? ' ' + esc(g.why) : '') + ' Type it to go on.</div>';
+      }
+      $ans.value = ''; $ans.focus(); return;
+    }
+    if (guide.phase === 'final') {
+      var right = S.check(cur, raw);
+      log('learn.guide', { item_id: cur.id, skill: cur.skill, steps: guide.total, steps_right: guide.stepsRight, final_correct: right, typed: raw });
+      if (right) {
+        guide = null; $card.className = 'card right';
+        $hint.className = 'hint'; $hint.innerHTML = '<div class="gtitle">✅ You worked it out. Respawned.</div>';
+        busy = true; setTimeout(next, 900); return;
+      }
+      // Still stuck: now show the whole solution, and he types the answer (spelling: twice).
+      guide = null; copiesLeft = cur.copies || 1;
+      $hint.innerHTML = '<ol class="steps">' + cur.steps.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' +
+        'Type <b>' + esc(cur.ans) + '</b>' + (copiesLeft > 1 ? ' ' + copiesLeft + ' times' : '') + ' to respawn';
+      $ans.value = ''; copyMode = true; $ans.focus();
+    }
   }
 
   function submit() {
@@ -125,6 +166,7 @@
       else { $ans.value = ''; $ans.focus(); }
       return;
     }
+    if (guide) return guideSubmit(raw);
     if (cur.school) { busy = true; return submitSchool(raw); }
     busy = true;
     var t = performance.now();
@@ -166,6 +208,8 @@
     $label.textContent = '⚡ Full power · bonus round while the game loads';
     $sub.innerHTML = '<span class="loading-dot"></span>Game loading…';
     if (gameStuck) $go.style.display = 'inline-block';
+    // If the shell's 'ready' was missed, never strand him: offer Start after 15 s.
+    setTimeout(function () { if (!leaving) $go.style.display = 'inline-block'; }, 15000);
     next();
   }
 

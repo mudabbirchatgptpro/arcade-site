@@ -134,7 +134,10 @@
     meta = meta || {};
     var s = st(id), t = now();
     var fl = isFluentAttempt(correct, meta.firstKeyMs, meta.totalMs, meta.backspace);
-    var wasGold = status(id) === 'gold';
+    var prev = load().f[id];
+    var everGold = !!(prev && prev.fdays && prev.fdays.length >= 3);        // locked in once = review rate for good
+    var echo = !!(prev && prev.miss);                                        // answer was just shown after a miss
+    if (echo) fl = false;                                                    // no speed credit for repeating a shown answer
     s.n++;
     if (correct) s.right++; else s.wrong++;
     s.hist.push({ t: t, ok: !!correct, fk: meta.firstKeyMs == null ? null : Math.round(meta.firstKeyMs), tot: Math.round(meta.totalMs || 0), fl: fl, sf: meta.surface || null });
@@ -144,8 +147,8 @@
     if (fl) {
       if (s.fdays.indexOf(d) === -1) s.fdays.push(d);
       if (s.fdays.length > 10) s.fdays.splice(0, s.fdays.length - 10);
+      s.due = t + SPACING_DAYS[s.lvl] * DAY;                               // first check after 1 day, then 3, 7, 21
       s.lvl = Math.min(s.lvl + 1, SPACING_DAYS.length - 1);
-      s.due = t + SPACING_DAYS[s.lvl] * DAY;
     } else {
       s.lvl = 0;
       s.due = t; // slow or wrong: due now (stays in the working set)
@@ -162,7 +165,7 @@
         answer: f ? f.ans : null, gear: 'sprint', surface: meta.surface || null,
       }, { game_key: meta.gameKey || null, question_id: id, severity: 'audit' });
     }
-    var earned = fuelEarn(correct, fl, wasGold);
+    var earned = fuelEarn(correct, fl, everGold);
     return { fluent: fl, status: status(id), earned: earned };
   }
 
@@ -193,15 +196,17 @@
     var f = fuelLoad();
     if (f.playingSince) {
       var used = Math.min(SEGMENT_MAX, Math.max(0, now() - f.playingSince));
-      f.ms = Math.max(0, f.ms - used); f.playingSince = null; fuelSave(f);
+      f.ms = Math.max(-TANK_MAX, f.ms - used); f.playingSince = null; fuelSave(f);
       if (root.arcadeLog && root.arcadeLog.event) root.arcadeLog.event('fuel.burn', { used_ms: used, left_ms: f.ms });
     }
     return f.ms;
   }
   function fuelPlay() { var f = fuelLoad(); f.playingSince = now(); fuelSave(f); }
   function fuelMs() { return fuelLoad().ms; }
-  function fuelGive(ms) { var f = fuelLoad(); var before = f.ms; f.ms = Math.max(0, Math.min(TANK_MAX, f.ms + ms)); fuelSave(f); return f.ms - before; }
-  function fmtFuel(ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  // Can go below zero (down to minus one tank): a wrong guess at an empty tank, or play past empty, is a debt
+  // that the next answers pay off first.
+  function fuelGive(ms) { var f = fuelLoad(); var before = f.ms; f.ms = Math.max(-TANK_MAX, Math.min(TANK_MAX, f.ms + ms)); fuelSave(f); return f.ms - before; }
+  function fmtFuel(ms) { if (ms < 0) return '-' + fmtFuel(-ms); var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
   // The pattern for a fact family, shown on the miss card. Never the answer.
   var FAMILY = {

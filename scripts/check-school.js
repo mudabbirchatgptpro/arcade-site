@@ -25,4 +25,18 @@ for (const b of S._builds) { n++; if (!/^[a-z]+$/.test(b[2])) { bad++; console.l
 const cases = [['rem', '207 R 12', '207r12'], ['rem', '1,207 r 3', '1207r3'], ['num', '0.940', '0.94'], ['num', '.5', '0.5'], ['num', '3,600', '3600'], ['text', ' Receive ', 'receive'], ['num', '007', '7']];
 for (const [m, a, want] of cases) { n++; if (S.norm(a, m) !== want) { bad++; console.log('NORM', m, a, S.norm(a, m), want); } }
 for (let i = 0; i < 2000; i++) { const it = S.next(); n++; if (!it.q || it.ans == null || !it.steps || !it.steps.length) { bad++; console.log('ITEM', it); break; } if (it.steps.some(s => /undefined|NaN/.test(s))) { bad++; console.log('STEP', it.q, it.steps); break; } }
+// Guided steps: present, well formed, and consistent with the answer.
+for (const k of Object.keys(S._gen)) for (const lvl of [3, 4, 5]) for (let i = 0; i < 2000; i++) {
+  const it = S._gen[k](lvl); n++;
+  if (!it.guide || !it.guide.length || !it.finalPrompt) { bad++; console.log('NO GUIDE', k, it.q); continue; }
+  if (it.guide.some(g => !g.p || g.a == null || /undefined|NaN/.test(g.p + g.a))) { bad++; console.log('GUIDE BAD', k, it.q, JSON.stringify(it.guide)); }
+  if (k === 'long-div') { const digits = it.guide.filter(g => /How many/.test(g.p)).map(g => g.a).join(''); if (Number(digits) !== Number(it.ans.split(' R ')[0])) { bad++; console.log('DIV GUIDE', it.q, digits, it.ans); } }
+  if (k === 'dec-mul') { const p = parse(it.q); const ai = Number(String(p[0]).replace('.', '')), bi = Number(String(p[2]).replace('.', '')); if (Number(it.guide[0].a) !== ai * bi) { bad++; console.log('MUL GUIDE', it.q, it.guide[0].a); } }
+  if (k === 'dec-div' && lvl === 3 && it.q.split(' ÷ ')[0].indexOf('.') < 0) { bad++; console.log('NO POINT', it.q); }
+}
+const G = S._g;
+for (const y of G.agreement.items) { n++; if (!y.subj || !y.s.toLowerCase().includes(y.subj)) { bad++; console.log('AGREE SUBJ', y.s, y.subj); } }
+for (const y of G.pronoun.items) { n++; if (!y.g || !y.g.a) { bad++; console.log('PRON', y.s); } }
+for (const y of G.fragrun.items) { n++; if (y.n == null || (y.a === 'f') !== (y.n === 0)) { bad++; console.log('FRAG', y.s, y.n, y.a); } }
+for (let i = 0; i < 3000; i++) { const it = S.next(); n++; if (it.skill !== 'spell' && it.skill in S._g && (!it.guide || !it.guide.length)) { bad++; console.log('NO G GUIDE', it.skill, it.q); break; } if (it.skill === 'spell' && it.guide == null) { bad++; console.log('NO SPELL GUIDE', it.q); break; } }
 console.log(n, 'checks,', bad, 'problems'); process.exit(bad ? 1 : 0);

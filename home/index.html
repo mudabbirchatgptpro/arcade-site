@@ -559,11 +559,12 @@ function loadHub(playerId) {
 (function(){
   var E=window.FactEngine; if(!E) return;
   // Fuel gauge. Any sign of him on Home means the game is over: stop the fuel clock.
-  function tank(){
-    E.fuelDrain();
+  function tank(noDrain){
+    if(!noDrain) E.fuelDrain();
   }
-  tank();
-  ['pointermove','keydown','focus'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) tank(); }catch(e){} },true);});
+  tank(true);
+  // Stop the fuel clock only when the shell confirms no game is running (Home can get stray events during play).
+  ['pointermove'].forEach(function(ev){window.addEventListener(ev,function(){ try{ if(!JSON.parse(localStorage.getItem('pa_fuel_v1')||'{}').playingSince) return; var sh=window.arcadeShell; if(sh&&sh.isGameActive){ Promise.resolve(sh.isGameActive()).then(function(a){ if(!a) tank(); }).catch(function(){}); } else tank(); }catch(e){} },true);});
   var c=E.counts(); document.getElementById('rc-facts').textContent='🔓 '+c.fluent+' / 120 facts unlocked'+(c.gold?' · 🏆 '+c.gold+' mastered':'')+'. The more you unlock, the faster you get back in.';
   // Hoot Lite: one line on the first Home visit of the day, a clip when a square turns gold.
   var H=window.HootLite; if(!H) return;
