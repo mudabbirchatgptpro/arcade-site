@@ -597,21 +597,11 @@ function loadHub(playerId) {
     var id=e.target.getAttribute&&e.target.getAttribute('data-id'); if(!id) return;
     var f=E.byId(id), h=E.recent(id);
     document.getElementById('fdetail').textContent=f.full+' · '+(h.length?'last times: '+h.map(function(a){return (a.ok?'':'✗ ')+(a.fk==null?'?':(a.fk/1000).toFixed(1)+'s');}).join(', '):'not tried yet');
-    if(window.HootLite) HootLite.setState({surface:'home',item:id});
   });
   // Hoot Lite: one line on the first Home visit of the day, a clip when a square turns gold.
   var H=window.HootLite; if(!H) return;
   H.setState({surface:'home',item:null});
   H.mount();
-  H.onHint(function(){
-    if(!E.runDoneToday()) return "Start with the Run: three heats, then a loot card.";
-    var c=E.counts(); if(c.bronze) return c.bronze+" bronze squares. Fast answers turn them silver.";
-    return "Pick any game. Pit stops keep your squares fresh.";
-  });
-  H.onExplain(function(st){
-    if(st.item) return H.pattern(st.item);
-    return "Bronze: right. Silver: fast today. Gold: fast on three days.";
-  });
   var golds=E.FACTS.filter(function(f){return E.status(f.id)==='gold';}).map(function(f){return f.id;});
   var fresh=H.newGolds(golds);
   if(fresh.length){

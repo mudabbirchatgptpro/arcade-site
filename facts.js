@@ -164,6 +164,19 @@
     return { fluent: fl, status: status(id) };
   }
 
+  // The pattern for a fact family, shown on the miss card. Never the answer.
+  var FAMILY = {
+    8: 'Eights: double it, double it, double it.',
+    9: 'Nines: ten of them, minus one of them.',
+    10: 'Tens: the number with a zero on the end.',
+    11: 'Elevens: ten of them, plus one of them.',
+    12: 'Twelves: ten of them, plus two of them.',
+  };
+  function pattern(id) {
+    var F = BY_ID[id]; if (!F) return null;
+    if (F.op === 'div') return F.a + ' ÷ ' + F.b + ' asks: ' + F.b + ' times what makes ' + F.a + '?';
+    return FAMILY[F.row] || null;
+  }
   function recent(id) { var s = load().f[id]; return s ? s.hist.slice(-5) : []; }
 
   // ── Run (daily) and ghost ──
@@ -177,7 +190,7 @@
   function ignitionCount() { return runDoneToday() ? 1 : 5; }
 
   root.FactEngine = {
-    FACTS: FACTS, byId: function (id) { return BY_ID[id]; },
+    FACTS: FACTS, byId: function (id) { return BY_ID[id]; }, pattern: pattern,
     pick: pick, record: record, status: status, counts: counts, recent: recent,
     run: run, saveRun: saveRun, runDoneToday: runDoneToday, ignitionCount: ignitionCount,
     today: today, isFluentAttempt: isFluentAttempt,

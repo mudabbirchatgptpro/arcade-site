@@ -95,7 +95,7 @@
       $card.className = 'card wrong';
       $fact.innerHTML = cur.full.replace('=', '<span class="eq">=</span>');
       $hint.className = 'hint miss';
-      $hint.innerHTML = 'Type <b>' + cur.ans + '</b> to keep going';
+      $hint.innerHTML = 'Type <b>' + cur.ans + '</b> to keep going' + (E.pattern(cur.id) ? '<div class="pat">' + E.pattern(cur.id) + '</div>' : '');
       $ans.value = '';
       copyMode = true;
       busy = false;
