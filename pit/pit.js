@@ -29,6 +29,14 @@
   var cur = null, shownAt = 0, firstKeyAt = null, backspace = false;
   var copyMode = false;      // after a miss: type the shown answer to continue
   var inputMode = 'num', copiesLeft = 0, guide = null;
+  // Gretchen (2026-11-22): 5 quick math facts right before he continues, every stop and every game start.
+  var FACTS_REQ = 5, factsRight = 0, schoolCount = 0, stopStart = Date.now(), fiveAt = null, clockT = null;
+  function done() { return E.fuelMs() >= NEED && factsRight >= FACTS_REQ; }
+  function clock() {
+    if (loadingPractice || leaving) return;
+    var secs = Math.floor((Date.now() - stopStart) / 1000);
+    $('factline').innerHTML = '🔢 Facts <b>' + Math.min(factsRight, FACTS_REQ) + ' / ' + FACTS_REQ + '</b>' + (fiveAt ? ' · done in ' + Math.round((fiveAt - stopStart) / 1000) + ' s' : ' · ' + secs + ' s');
+  }
   var busy = false, finishedFacts = false, gameReady = false, gameStuck = false, leaving = false;
 
   function log(type, payload) {
@@ -69,7 +77,8 @@
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
-    if (window.School && (schoolFirst || Math.random() < (loadingPractice ? 0.8 : pSchool))) {
+    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < 1 && Math.random() < pSchool)))) {
+      if (!loadingPractice) schoolCount++;
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;
       $fact.className = 'fact' + (cur.long || cur.q.length > 22 ? ' long' : cur.q.length > 12 ? ' mid' : '');
@@ -99,7 +108,7 @@
       right++;
       gauge(E.fuelGive(cur.value * 1000));
       $card.className = 'card right';
-      if (E.fuelMs() >= NEED && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
+      if (done() && !loadingPractice) setTimeout(factsDone, 300); else setTimeout(next, 300);
       return;
     }
     // A miss earns nothing, and a wrong guess on a choice item costs fuel (guessing is worth zero on average).
@@ -183,7 +192,9 @@
     if (correct) {
       right++;
       $card.className = 'card right';
-      if (E.fuelMs() >= NEED && !loadingPractice) setTimeout(factsDone, 300);
+      if (!loadingPractice && ++factsRight === FACTS_REQ) fiveAt = Date.now();
+      clock();
+      if (done() && !loadingPractice) setTimeout(factsDone, 300);
       else setTimeout(next, 300);
     } else {
       // Show the fact and its pattern; he types it once. A miss earns no fuel.
@@ -200,7 +211,8 @@
 
   function factsDone() {
     finishedFacts = true;
-    log('pit.done', { surface: surface, typed: typed, right: right, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
+    clearInterval(clockT);
+    log('pit.done', { surface: surface, typed: typed, right: right, facts_right: factsRight, ms_to_five: fiveAt ? fiveAt - stopStart : null, fuel_start_ms: startFuel, fuel_ms: E.fuelMs() });
     if (isBreak) return leave('break');
     if (gameReady) return leave('ready');
     // Charged but the game is still loading: keep the questions coming (the tank is full, so no fuel).
@@ -262,15 +274,7 @@
 
   log('pit.load', { surface: surface, fuel_ms: startFuel });
   gauge(0);
-  if (startFuel >= NEED) {
-    // Paid up: no facts, straight back to the game.
-    $card.style.display = 'none';
-    $label.textContent = '⚡ Full power';
-    finishedFacts = true;
-    if (isBreak) setTimeout(function () { leave('paid'); }, 900);
-    else { $sub.innerHTML = '<span class="loading-dot"></span>Game loading…'; if (gameReady) leave('ready'); }
-  } else {
-    $label.textContent = isBreak ? '⚡ Recharge!' : '⚡ Power up to play';
-    next();
-  }
+  $label.textContent = isBreak ? '⚡ Recharge!' : '⚡ Power up to play';
+  clock(); clockT = setInterval(clock, 1000);
+  next();
 })();
