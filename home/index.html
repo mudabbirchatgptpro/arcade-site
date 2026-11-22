@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parker's Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>/* 2026-05-31 hide category tabs */ #category-tabs{display:none !important;}</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <span class="login-crown">🎮</span>
+    <div class="login-title">Who's playing?</div>
+    <div class="login-sub">Pick <strong>Admin</strong> for testing — keeps Parker's real data clean.</div>
+    <div class="login-presets">
+      <button class="preset-btn admin-btn" id="login-admin-btn" onclick="choosePlayer('admin')" autofocus>Admin (test)</button>
+      <button class="preset-btn" onclick="choosePlayer('parker')">Parker</button>
+    </div>
+    <div class="login-divider">or enter a code</div>
+    <div class="login-input-row">
+      <input class="login-input" id="custom-code" type="text" placeholder="student code…" maxlength="20"
+        onkeydown="if(event.key==='Enter')submitCustom()">
+      <button class="login-go" onclick="submitCustom()">Go →</button>
+    </div>
+  </div>
+</div>
+
+<div id="stars"></div>
+<div class="wrap">
+  <header>
+    <span class="crown">🎮</span>
+    <div class="title">Parker's Arcade</div>
+    <div class="sub">Play · Learn · Level up</div>
+    <div class="live-badge"><span class="pulse"></span>Live progress sync</div>
+    <div id="outbox-indicator" class="live-badge" style="display:none;background:rgba(255,170,0,.18);border-color:rgba(255,170,0,.45);" title="Un-synced attempts — will retry automatically">↻ 0 un-synced</div>
+    <div class="player-badge" id="player-badge" onclick="switchPlayer()" title="Switch profile">
+      Playing as <strong id="player-name">…</strong> &nbsp;✎
+    </div>
+  </header>
+
+  <!-- Redesign 2026-11-22: Run card + fluency grid -->
+  <style>
+    #mastery-banner,#stats-row,#weak-banner,.live-badge{display:none !important}
+    .run-card{display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#123a6b,#1b1f4d);border:2px solid #2f6fd6;border-radius:20px;padding:18px 22px;margin:8px 0 14px}
+    .run-card h2{margin:0;font-family:'Fredoka One',sans-serif;font-weight:400;font-size:24px}
+    .run-card .rc-sub{opacity:.8;font-weight:700;margin-top:4px}
+    .run-card a{font:900 20px Nunito,sans-serif;padding:12px 24px;border-radius:14px;background:linear-gradient(135deg,#00ffcc,#0088ff);color:#001a33;text-decoration:none;white-space:nowrap}
+    .run-card.done{border-color:#00e5a8}
+    .fgrid-wrap{background:#0e1433;border-radius:20px;padding:14px 18px;margin-bottom:18px}
+    .fgrid-head{display:flex;justify-content:space-between;font-weight:800;margin-bottom:8px}
+    .fgrid-blocks{display:flex;gap:22px;flex-wrap:wrap}
+    .fgrid{display:grid;grid-template-columns:28px repeat(12,22px);gap:3px;font-size:11px;font-weight:800;color:#8f9bc7;align-items:center}
+    .fcell{width:22px;height:22px;border-radius:5px;cursor:pointer}
+    .c-grey{background:#2a3150}.c-bronze{background:#b8733a}.c-silver{background:#c9d3e6}.c-gold{background:#ffd166}
+    .fgrid-legend{display:flex;gap:14px;font-size:12px;font-weight:700;color:#8f9bc7;margin-top:8px;flex-wrap:wrap}
+    .fgrid-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+    #fdetail{min-height:18px;font-size:13px;font-weight:700;color:#cfd6f5;margin-top:6px}
+  </style>
+  <div class="run-card" id="run-card">
+    <div><h2 id="rc-title">Today's Run</h2><div class="rc-sub" id="rc-sub">3 heats, about 8 min. Pays: 1 loot card + quick ignition all day.</div></div>
+    <a href="/run/" id="rc-go">Start Run</a>
+  </div>
+  <div class="fgrid-wrap">
+    <div class="fgrid-head"><span>Fact grid</span><span id="fgrid-count"></span></div>
+    <div class="fgrid-blocks"><div><div style="font-weight:800;margin-bottom:4px">× times</div><div class="fgrid" id="fgrid-m"></div></div><div><div style="font-weight:800;margin-bottom:4px">÷ divide</div><div class="fgrid" id="fgrid-d"></div></div></div>
+    <div class="fgrid-legend"><span><i class="c-grey"></i>not yet</span><span><i class="c-bronze"></i>right, not fast yet</span><span><i class="c-silver"></i>fast today</span><span><i class="c-gold"></i>fast on 3 days</span></div>
+    <div id="fdetail">Tap a square to see your last times.</div>
+  </div>
+
+  <!-- 2026-05-27: mode toggles hidden — shell forces 'mixed' always (no choice for Parker). Buttons retained (display:none) so existing setMode/getElementById() refs don't break. -->
+  <div class="mode-tabs" style="display:none">
+    <button class="mode-tab active" id="tab-mixed"   onclick="setMode('mixed')">🎯 Mix</button>
+    <button class="mode-tab"        id="tab-english" onclick="setMode('english')">📖 English</button>
+    <button class="mode-tab"        id="tab-maths"   onclick="setMode('maths')">🔢 Maths</button>
+  </div>
+
+  <div id="mastery-banner">
+    <div class="mastery-banner-header">
+      <span id="mastery-label">Mastered 0 / 0 questions</span>
+      <span id="mastery-pct">0%</span>
+    </div>
+    <div class="mastery-bar-wrap"><div class="mastery-bar-fill" id="mastery-fill" style="width:0%"></div></div>
+    <div id="mastery-sub" class="mastery-sub">Loading…</div>
+  </div>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-pill">Loading…</div>
+  </div>
+
+  <div class="category-tabs" id="category-tabs"></div>
+
+  <div class="grid" id="game-grid"></div>
+
+  <div id="show-all-row" style="text-align:center;margin:12px 0 24px;display:none;">
+    <button class="show-all-btn" id="show-all-btn">Show all <span id="show-all-count">40</span> games →</button>
+  </div>
+
+  <div id="weak-banner" class="banner needs-work">Loading…</div>
+
+  <footer>
+    PARKER'S ARCADE<span id="footer-switch-wrap"> · <a href="#" id="footer-switch" style="color:inherit;text-decoration:underline;opacity:0.7;">Switch profile</a></span>
+  </footer>
+</div>
+
+<script src="env.js"></script>
+<script src="event-types.js"></script>
+<script>window.__EVENT_SOURCE = 'arcade-hub-lobby';</script>
+<script src="event-logger.js"></script>
+<script>window.__inShell = !!window.arcadeShell; /* preload ran = real Electron shell (Parker's kiosk) */</script>
+<script src="arcade-shell-shim.js"></script>
+<script src="progress-client.js"></script>
+<script>
+var PLAYER_KEY = 'isee_player_id';
+var MODE_KEY   = 'isee_mode';
+
+// Lobby loaded — fire one event per page-load so we can count sessions.
+if (window.arcadeLog) {
+  window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_LOAD, {
+    referrer: document.referrer,
+    href: location.href,
+  });
+}
+
+// Static stars
+(function(){
+  var s=document.getElementById('stars');
+  for(var i=0;i<90;i++){
+    var el=document.createElement('div');
+    el.className='star';
+    var sz=Math.random()*2.5+.5;
+    el.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;--d:'+(2+Math.random()*4)+'s;animation-delay:'+(-Math.random()*5)+'s';
+    s.appendChild(el);
+  }
+})();
+
+// URL build (2026-05-07): the desktop arcade hardcodes 'parker'. The URL
+// preview restores the picker so Mudaber can QA without touching Parker's
+// real attempts log. Default highlight: Admin.
+var _existingPlayer = null;
+try { _existingPlayer = localStorage.getItem(PLAYER_KEY); } catch (e) {}
+// Strip stale legacy keys ('parker-mudaber', 'student', etc.) — only
+// allow known profiles. Anything else falls through to the picker.
+if (_existingPlayer && _existingPlayer !== 'parker' && _existingPlayer !== 'admin') {
+  try { localStorage.removeItem(PLAYER_KEY); } catch (e) {}
+  _existingPlayer = null;
+}
+
+function choosePlayer(id) {
+  var clean = (id || '').trim().toLowerCase();
+  if (!clean) return;
+  try { localStorage.setItem(PLAYER_KEY, clean); } catch (e) {}
+  if (window.arcadeLog) {
+    window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_PROFILE_PICK,
+      { player_id: clean }, { device_local_key: clean, severity: 'audit' });
+  }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('player-name').textContent = clean === 'admin' ? 'Admin (test)' : clean;
+  // Color the badge if Admin so Mudaber can tell at a glance.
+  var badge = document.getElementById('player-badge');
+  if (badge) {
+    if (clean === 'admin') {
+      badge.style.background = 'rgba(255,170,0,0.22)';
+      badge.style.borderColor = 'rgba(255,170,0,0.55)';
+    } else {
+      badge.style.background = '';
+      badge.style.borderColor = '';
+    }
+  }
+  loadHub(clean);
+}
+
+function submitCustom() {
+  var v = document.getElementById('custom-code').value;
+  if (v) choosePlayer(v);
+}
+
+function switchPlayer() {
+  try { localStorage.removeItem(PLAYER_KEY); } catch (e) {}
+  // Hard reload — clears in-memory progress-client state too.
+  window.location.reload();
+}
+
+document.getElementById('footer-switch').addEventListener('click', function (e) {
+  e.preventDefault();
+  switchPlayer();
+});
+
+// 2026-11-21: inside the real shell (Parker's kiosk) there is no picker and no Admin
+// option: it is always Parker. The picker stays for the browser preview only.
+if (window.__inShell) {
+  // no profile switching on the kiosk
+  document.addEventListener('DOMContentLoaded', function(){ var w=document.getElementById('footer-switch-wrap'); if (w) w.style.display='none'; var b=document.getElementById('player-badge'); if (b) { b.onclick=null; b.removeAttribute('onclick'); b.title=''; b.style.cursor='default'; b.innerHTML=b.innerHTML.replace('✎',''); } });
+  _existingPlayer = 'parker';
+  try { localStorage.setItem(PLAYER_KEY, 'parker'); } catch (e) {}
+}
+if (_existingPlayer) {
+  // Returning visitor — skip the picker, go straight in.
+  choosePlayer(_existingPlayer);
+} else {
+  document.getElementById('login-screen').style.display = '';
+  // Auto-focus the Admin button so Enter submits Admin by default.
+  setTimeout(function () {
+    var btn = document.getElementById('login-admin-btn');
+    if (btn) btn.focus();
+  }, 50);
+}
+
+/**
+ * Gate check — if mom has set an active homework_gate override, redirect
+ * to the generic gate.html immediately. Defense-in-depth: when running
+ * inside Electron main.ts also blocks arcade:launch. In browser mode the
+ * launchTransient shim shows the desktop-only modal anyway, but the gate
+ * redirect still keeps the lobby visually consistent with what mom expects.
+ *
+ * Best-effort: any error (no env, network down, CORS) just falls through
+ * to the normal hub.
+ */
+(function gateCheckOnLoad() {
+  try {
+    var env = window.__ARCADE_ENV || {};
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return;
+    var player = (function () {
+      try { return localStorage.getItem(PLAYER_KEY); } catch (e) { return null; }
+    })();
+    if (!player) return;
+    fetch(env.SUPABASE_URL + '/rest/v1/rpc/get_active_override', {
+      method: 'POST',
+      headers: {
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + env.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_device_local_key: player }),
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rows) {
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        var o = rows[0];
+        if (o && o.kind === 'homework_gate') {
+          window.location.replace('gate.html');
+        }
+      })
+      .catch(function () {});
+  } catch (e) {}
+})();
+
+// Transient games registered with the shell. The hub asks the shim/preload
+// bridge for the list at startup; falls back to an empty grid if neither
+// is present.
+var TRANSIENT_GAMES = [];
+
+// 2026-05-09: default to 'mixed' so Parker gets interleaved English+Math
+// without having to pick a mode. He said he doesn't care which type — the
+// system rotates through both based on a difficulty-sorted merge.
+function currentMode() { try { return localStorage.getItem(MODE_KEY) || 'mixed'; } catch(e){ return 'mixed'; } }
+
+function setMode(mode) {
+  try { localStorage.setItem(MODE_KEY, mode); } catch(e) {}
+  document.getElementById('tab-mixed').classList.toggle('active', mode === 'mixed');
+  document.getElementById('tab-english').classList.toggle('active', mode === 'english');
+  document.getElementById('tab-maths').classList.toggle('active', mode === 'maths');
+  var player = localStorage.getItem(PLAYER_KEY) || 'student';
+  if (window.arcadeLog) {
+    window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_MODE_TOGGLE, { mode: mode });
+  }
+  loadHub(player);
+}
+
+(function(){
+  var m = currentMode();
+  document.getElementById('tab-mixed').classList.toggle('active', m === 'mixed');
+  document.getElementById('tab-english').classList.toggle('active', m === 'english');
+  document.getElementById('tab-maths').classList.toggle('active', m === 'maths');
+})();
+
+function pct(s){return(!s||!s.answered)?null:Math.round(s.correct/s.answered*100)}
+
+function accRing(p,color){
+  if(p===null)return'';
+  var r=18,c=2*Math.PI*r,dash=c*(p/100),gap=c-dash;
+  return'<svg class="acc-ring" width="48" height="48" viewBox="0 0 48 48">'+
+    '<circle cx="24" cy="24" r="'+r+'" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="4"/>'+
+    '<circle cx="24" cy="24" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="4"'+
+    ' stroke-dasharray="'+dash+' '+gap+'" stroke-dashoffset="'+c*.25+'" stroke-linecap="round"/>'+
+    '<text x="24" y="28" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="800" fill="#fff">'+p+'%</text>'+
+    '</svg>';
+}
+
+function buildCard(game, stats) {
+  var p = pct(stats);
+  var ring = accRing(p, game.ringColor || '#ff66cc');
+  var accLine = p !== null
+    ? '<span class="acc-text">✓ <strong>'+stats.correct+'/'+stats.answered+'</strong> correct</span>'
+    : '<span class="acc-text" style="opacity:.4">No plays yet</span>';
+  var a = document.createElement('a');
+  a.className = 'card ' + (game.cls || 'card-transient');
+  a.href = '#';
+  a.style.setProperty('--fd', game.fd || '3s');
+  a.innerHTML =
+    '<div class="card-top">'+
+      '<span class="card-icon">'+(game.icon||'🎮')+'</span>'+
+      ring+
+    '</div>'+
+    '<div class="card-body">'+
+      '<div class="card-name">'+game.displayName+'</div>'+
+      '<div class="card-desc">'+(game.desc||'Third-party game with ad-skip overlay.')+'</div>'+
+      '<div class="card-footer">'+
+        accLine+
+        '<button class="play-btn">▶ PLAY</button>'+
+      '</div>'+
+    '</div>';
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    if (window.arcadeShell && window.arcadeShell.launchTransient) {
+      var player = localStorage.getItem(PLAYER_KEY) || 'student';
+      if (window.arcadeLog) {
+        window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_GAME_TILE_CLICK,
+          { display_name: game.displayName, mode: currentMode() },
+          { game_key: game.key, severity: 'audit' });
+      }
+      window.arcadeShell.launchTransient({
+        gameKey: game.key,
+        player: player,
+        mode: currentMode()
+      });
+    } else {
+      alert('Arcade shell unavailable.');
+    }
+  });
+  return a;
+}
+
+function renderStats(totalAnswered, totalCorrect) {
+  var row = document.getElementById('stats-row');
+  if (!totalAnswered) {
+    row.innerHTML = '<div class="stat-pill">No sessions yet — pick a game and get started!</div>';
+    return;
+  }
+  var p = Math.round(totalCorrect/totalAnswered*100);
+  row.innerHTML =
+    '<div class="stat-pill">Questions answered: <span>'+totalAnswered+'</span></div>'+
+    '<div class="stat-pill">Overall accuracy: <span>'+p+'%</span></div>'+
+    '<div class="stat-pill">Correct: <span>'+totalCorrect+'</span></div>';
+}
+
+function renderWeakBanner(weakCount) {
+  var el = document.getElementById('weak-banner');
+  if (weakCount === 0) {
+    el.className = 'banner all-good';
+    el.innerHTML = '🌟 <strong>All clear!</strong> No questions to review yet.';
+  } else {
+    el.className = 'banner needs-work';
+    el.innerHTML = '🔁 <strong>'+weakCount+' question'+(weakCount>1?'s':'')+' to review</strong> — pop up in your next sessions until you answer each correctly 3 times.';
+  }
+}
+
+function updateMastery() {
+  var mode = currentMode();
+  var deviceLocalKey = (function(){
+    try { return localStorage.getItem(PLAYER_KEY) || 'student'; }
+    catch (e) { return 'student'; }
+  })();
+  // 2026-05-09: 'mixed' bypasses the Electron IPC (which only knows
+  // english/maths) and fetches the merged pool directly from the hub.
+  // This is also how the overlay loads in mixed mode — same path,
+  // hub-only iteration.
+  var fetchQuestions;
+  // 2026-11-21 cloud: inside the shell, always ask the shell (also starts heartbeat).
+  if (window.arcadeShell && window.arcadeShell.getQuestions) {
+    fetchQuestions = window.arcadeShell.getQuestions(mode, deviceLocalKey);
+  } else if (mode === 'mixed') {
+    fetchQuestions = fetch('/questions/bank.json').then(function(r){ return r.json(); }).then(function(b){ var q=(b&&b.questions)||b||[]; return { total: q.length, questions: q }; }).catch(function(){ return { total: 0 }; });
+  } else {
+    fetchQuestions = Promise.resolve({ total: 0 });
+  }
+  fetchQuestions
+    .catch(function () { return { total: 0 }; })
+    .then(function (data) {
+      var total   = (data && data.total) || 0;
+      var learnedRaw = window.SharedProgress.getLearned().length;
+      // 2026-05-31: learnedRaw is the CUMULATIVE historical learned-count, which
+      // can exceed the current pool size (pool was trimmed/rotated) → showed 124%.
+      // Cap the displayed count + percent at the pool size so it never exceeds 100%.
+      var learned = total > 0 ? Math.min(learnedRaw, total) : learnedRaw;
+      var weak    = window.SharedProgress.getWeakCount();
+      var pctVal  = total > 0 ? Math.min(100, Math.round(learned / total * 100)) : 0;
+      document.getElementById('mastery-fill').style.width = pctVal + '%';
+      document.getElementById('mastery-label').textContent = 'Mastered ' + learned + ' / ' + total + ' questions';
+      document.getElementById('mastery-pct').textContent = pctVal + '%';
+      var label = mode === 'mixed' ? '🎯 Mix (English + Maths)' : (mode === 'maths' ? '🔢 Maths' : '📖 English') + ' mode';
+      document.getElementById('mastery-sub').textContent = weak + ' in review · ' + label;
+    });
+}
+
+// 2026-05-08: 40-tile catalog. Category tabs + "All" defaults to 10
+// featured tiles + "Show all 40" expand button. Keeps the lobby digestible
+// while letting Parker browse the full library on demand.
+var CATEGORY_FILTER = 'all';
+// 2026-05-08: show all games by default. The "Show all 41 →" button
+// behind a 10-tile preview was frustrating during curation testing
+// (Mudaber needs to scroll through every game) — and 41 tiles in the
+// CSS grid is fine on any screen size, just scrolls. The button still
+// exists as a no-op safety net.
+var SHOW_ALL = true;
+var INITIAL_ALL_LIMIT = 100;
+var CATEGORIES = [
+  { key: 'all',        label: 'All' },
+  { key: 'featured',   label: '⭐ Featured' },
+  { key: 'action',     label: '⚡ Action' },
+  { key: 'racing',     label: '🏁 Racing' },
+  { key: 'puzzle',     label: '🧩 Puzzle' },
+  { key: 'sports',     label: '🏀 Sports' },
+  { key: 'arcade',     label: '🕹️ Arcade' }
+];
+
+function renderCategoryTabs() {
+  var bar = document.getElementById('category-tabs');
+  if (!bar) return;
+  bar.innerHTML = '';
+  CATEGORIES.forEach(function (c) {
+    var b = document.createElement('button');
+    b.className = 'category-tab' + (CATEGORY_FILTER === c.key ? ' active' : '');
+    b.textContent = c.label;
+    b.addEventListener('click', function () {
+      CATEGORY_FILTER = c.key;
+      SHOW_ALL = false; // reset expansion on category switch
+      if (window.arcadeLog) {
+        window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_CATEGORY_FILTER, { category: c.key });
+      }
+      renderGrid(null);
+    });
+    bar.appendChild(b);
+  });
+}
+
+function visibleGamesForCategory() {
+  if (CATEGORY_FILTER === 'all') return TRANSIENT_GAMES.slice();
+  if (CATEGORY_FILTER === 'featured') {
+    return TRANSIENT_GAMES.filter(function (g) { return g.featured; });
+  }
+  return TRANSIENT_GAMES.filter(function (g) { return g.category === CATEGORY_FILTER; });
+}
+
+function sortFeaturedFirst(games) {
+  return games.slice().sort(function (a, b) {
+    var af = a.featured ? 1 : 0;
+    var bf = b.featured ? 1 : 0;
+    if (af !== bf) return bf - af;
+    return 0; // stable; preserves source order within tier
+  });
+}
+
+function renderGrid(_playerId) {
+  var grid = document.getElementById('game-grid');
+  grid.innerHTML = '';
+  if (!TRANSIENT_GAMES.length) {
+    grid.innerHTML = '<div class="empty-state">No games registered.</div>';
+    document.getElementById('show-all-row').style.display = 'none';
+    return;
+  }
+
+  renderCategoryTabs();
+
+  var pool = sortFeaturedFirst(visibleGamesForCategory());
+  var visible = pool;
+  var hiddenCount = 0;
+
+  // "All" defaults to the first INITIAL_ALL_LIMIT featured tiles.
+  // Other categories show all matching tiles (typically <= 8 each).
+  if (CATEGORY_FILTER === 'all' && !SHOW_ALL && pool.length > INITIAL_ALL_LIMIT) {
+    visible = pool.slice(0, INITIAL_ALL_LIMIT);
+    hiddenCount = pool.length - INITIAL_ALL_LIMIT;
+  }
+
+  var ta = 0, tc = 0;
+  visible.forEach(function (g) {
+    var st = window.SharedProgress.getStats(g.key);
+    ta += st.answered || 0; tc += st.correct || 0;
+    grid.appendChild(buildCard(g, st));
+  });
+  renderStats(ta, tc);
+
+  var showAllRow = document.getElementById('show-all-row');
+  if (hiddenCount > 0) {
+    document.getElementById('show-all-count').textContent = pool.length;
+    showAllRow.style.display = '';
+  } else {
+    showAllRow.style.display = 'none';
+  }
+}
+
+(function attachShowAll() {
+  var btn = document.getElementById('show-all-btn');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      SHOW_ALL = true;
+      if (window.arcadeLog) {
+        window.arcadeLog.event(window.ARCADE_EVENT_TYPES.LOBBY_SHOW_ALL_CLICK, {});
+      }
+      renderGrid(null);
+    });
+  }
+})();
+
+function loadHub(playerId) {
+  var driverPromise = (window.arcadeShell && window.arcadeShell.listGames)
+    ? window.arcadeShell.listGames()
+    : Promise.resolve([]);
+
+  Promise.all([
+    window.SharedProgress.init(),
+    driverPromise
+  ]).then(function(results) {
+    TRANSIENT_GAMES = results[1] || [];
+    renderGrid(playerId);
+    renderWeakBanner(window.SharedProgress.getWeakCount());
+    updateMastery();
+  }).catch(function(err) {
+    console.warn('[hub] init failed', err);
+    document.getElementById('stats-row').innerHTML = '<div class="stat-pill" style="color:#ff8866">Offline — stats unavailable</div>';
+    document.getElementById('weak-banner').style.display = 'none';
+    renderGrid(playerId);
+  });
+}
+
+// 2026-05-08: real-time content updates. Poll /api/content-version every
+// 30 sec; if it changed since first load, reload the page so the running
+// .app picks up the new content without anyone having to kill/respawn.
+// Skips reload if a game is currently being played (BrowserView covers
+// the lobby anyway, and we don't want to disrupt active play).
+(function setupContentVersionPoller() {
+  var initialVersion = null;
+  var POLL_MS = 30 * 1000;
+  function poll() {
+    fetch('/api/content-version', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.version) return;
+        if (initialVersion === null) {
+          initialVersion = data.version;
+          return;
+        }
+        if (data.version !== initialVersion) {
+          console.log('[hub] content version changed; reloading',
+            { from: initialVersion, to: data.version });
+          // Soft check: don't reload if a game is currently mounted as a
+          // BrowserView (the launcher manages that surface, not us).
+          // The Electron shell exposes window.arcadeShell.isGameActive()?
+          // We don't have such an API today, so just trust that reloading
+          // the lobby while a game's BrowserView is on top is invisible
+          // to the kid (game keeps playing, lobby refreshes underneath).
+          location.reload();
+        }
+      })
+      .catch(function () {
+        // Transient network error — try again next tick.
+      });
+  }
+  // First poll fires after the initial delay so initialVersion gets set
+  // from the SAME deploy the page was served from.
+  setInterval(poll, POLL_MS);
+  // Set initial version immediately so first 30s window doesn't drift.
+  poll();
+})();
+</script>
+<script src="facts.js"></script>
+<script>
+(function(){
+  var E=window.FactEngine; if(!E) return;
+  var r=E.run();
+  if(E.runDoneToday()){
+    document.getElementById('run-card').classList.add('done');
+    document.getElementById('rc-title').textContent="Run done today ✓";
+    var l=r.last||{};
+    document.getElementById('rc-sub').textContent=(l.typed||0)+' facts typed. Quick ignition is on.';
+    document.getElementById('rc-go').textContent='Race again';
+  }
+  function build(op,el){
+    var g=document.getElementById(el); g.innerHTML='<span></span>';
+    for(var c=1;c<=12;c++){g.innerHTML+='<span style="text-align:center">'+c+'</span>';}
+    [8,9,10,11,12].forEach(function(t){
+      g.innerHTML+='<span>'+(op==='m'?t+'×':'÷'+t)+'</span>';
+      for(var m=1;m<=12;m++){
+        var id=op==='m'?'fact-m-'+t+'x'+m:'fact-d-'+(t*m)+'-'+t;
+        g.innerHTML+='<span class="fcell c-'+E.status(id)+'" data-id="'+id+'"></span>';
+      }
+    });
+  }
+  build('m','fgrid-m'); build('d','fgrid-d');
+  var c=E.counts(); document.getElementById('fgrid-count').textContent=c.fluent+' / 120 fast · '+c.gold+' gold';
+  document.querySelector('.fgrid-blocks').addEventListener('click',function(e){
+    var id=e.target.getAttribute&&e.target.getAttribute('data-id'); if(!id) return;
+    var f=E.byId(id), h=E.recent(id);
+    document.getElementById('fdetail').textContent=f.full+' · '+(h.length?'last times: '+h.map(function(a){return (a.ok?'':'✗ ')+(a.fk==null?'?':(a.fk/1000).toFixed(1)+'s');}).join(', '):'not tried yet');
+  });
+})();
+</script>
+</body>
+</html>

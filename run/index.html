@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Today's Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #070b22; --card: #121a3a; --ink: #f2f5ff; --dim: #8f9bc7; --go: #00e5a8; --miss: #ff6b6b; --gold: #ffd166; --ghost: #a78bfa; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: Nunito, system-ui, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 40px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+  .home { color: var(--dim); text-decoration: none; font-weight: 800; }
+  h1 { font-family: 'Fredoka One', sans-serif; font-weight: 400; margin: 0; font-size: 30px; }
+  .dim { color: var(--dim); font-weight: 700; }
+  .track { width: 100%; background: #ffffff10; border-radius: 12px; height: 34px; position: relative; overflow: hidden; }
+  .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 12px; }
+  .bar.me { background: linear-gradient(90deg, #00ffcc, #0088ff); height: 18px; top: 2px; }
+  .bar.ghost { background: var(--ghost); opacity: .55; height: 10px; top: 22px; }
+  .row { width: 100%; display: flex; justify-content: space-between; font-weight: 800; }
+  .card { background: var(--card); border-radius: 26px; padding: 34px 46px 28px; min-width: 440px; text-align: center; box-shadow: 0 20px 60px #0008; }
+  .card.right { box-shadow: 0 0 0 4px var(--go), 0 20px 60px #0008; }
+  .card.wrong { box-shadow: 0 0 0 4px var(--miss), 0 20px 60px #0008; }
+  .fact { font-family: 'Fredoka One', sans-serif; font-size: 84px; line-height: 1; white-space: nowrap; }
+  .fact .eq { color: var(--dim); }
+  input { margin-top: 22px; width: 220px; font: 900 56px Nunito, sans-serif; text-align: center; color: var(--ink); background: #0a1030; border: 3px solid #2a3570; border-radius: 16px; padding: 6px 10px; outline: none; }
+  .hint { min-height: 26px; margin-top: 14px; font-weight: 800; font-size: 20px; color: var(--dim); }
+  .hint.miss { color: var(--miss); }
+  .lag { font-size: 12px; color: var(--dim); }
+  .lag i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--go); margin-right: 4px; }
+  button.big { font: 900 22px Nunito, sans-serif; padding: 14px 30px; border: 0; border-radius: 14px; background: linear-gradient(135deg, #00ffcc, #0088ff); color: #001a33; cursor: pointer; }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+  .stat { background: var(--card); border-radius: 16px; padding: 14px 18px; }
+  .stat b { display: block; font-size: 28px; font-family: 'Fredoka One', sans-serif; font-weight: 400; }
+  .loot { display: flex; gap: 14px; }
+  .lootcard { width: 150px; height: 190px; border-radius: 18px; border: 0; cursor: pointer; font: 900 16px Nunito, sans-serif; color: #001a33; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; }
+  .lootcard .em { font-size: 52px; }
+  .common { background: #b8c4e8; } .rare { background: #7cc8ff; } .epic { background: #c9a0ff; } .legendary { background: var(--gold); }
+  .odds { font-size: 12px; color: var(--dim); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="home" href="/home/" id="home">← Home</a><span class="dim" id="heatlabel"></span></div>
+
+  <!-- Intro -->
+  <section id="intro" class="wrap" style="padding:0">
+    <h1>Today's Run</h1>
+    <div class="dim" id="introtext">3 heats of 40 right answers. Race your ghost.</div>
+    <div class="dim" id="introsub"></div>
+    <button class="big" id="start">Start heat 1</button>
+  </section>
+
+  <!-- Heat -->
+  <section id="heat" class="wrap hidden" style="padding:0">
+    <div class="row"><span id="count">0 / 40</span><span id="clock">0.0 s</span></div>
+    <div class="track"><div class="bar me" id="me"></div><div class="bar ghost" id="ghost"></div></div>
+    <div class="row dim"><span>You</span><span id="ghostlabel">Ghost: none yet</span></div>
+    <div class="card" id="card">
+      <div class="fact" id="fact">&nbsp;</div>
+      <input id="ans" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="Your answer">
+      <div class="hint" id="hint">Type it, then Enter</div>
+    </div>
+    <div class="lag"><i id="lagdot"></i>input lag <span id="lag">0</span> ms</div>
+  </section>
+
+  <!-- Between heats -->
+  <section id="between" class="wrap hidden" style="padding:0">
+    <h1 id="btitle">Heat done</h1>
+    <div class="dim" id="btext"></div>
+    <button class="big" id="nextheat">Next heat</button>
+  </section>
+
+  <!-- Receipt -->
+  <section id="receipt" class="wrap hidden" style="padding:0">
+    <h1>Run complete</h1>
+    <div class="stats" id="stats"></div>
+    <div class="dim">The Vault (careful work) joins the Run next week.</div>
+    <div id="lootwrap" class="wrap" style="padding:0">
+      <div class="dim">Pick a loot card</div>
+      <div class="loot" id="loot"></div>
+      <div class="odds">Odds: common 60% · rare 28% · epic 10% · legendary 2%. Beat your ghost for better odds.</div>
+    </div>
+    <div class="dim" id="perk">Perk unlocked: quick ignition today (1 fact to start a game, not 5).</div>
+    <a href="/home/"><button class="big">Back to games</button></a>
+  </section>
+</div>
+
+<script src="/env.js"></script>
+<script src="/event-types.js"></script>
+<script>window.__EVENT_SOURCE = 'arcade-hub-run';</script>
+<script src="/event-logger.js"></script>
+<script src="/facts.js"></script>
+<script src="run.js"></script>
+</body>
+</html>

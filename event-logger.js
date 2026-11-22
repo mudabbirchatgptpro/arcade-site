@@ -49,6 +49,8 @@
   }
 
   function inferDeviceKey() {
+    // A test site can force the key (scripts/test-server.js) so test events never carry Parker's key.
+    if (window.__ARCADE_FORCE_KEY) return window.__ARCADE_FORCE_KEY;
     try { return localStorage.getItem('isee_player_id') || null; } catch (e) { return null; }
   }
 
