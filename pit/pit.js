@@ -69,7 +69,9 @@
   // Each card is a school item with probability pSchool (rises as facts get fluent); while the game is
   // loading after he is charged, mostly school items: the wait is learning time, and it earns nothing.
   var schoolFirst = qs.get('school') === '1'; // testing
-  var pSchool = window.School ? Math.min(0.85, 0.25 + 0.6 * E.counts().fluent / 120) : 0;
+  var LC = window.__LEARN || {};
+  var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / 120) : 0;
+  var BOSS_MAX = LC.bossPerStop || 1;
   var loadingPractice = false;
 
   function next() {
@@ -77,7 +79,7 @@
     $card.className = 'card';
     $ans.value = '';
     $hint.className = 'hint';
-    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < 1 && Math.random() < pSchool)))) {
+    if (window.School && (schoolFirst || (loadingPractice ? Math.random() < 0.8 : (schoolCount < BOSS_MAX && Math.random() < pSchool)))) {
       if (!loadingPractice) schoolCount++;
       schoolFirst = false;
       cur = window.School.next(); cur.school = true;

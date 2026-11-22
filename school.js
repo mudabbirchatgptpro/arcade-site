@@ -41,7 +41,8 @@
       var a, b;
       if (lvl <= 3) { a = dec(R(12, 98), 1); b = dec(R(13, 89), 0); }
       else if (lvl === 4) { a = dec(R(12, 98), 1); b = dec(R(12, 98), 1); }
-      else { a = dec(R(102, 989), 2); b = pickOf([dec(R(2, 9), 2), dec(R(12, 89), 1), dec(R(3, 9), 1)]); }
+      else if (lvl === 5) { a = dec(R(102, 989), 2); b = pickOf([dec(R(2, 9), 2), dec(R(12, 89), 1), dec(R(3, 9), 1)]); }
+      else { a = dec(R(102, 989), 2); b = dec(R(12, 98), 2); } // level 6: e.g. 3.47 × 0.58 (4 decimal places)
       if (a.i % 10 === 0) a.i += 3; if (b.i % 10 === 0 && b.s) b.i += 1;
       var p = dec(a.i * b.i, a.s + b.s), ans = dstr(p), q = dstr(a) + ' × ' + dstr(b), pl = a.s + b.s;
       return {
@@ -60,7 +61,8 @@
       var d, q, r = 0;
       if (lvl <= 3) { d = R(21, 49); q = R(13, 39); }
       else if (lvl === 4) { d = R(23, 89); q = pickOf([R(101, 109), R(201, 209), R(301, 309), R(401, 409), R(110, 190)]); }
-      else { d = R(31, 97); q = R(120, 890); r = R(1, d - 1); }
+      else if (lvl === 5) { d = R(31, 97); q = R(120, 890); r = R(1, d - 1); }
+      else { d = R(41, 98); q = R(1, 9) * 1000 + R(0, 9) * 10 + R(1, 9); r = R(1, d - 1); } // level 6: 4-digit answer with a 0 inside, plus a remainder
       if (d % 10 === 0) d += 3;
       var D = d * q + r;
       return {
@@ -87,6 +89,16 @@
             { p: 'Now ' + fmtInt(D.i) + ' ÷ ' + dv.i + ' = ?', a: String(q), why: fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q + '.' }],
           finalPrompt: 'Moving both points the same way keeps the answer the same. So ' + qs4 + ' = ?',
           steps: ['Make the divisor whole: move both points 2 places right.', qs4 + ' becomes ' + fmtInt(D.i) + ' ÷ ' + dv.i + '.', fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q + '.'] }; }
+      if (lvl >= 6) { // level 6: decimal ÷ decimal with a decimal answer, e.g. 1.457 ÷ 0.31 = 4.7
+        q = dec(R(12, 98), 1); if (q.i % 10 === 0) q.i += 1; dv = dec(R(12, 89), 2); if (dv.i % 10 === 0) dv.i += 1; D = dec(q.i * dv.i, 3);
+        var D1 = dec(D.i, 1), qs6 = dstr(D) + ' ÷ ' + dstr(dv);
+        return { q: qs6, ans: dstr(q), mode: 'num', value: 40,
+          guide: [{ p: 'Make the divisor whole: move the point in ' + dstr(dv) + ' 2 places right. What is it now?', a: String(dv.i), why: dstr(dv) + ' → ' + dv.i + '.' },
+            { p: 'Move the point in ' + dstr(D) + ' the SAME 2 places right. What is it now?', a: dstr(D1), why: dstr(D) + ' → ' + dstr(D1) + '.' },
+            { p: 'Divide ignoring the point: ' + fmtInt(D.i) + ' ÷ ' + dv.i + ' = ?', a: String(q.i), why: fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q.i + '.' }],
+          finalPrompt: dstr(D1) + ' has 1 digit after the point, so the answer does too. So ' + qs6 + ' = ?',
+          steps: ['Move both points 2 places right: ' + qs6 + ' becomes ' + dstr(D1) + ' ÷ ' + dv.i + '.', fmtInt(D.i) + ' ÷ ' + dv.i + ' = ' + q.i + ', and the point goes straight up: ' + dstr(q) + '.'] };
+      }
       var k = R(2, 9), m = R(2, 9) * pickOf([10, 100]), sh = pickOf([1, 2]);
       dv = dec(k, sh); var whole = k * m, big = whole * Math.pow(10, sh), ansN = m * Math.pow(10, sh), qs5 = fmtInt(whole) + ' ÷ ' + dstr(dv);
       return { q: qs5, ans: String(ansN), mode: 'num', value: 30,
@@ -97,7 +109,7 @@
         steps: ['Make the divisor whole: move both points ' + sh + ' place' + (sh > 1 ? 's' : '') + ' right.', fmtInt(whole) + ' becomes ' + fmtInt(big) + ', and ' + dstr(dv) + ' becomes ' + k + '.', fmtInt(big) + ' ÷ ' + k + ' = ' + fmtInt(ansN) + '.'] };
     },
     'zeros-div': function (lvl) { // his dropped-zero mistake (4800 ÷ 6 answered 80)
-      var a = R(2, 9), b = R(2, 9), z1 = lvl >= 5 ? R(3, 5) : R(2, 4), z2 = R(1, Math.min(2, z1 - 1));
+      var a = R(2, 9), b = R(2, 9), z1 = lvl >= 6 ? R(4, 6) : lvl >= 5 ? R(3, 5) : R(2, 4), z2 = R(1, Math.min(2, z1 - 1));
       var D = a * b * Math.pow(10, z1), d = b * Math.pow(10, z2), q = a * Math.pow(10, z1 - z2), D2 = D / Math.pow(10, z2), qs = fmtInt(D) + ' ÷ ' + fmtInt(d);
       return { q: qs, ans: String(q), mode: 'num', value: 30,
         guide: [{ p: 'Cross off the same number of zeros from both. How many zeros does ' + fmtInt(d) + ' have?', a: String(z2), why: fmtInt(d) + ' has ' + z2 + '.' },
@@ -108,6 +120,16 @@
     },
     'rem-word': function (lvl) { // remainder word problems: round up, drop, or leftover
       var d = R(lvl >= 5 ? 24 : 12, lvl >= 5 ? 48 : 30), q = R(lvl >= 5 ? 21 : 11, lvl >= 5 ? 79 : 40), r = R(1, d - 1), N = d * q + r;
+      if (lvl >= 6) { // level 6: two steps (multiply first, then divide and decide)
+        var per = R(36, 96), days = R(3, 9), box = R(12, 30), tot = per * days; while (tot % box === 0) { box++; }
+        var fb = Math.floor(tot / box), lft = tot % box;
+        return { q: 'A farm collects ' + per + ' eggs a day for ' + days + ' days. A carton holds ' + box + ' eggs. How many cartons can be FILLED?', ans: String(fb), mode: 'num', value: 40, long: true,
+          guide: [{ p: 'First, how many eggs in total? ' + per + ' × ' + days + ' = ?', a: String(tot), why: per + ' × ' + days + ' = ' + tot + '.' },
+            { p: tot + ' ÷ ' + box + ': how many WHOLE times does ' + box + ' fit?', a: String(fb), why: box + ' × ' + fb + ' = ' + box * fb + '.' },
+            { p: 'How many eggs are left over?', a: String(lft), why: tot + ' − ' + box * fb + ' = ' + lft + '.' }],
+          finalPrompt: 'Can the leftover eggs fill a whole carton? So how many cartons are FILLED?',
+          steps: [per + ' × ' + days + ' = ' + tot + ' eggs.', tot + ' ÷ ' + box + ' = ' + fb + ' R ' + lft + '.', 'Only full cartons count: ' + fb + '.'] };
+      }
       var t = pickOf(['up', 'drop', 'left']), it;
       var g = [{ p: N + ' ÷ ' + d + ': how many WHOLE times does ' + d + ' fit?', a: String(q), why: d + ' × ' + q + ' = ' + d * q + '.' },
         { p: 'And how many are left over?', a: String(r), why: N + ' − ' + d * q + ' = ' + r + '.' }];
@@ -349,9 +371,10 @@
   // back as a recall check after 1, 3, 7 and 21 days; passing checks on 2 later days makes it MASTERED.
   // Failing a check sends him back to that level. 2 misses in his last 3 at a level steps down one.
   var DAY = 86400000, GAPS = [1, 3, 7, 21];
+  function LCFG() { return root.__LEARN || {}; }
   var SKILLS = {
-    'dec-mul': { levels: [3, 4, 5], w: 13 }, 'long-div': { levels: [3, 4, 5], w: 11 }, 'dec-div': { levels: [3, 4, 5], w: 11 },
-    'rem-word': { levels: [4, 5], w: 7 }, 'zeros-div': { levels: [3, 4, 5], w: 4 },
+    'dec-mul': { levels: [3, 4, 5, 6], w: 13 }, 'long-div': { levels: [3, 4, 5, 6], w: 11 }, 'dec-div': { levels: [3, 4, 5, 6], w: 11 },
+    'rem-word': { levels: [4, 5, 6], w: 7 }, 'zeros-div': { levels: [3, 4, 5, 6], w: 4 },
     spell: { w: 18 },
     sentence: { levels: [1, 2, 3], w: 6 }, subject: { levels: [1, 2, 3], w: 4 }, agreement: { levels: [1, 2, 3], w: 6 },
     pronoun: { levels: [1, 2, 3], w: 5 }, fragrun: { levels: [1, 2, 3], w: 6 }, verbals: { levels: [1, 2, 3], w: 4 },
@@ -361,6 +384,9 @@
   function st(k) {
     var s = load().skills; var x = s[k];
     if (!x || x.v !== 2) x = s[k] = { v: 2, i: 0, run: [], passed: {}, n: 0, right: 0, missAt: 0 };
+    // The dial's floor: never below minLevel (raising it moves him up straight away).
+    var floor = Math.min(LCFG().minLevel || 0, ((SKILLS[k] && SKILLS[k].levels) || [0]).length - 1);
+    if (x.i < floor) { x.i = floor; x.run = []; }
     return x;
   }
   function mastered(k) { var x = st(k), L = SKILLS[k].levels || []; return L.length > 0 && L.every(function (_, i) { return x.passed[i] && x.passed[i].mastered; }); }
@@ -486,12 +512,12 @@
         } else if (p) { delete x.passed[it.lvlIndex]; x.i = Math.min(x.i, it.lvlIndex); x.run = []; }
       } else {
         x.run.push(correct ? 1 : 0); if (x.run.length > 6) x.run.shift();
-        var tail = x.run.slice(-4), last3 = x.run.slice(-3);
-        if (tail.length === 4 && tail.every(Boolean)) {                       // push: up a level now
+        var need = LCFG().stepUp || 4, tail = x.run.slice(-need), last3 = x.run.slice(-3);
+        if (tail.length === need && tail.every(Boolean)) {                       // push: up a level now
           if (!x.passed[x.i]) x.passed[x.i] = { at: now, step: 0, due: now + GAPS[0] * DAY, days: [], mastered: false };
           if (x.i < def.levels.length - 1) x.i++;
           x.run = [];
-        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > 0) { x.i--; x.run = []; }
+        } else if (last3.length === 3 && last3.filter(function (v) { return !v; }).length >= 2 && x.i > (LCFG().minLevel || 0)) { x.i--; x.run = []; }
       }
     }
     if (it.key && it.skill !== 'spell') {

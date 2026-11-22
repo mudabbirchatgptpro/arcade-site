@@ -13,7 +13,8 @@
   'use strict';
   var KEY = 'pa_facts_v1';
   var RUN_KEY = 'pa_run_v1';
-  var FIRST_KEY_MS = 3000, TOTAL_MS = 5000, WORKING = 6;
+  var LC = (root.__LEARN || {});
+  var FIRST_KEY_MS = LC.fluentFirstKeyMs || 3000, TOTAL_MS = LC.fluentTotalMs || 5000, WORKING = 6;
   var DAY = 86400000;
   var SPACING_DAYS = [1, 3, 7, 21];
 

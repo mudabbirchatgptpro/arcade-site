@@ -5,8 +5,13 @@ const S = window.School; let bad = 0, n = 0;
 const num = s => Number(String(s).replace(/,/g, ''));
 const near = (a, b) => Math.abs(a - b) < 1e-9 * Math.max(1, Math.abs(b));
 function parse(q) { const m = q.replace(/,/g, '').match(/^([\d.]+) ([×÷]) ([\d.]+)$/); return m && [Number(m[1]), m[2], Number(m[3])]; }
-for (const k of Object.keys(S._gen)) for (const lvl of [3, 4, 5]) for (let i = 0; i < 3000; i++) {
+for (const k of Object.keys(S._gen)) for (const lvl of [3, 4, 5, 6]) for (let i = 0; i < 3000; i++) {
   const it = S._gen[k](lvl); n++;
+  if (k === 'rem-word' && /eggs a day/.test(it.q)) {
+    const [per, days, box] = it.q.match(/\d+/g).map(Number);
+    if (num(it.ans) !== Math.floor(per * days / box) || (per * days) % box === 0) { bad++; console.log('BAD', it.q, it.ans); }
+    continue;
+  }
   if (k === 'rem-word') {
     const nums = it.q.match(/\d+/g).map(Number); const N = nums[0] > nums[1] ? nums[0] : nums[1], d = nums[0] > nums[1] ? nums[1] : nums[0];
     const want = /buses/.test(it.q) ? Math.ceil(N / d) : /FULL/.test(it.q) ? Math.floor(N / d) : N % d;
@@ -26,7 +31,7 @@ const cases = [['rem', '207 R 12', '207r12'], ['rem', '1,207 r 3', '1207r3'], ['
 for (const [m, a, want] of cases) { n++; if (S.norm(a, m) !== want) { bad++; console.log('NORM', m, a, S.norm(a, m), want); } }
 for (let i = 0; i < 2000; i++) { const it = S.next(); n++; if (!it.q || it.ans == null || !it.steps || !it.steps.length) { bad++; console.log('ITEM', it); break; } if (it.steps.some(s => /undefined|NaN/.test(s))) { bad++; console.log('STEP', it.q, it.steps); break; } }
 // Guided steps: present, well formed, and consistent with the answer.
-for (const k of Object.keys(S._gen)) for (const lvl of [3, 4, 5]) for (let i = 0; i < 2000; i++) {
+for (const k of Object.keys(S._gen)) for (const lvl of [3, 4, 5, 6]) for (let i = 0; i < 2000; i++) {
   const it = S._gen[k](lvl); n++;
   if (!it.guide || !it.guide.length || !it.finalPrompt) { bad++; console.log('NO GUIDE', k, it.q); continue; }
   if (it.guide.some(g => !g.p || g.a == null || /undefined|NaN/.test(g.p + g.a))) { bad++; console.log('GUIDE BAD', k, it.q, JSON.stringify(it.guide)); }
