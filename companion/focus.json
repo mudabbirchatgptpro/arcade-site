@@ -94,11 +94,11 @@
   }
  ],
  "tricks": {
-  "fact-m-9x6": "For nines: ten times six is sixty, minus six is fifty four.",
-  "fact-m-8x7": "Five, six, seven, eight: 56 equals 7 times 8.",
-  "fact-m-12x8": "Twelve is ten plus two: 80 plus 16 is 96.",
-  "fact-m-9x7": "Ten sevens is 70, take away 7: 63.",
-  "fact-m-9x8": "Ten eights is 80, take away 8: 72.",
-  "fact-m-9x9": "Ten nines is 90, take away 9: 81."
+  "fact-m-9x6": "Ten sixes minus six: 54.",
+  "fact-m-8x7": "Five, six, seven, eight: 56.",
+  "fact-m-12x8": "Eighty plus sixteen: 96.",
+  "fact-m-9x7": "Ten sevens minus seven: 63.",
+  "fact-m-9x8": "Ten eights minus eight: 72.",
+  "fact-m-9x9": "Ten nines minus nine: 81."
  }
 }

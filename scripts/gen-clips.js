@@ -20,18 +20,18 @@ function words(n) {
 }
 function questionText(id) {
   let m = /^fact-m-(\d+)x(\d+)$/.exec(id);
-  if (m) return `What's ${words(+m[1])} times ${words(+m[2])}?`;
+  if (m) return `${words(+m[1])} times ${words(+m[2])}?`;
   m = /^fact-d-(\d+)-(\d+)$/.exec(id);
-  if (m) return `What's ${words(+m[1])} divided by ${words(+m[2])}?`;
+  if (m) return `${words(+m[1])} divided by ${words(+m[2])}?`;
   return null;
 }
 
 const clips = []; // {key, text (spoken, clean), send (with tags)}
 const add = (key, send) => clips.push({ key, send, text: send.replace(/\[[^\]]*\]\s*/g, "").trim() });
 
-["Hmm...", "Wait, let me think...", "Okay okay...", "Mm-hm, let me see...", "Hold on...", "Ahh, okay...", "Let me check that...", "[curious] Hmm, interesting..."]
+["Hmm...", "Wait, wait...", "Okay okay...", "Mm-hm...", "Hold on...", "Ahh, okay...", "Let me see...", "[curious] Hmm, interesting..."]
   .forEach((t, i) => add(`react-think-${i + 1}`, t));
-["[excited] Ooh!", "Ha!", "Ooh, good one.", "[laughs] Ha ha ha!", "Oh, really?", "Ooh, nice.", "[laughs] Ha! Okay.", "[excited] Whoa!", "[curious] Ooh, tell me more.", "Interesting...", "Oho!", "[laughs] Ha ha, okay."]
+["[excited] Ooh!", "Ha!", "Ooh, good one.", "[laughs] Ha ha ha!", "Oh, really?", "Ooh, nice.", "[laughs] Ha! Okay.", "[excited] Whoa!", "[curious] Ooh, go on.", "Interesting...", "Oho!", "[laughs] Ha ha, okay."]
   .forEach((t, i) => add(`react-chat-${i + 1}`, t));
 ["[excited] Boom! Nailed it.", "Yes! That's the one.", "[excited] Ooh, you're quick!", "Right on the money.", "Look at you go!", "Smooth. Super smooth.", "[laughs] Yes yes yes! Brain on fire.", "Owl be darned, you got it.", "[excited] That's it! Easy for you.", "Correct, and not even breaking a sweat.",
  "[laughs] Ha! Too fast for me.", "Bingo!", "[excited] Yes! You've got that one locked in.", "Nice. My feathers are impressed.", "That's the answer. Show-off.", "Whoa, okay, mathematician.", "Perfect. Do it again.", "[laughs] Okay, okay, I see you.", "Yes! Gold star for you.", "Cha-ching. That's right."]
