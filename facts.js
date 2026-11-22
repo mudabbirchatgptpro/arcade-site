@@ -1,6 +1,7 @@
 /* Fact engine (redesign 2026-11-22). One engine for pit stops, ignition and heats.
  *
- * 120 facts: 8..12 x 1..12 and the matching division (ids match data/questions-facts.json).
+ * 72 facts: 8, 9, 11, 12 x 4..12 and the matching division. Gretchen (2026-11-22): no x or ÷ by 0-3 (too easy,
+ * e.g. 10 ÷ 10, 9 x 1), and the 10s table is dropped too (adding a zero is not a fact worth drilling).
  * Per-fact state lives in localStorage on the hub origin (the overlay shares it).
  * Fluent attempt = right, first key within 3 s, total within 5 s, no backspace.
  * Cell colour: grey (never right), bronze (right but not fluent now),
@@ -36,15 +37,16 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  // ── The 120 facts ──
+  // ── The facts ──
+  var TABLES = [8, 9, 11, 12], M_FROM = 4, M_TO = 12;
   var FACTS = [], BY_ID = {};
-  [8, 9, 10, 11, 12].forEach(function (t) {
-    for (var m = 1; m <= 12; m++) {
+  TABLES.forEach(function (t) {
+    for (var m = M_FROM; m <= M_TO; m++) {
       FACTS.push({ id: 'fact-m-' + t + 'x' + m, op: 'mul', a: t, b: m, q: t + ' × ' + m, ans: t * m, full: t + ' × ' + m + ' = ' + (t * m), row: t, col: m });
     }
   });
-  [8, 9, 10, 11, 12].forEach(function (t) {
-    for (var m = 1; m <= 12; m++) {
+  TABLES.forEach(function (t) {
+    for (var m = M_FROM; m <= M_TO; m++) {
       FACTS.push({ id: 'fact-d-' + (t * m) + '-' + t, op: 'div', a: t * m, b: t, q: (t * m) + ' ÷ ' + t, ans: m, full: (t * m) + ' ÷ ' + t + ' = ' + m, row: t, col: m });
     }
   });
@@ -56,7 +58,7 @@
     if (S) return S;
     try { S = JSON.parse(store.get(KEY) || 'null'); } catch (e) { S = null; }
     if (!S || typeof S !== 'object' || !S.f) S = { v: 1, f: {}, last: null, order: null };
-    if (!S.order) S.order = shuffled(FACTS.map(function (f) { return f.id; }));
+    if (!S.order || S.order.some(function (id) { return !BY_ID[id]; }) || S.order.length !== FACTS.length) S.order = shuffled(FACTS.map(function (f) { return f.id; })); // fact set changed: re-deal, keep his history
     return S;
   }
   function save() { store.set(KEY, JSON.stringify(S)); }
@@ -103,7 +105,7 @@
       var ha = s.f[a].hist, hb = s.f[b].hist;
       return (ha.length ? ha[ha.length - 1].t : 0) - (hb.length ? hb[hb.length - 1].t : 0);
     });
-    // Keep 2 slots for new facts while any remain, so all 120 get met.
+    // Keep 2 slots for new facts while any remain, so every fact gets met.
     var nFresh = Math.min(fresh.length, Math.max(2, WORKING - started.length));
     return started.slice(0, WORKING - nFresh).concat(fresh.slice(0, nFresh));
   }

@@ -70,7 +70,7 @@
   // loading after he is charged, mostly school items: the wait is learning time, and it earns nothing.
   var schoolFirst = qs.get('school') === '1'; // testing
   var LC = window.__LEARN || {};
-  var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / 120) : 0;
+  var pSchool = window.School ? Math.min(0.85, (LC.bossShare || 0.25) + 0.6 * E.counts().fluent / E.FACTS.length) : 0;
   var BOSS_MAX = LC.bossPerStop || 1;
   var loadingPractice = false;
 
@@ -96,7 +96,71 @@
     }
     shownAt = performance.now();
     window.__pitCur = cur; // read by the automated tests only
+    hootReset();
     $ans.focus();
+  }
+
+
+  // ── Ask Hoot: when he is confused on a boss question. The idea in plain words straight away, then Hoot (AI)
+  // explains in kid words and reads it aloud; he can type follow-ups (mic only if learning.js allows it).
+  // Hoot never gets the answer, so he cannot give it away.
+  var GLOSS = {
+    verbals: 'GERUND = a verb + ing used as a THING: "Reading is fun." PARTICIPLE = a verb form that DESCRIBES something: "the barking dog", "the broken vase". INFINITIVE = to + verb: "I want to win."',
+    voice: 'ACTIVE: the subject DOES the action ("The dog chased the ball"). PASSIVE: the subject has it done TO it ("The ball was chased by the dog").',
+    agreement: 'The verb must match the REAL subject. One thing → is, has, runs. Many → are, have, run. Skip phrases like "of the..." to find the real subject.',
+    pronoun: 'I, he, she, we, who DO the action. Me, him, her, us, whom RECEIVE it. Trick: cover the other person and say it alone.',
+    fragrun: 'A sentence needs a subject + a verb + a finished thought. FRAGMENT = something is missing. RUN-ON = two sentences jammed together with no period, semicolon, or comma + and/but/so.',
+    sentence: 'INDEPENDENT clause = can stand alone. DEPENDENT clause = starts with because, when, although, who, that... and cannot stand alone. Simple = 1 independent. Compound = 2. Complex = 1 + a dependent. Compound-complex = 2 + a dependent.',
+    subject: 'The SUBJECT is who or what does the verb. In a command ("Sit down!") it is the hidden "you". "Here" and "there" are never the subject.',
+    irregular: 'Some verbs change shape: swim → swam (yesterday) → swum (with has / have / had).',
+    spell: 'Break the word into chunks (syllables), say each chunk, and find the ONE tricky part.',
+    'dec-mul': 'Multiply as if there were no points. Then count ALL the digits after the points in both numbers and put that many back in the answer.',
+    'long-div': 'Divide, multiply, subtract, bring down, repeat. Round the divisor first to guess each digit.',
+    'dec-div': 'Make the number you divide BY whole by moving its point. Move the other point the same number of places. Then divide.',
+    'zeros-div': 'Cross off the same number of zeros from both numbers first. The answer does not change.',
+    'rem-word': 'After dividing, decide what the leftover means: does it need one more (round up), get dropped, or IS it the answer?',
+  };
+  var hootMsgs = [], $hb = $('hootbox'), $hbsay = $('hbsay');
+  function hootReset() { hootMsgs = []; $hb.style.display = 'none'; $('askhoot').style.display = cur && cur.school ? 'inline-block' : 'none'; }
+  function hootSpeak(text) {
+    if (!ov || !ov.speak) return;
+    ov.speak(text).then(function (r) { if (r && r.audio) { try { new Audio('data:audio/mpeg;base64,' + r.audio).play().catch(function () {}); } catch (e) {} } }).catch(function () {});
+  }
+  function hootAsk(userText) {
+    if (!cur) return;
+    hootMsgs.push({ role: 'user', content: userText });
+    if (!ov || !ov.tutorChat) { $hbsay.textContent = '(Hoot can chat inside the arcade app.)'; return; }
+    $hbsay.textContent = '🦉 thinking…';
+    var ctx = { stem: cur.q + (cur.sub ? ' (' + cur.sub + ')' : ''), topic: cur.skill, correctText: '', chosenText: '',
+      learningObjective: 'Parker is CONFUSED and asked for help, he has not answered yet. Explain the idea and any grammar or maths words in the question in kid words, with ONE example that is NOT this question. Never give or hint the answer to this question. Use SAY only: never ask him to write anything and never mention a camera. No tags.' };
+    ov.tutorChat({ context: ctx, messages: hootMsgs }).then(function (t) {
+      t = String(t || '').replace(/\[\[[A-Z_]+\]\]/g, '').trim();
+      if (!t) { $hbsay.textContent = '🦉 Hoot could not answer just now. Read the idea above.'; return; }
+      hootMsgs.push({ role: 'assistant', content: t });
+      $hbsay.textContent = '🦉 ' + t; hootSpeak(t);
+      log('hoot.ask', { skill: cur.skill, item: cur.q, asked: userText, reply: t });
+    });
+  }
+  $('askhoot').addEventListener('click', function () {
+    $hb.style.display = 'block'; $('askhoot').style.display = 'none';
+    $('hbgloss').textContent = GLOSS[cur.skill] || '';
+    hootAsk('I am confused. Can you explain what this is asking and what the words mean?');
+  });
+  $('hbsend').addEventListener('click', function () { var v = $('hbq').value.trim(); if (v) { $('hbq').value = ''; hootAsk(v); } $ans.focus(); });
+  $('hbq').addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); $('hbsend').click(); } });
+  $('hbclose').addEventListener('click', function () { $hb.style.display = 'none'; $('askhoot').style.display = 'inline-block'; $ans.focus(); });
+  // Hold-to-talk (only when learning.js says hootMic: true, i.e. after Gretchen's yes on the microphone).
+  if ((window.__LEARN || {}).hootMic && ov && ov.transcribe && navigator.mediaDevices) {
+    var rec = null, chunks = [], $mic = $('hbmic'); $mic.style.display = 'inline-block';
+    $mic.addEventListener('pointerdown', function () {
+      (ov.ensureMic ? ov.ensureMic() : Promise.resolve({ ok: true })).then(function () { return navigator.mediaDevices.getUserMedia({ audio: true }); }).then(function (st) {
+        chunks = []; rec = new MediaRecorder(st); rec.ondataavailable = function (e) { chunks.push(e.data); };
+        rec.onstop = function () { st.getTracks().forEach(function (t) { t.stop(); }); var b = new Blob(chunks, { type: 'audio/webm' }), fr = new FileReader();
+          fr.onload = function () { ov.transcribe(String(fr.result).split(',')[1], 'audio/webm').then(function (txt) { if (txt) hootAsk(txt); }); }; fr.readAsDataURL(b); };
+        rec.start(); $mic.textContent = '🔴 Listening';
+      }).catch(function () {});
+    });
+    window.addEventListener('pointerup', function () { if (rec && rec.state === 'recording') { rec.stop(); $mic.textContent = '🎤 Hold'; } });
   }
 
   function submitSchool(raw) {
@@ -128,7 +192,8 @@
     if (guide.i < guide.total) {
       var g = cur.guide[guide.i];
       setMode(g.mode || 'num'); guide.phase = 'step';
-      $hint.innerHTML = '<div class="gtitle">🔧 Break it down · step ' + (guide.i + 1) + ' of ' + guide.total + '</div><div class="gq">' + esc(g.p) + '</div>';
+      $hint.innerHTML = '<div class="gtitle">🔧 Break it down · step ' + (guide.i + 1) + ' of ' + guide.total + '</div>' +
+        (guide.i === 0 && GLOSS[cur.skill] ? '<div class="gsub">💡 ' + esc(GLOSS[cur.skill]) + '</div>' : '') + '<div class="gq">' + esc(g.p) + '</div>';
     } else {
       setMode(cur.mode); guide.phase = 'final';
       $hint.innerHTML = '<div class="gtitle">🎯 Your turn</div><div class="gq">' + esc(cur.finalPrompt || 'Answer the question above.') + '</div>' +
@@ -258,7 +323,7 @@
   });
   // First-key time also from the input event (some input methods send no digit keydown).
   $ans.addEventListener('input', function () { if (firstKeyAt == null && !copyMode && $ans.value !== '') firstKeyAt = performance.now(); });
-  document.addEventListener('mousedown', function (e) { if (e.target !== $go && e.target.id !== 'exit') setTimeout(function () { $ans.focus(); }, 0); });
+  document.addEventListener('mousedown', function (e) { if (e.target !== $go && e.target.id !== 'exit' && !$hb.contains(e.target) && e.target.id !== 'askhoot') setTimeout(function () { $ans.focus(); }, 0); });
   window.addEventListener('focus', function () { if (!leaving) $ans.focus(); });
 
   $('exit').addEventListener('click', function () {

@@ -16,5 +16,6 @@
   };
   var cfg = BY_PACE[PACE] || BY_PACE[2];
   cfg.pace = PACE;
+  cfg.hootMic = false; // hold-to-talk with Hoot: turn on only after Gretchen says yes to the microphone
   window.__LEARN = cfg;
 })();
